@@ -16,34 +16,34 @@ using std::endl;
 
 namespace gazebo
 {
-	//A plugin to control a Scrat's wheels
-	class PupperPlugin : public ModelPlugin
-	{
+    //A plugin to control a Scrat's wheels
+    class PupperPlugin : public ModelPlugin
+    {
     public:
-		//Constructor
-		PupperPlugin()
-		{
+        //Constructor
+        PupperPlugin()
+        {
 
         }
 
-		//Destructor
-		virtual ~PupperPlugin()
-		{
+        //Destructor
+        virtual ~PupperPlugin()
+        {
 
-		}
+        }
 
-		////////////////////////////////////////////////
-		//----------------LOAD FUNCTION---------------//
-		////////////////////////////////////////////////
+        ////////////////////////////////////////////////
+        //----------------LOAD FUNCTION---------------//
+        ////////////////////////////////////////////////
 
-		virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
-		{
+        virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+        {
 
         }
     };
 
     // Tell Gazebo about this plugin, so that Gazebo can call Load on this plugin.
-	GZ_REGISTER_MODEL_PLUGIN(PupperPlugin)
-}
+    GZ_REGISTER_MODEL_PLUGIN(PupperPlugin)
+    }
 
 #endif
