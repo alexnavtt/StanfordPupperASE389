@@ -1,0 +1,273 @@
+<?xml version="1.0"?>
+
+<robot name = "pupper" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename = "$(find ase389)/pupper_description/motor.xacro"/>
+    <xacro:include filename = "$(find ase389)/pupper_description/colors.xacro"/>
+    <xacro:include filename = "$(find ase389)/pupper_description/left_leg.xacro"/>
+    <xacro:include filename = "$(find ase389)/pupper_description/right_leg.xacro"/>
+
+    <xacro:property name = "PI"            value = "3.14159265359"/>
+    <xacro:property name = "VisualPath"    value = "package://ase389/pupper_description/Pupper_STL"/>
+    <xacro:property name = "CollisionPath" value = "package://ase389/pupper_description/Pupper_STL"/>
+
+    <!-- Conversions -->
+    <xacro:property name = "meshScale_mm"  value = "0.001 0.001 0.001"/>
+    <xacro:property name = "meshScale_in"  value = "0.0254 0.0254 0.0254"/>
+    <xacro:property name = "massScale"     value = "${1240/(1000**3)}"/>    <!-- Convert mm^3 to kg-->
+    <xacro:property name = "density"       value = "1240"/>                 <!-- NOTE: density in g/cm^3 -->
+    <xacro:property name = "inch2meter"    value = "${25.4/1000}"/>
+    <xacro:property name = "inch2mm"       value = "25.4"/>
+
+    <!-- Since we only have mesh volumes, we convert these to mass with estimated density -->
+    <xacro:macro name = "volumeToMass" params = "volume scaling_factor:=0.001">
+        <mass value = "${volume * density * (scaling_factor**3)}"/>
+    </xacro:macro>
+
+    <!-- Similarly we approximate inertia with density -->
+    <xacro:macro name = "scaleInertia" params = "ixx iyy izz ixy:=0 ixz:=0 iyz:=0 scaling_factor:=0.001">
+        <xacro:property name = "kConvert" value = "${density*(scaling_factor**5)}"/>
+        <inertia ixx = "${ixx*kConvert}" iyy = "${iyy*kConvert}" izz = "${izz*kConvert}"
+                 ixy = "${ixy*kConvert}" iyz = "${iyz*kConvert}" ixz = "${ixz*kConvert}"/>
+    </xacro:macro>
+
+
+
+
+    <!-- ++++++++++++++++ -->
+    <!-- ROBOT START HERE -->
+    <!-- ++++++++++++++++ -->
+
+    <!-- Base link of the robot -->
+    <link name = "bottom_PCB">
+        <inertial>
+            <xacro:volumeToMass volume = "4.038" scaling_factor = "${inch2meter}"/>
+            <xacro:scaleInertia ixx = "41.05" iyy = "4.405" izz = "45.448" scaling_factor = "${inch2meter}"/>
+        </inertial>
+
+        <visual name = "bottom_PCB_visual">
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
+            </geometry>
+        </visual>
+
+        <collision name = "bottom_PCB_collision">
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Create Front bulkhead -->
+    <link name = "front_bulkhead">
+        <inertial>
+            <xacro:volumeToMass volume = "28243"/>
+            <xacro:scaleInertia ixx = "27491730" iyy = "74592784" izz = "83928296"/>
+        </inertial>
+
+        <visual>
+            <material name = "red"/>
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/part1_frontbulkhead.stl" scale = "${meshScale_mm}"/>
+            </geometry>
+        </visual>
+
+        <collision>
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/part1_frontbulkhead_simplified.dae" scale = "${meshScale_mm}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Join Front Bulkhead with Base -->
+    <joint name = "front_bulkhead_to_base" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "front_bulkhead"/>
+        <origin xyz = "0.002 0.114 0.044" rpy = "${PI/2} 0 0"/>
+    </joint>
+
+    <!-- Create Middle Bulkhead -->
+    <link name = "middle_bulkhead_front">
+        <inertial>
+            <xacro:volumeToMass volume = "33243"/>
+            <xacro:scaleInertia ixx = "22996456" iyy = "51008240" izz = "73639128"/>
+        </inertial>
+
+        <visual name = "middle_bulkhead_front_visual">
+            <material name = "blue"/>
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/part2_middlebulkhead1.stl" scale = "${meshScale_mm}"/>
+            </geometry>
+        </visual>
+
+        <collision name = "middle_bulkhead_front_collision">
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/part2_middlebulkhead1_simplified.dae" scale = "{meshScale_mm}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Join Middle Bulkhead to Base -->
+    <joint name = "middle_bulkhead_to_base_1" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "middle_bulkhead_front"/>
+        <origin xyz = "0.002 0.114 0.044" rpy = "${PI/2} 0 0"/>
+    </joint>
+
+    <!-- Create 2nd Middle Bulkhead -->
+    <link name = "middle_bulkhead_rear">
+        <inertial>
+            <xacro:volumeToMass volume = "33262"/>
+            <xacro:scaleInertia ixx = "21912060" iyy = "40583024" izz = "62043808"/>
+        </inertial>
+
+        <visual name = "middle_bulkhead_rear_visual">
+            <material name = "blue"/>
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/part3_middlebulkhead2.stl" scale = "${meshScale_mm}"/>
+            </geometry>
+        </visual>
+
+        <collision name = "middle_bulkhead_rear_collision">
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/part3_middlebulkhead2_simplified.dae" scale = "{meshScale_mm}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Join 2nd Bulkhead to Base -->
+    <joint name = "middle_bulkhead_to_base_2" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "middle_bulkhead_rear"/>
+        <origin xyz = "0.003 0.114 0.044" rpy = "${PI/2} 0 0"/>
+    </joint>
+
+    <!-- Create back right shroud -->
+    <link name = "back_right_shroud">
+        <inertial>
+            <xacro:volumeToMass volume = "15700"/>
+            <xacro:scaleInertia ixx = "30641556" iyy = "21280556" izz = "10692993"/>
+        </inertial>
+
+        <visual name = "back_right_shroud_visual">
+            <material name = "green"/>
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/part4_rightshroud.stl" scale = "${meshScale_mm}"/>
+            </geometry>
+        </visual>
+
+        <collision name = "back_right_shroud_collision">
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/part4_rightshroud_simplified.dae" scale = "${meshScale_mm}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Connect back right shroud to body -->
+    <joint name = "right_shroud_to_base" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "back_right_shroud"/>
+        <origin xyz  = "0.003 0.113 0.044" rpy = "${PI/2} ${PI} 0"/>
+    </joint>
+
+    <!-- Create back left shroud -->
+    <link name = "back_left_shroud">
+        <inertial>
+            <xacro:volumeToMass volume = "15700"/>
+            <xacro:scaleInertia ixx = "30641502" iyy = "21280568" izz = "10692940"/>
+        </inertial>
+
+        <visual name = "back_left_shroud_visual">
+            <material name = "green"/>
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/part5_leftshroud.stl" scale = "${meshScale_mm}"/>
+            </geometry>
+        </visual>    
+
+        <collision name = "back_left_shroud_collision">
+            <material name = "green"/>
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/part5_leftshroud_simplified.dae" scale = "${meshScale_mm}"/>
+            </geometry>
+        </collision>     
+    </link>
+
+    <!-- Join back left shroud to body -->
+    <joint name = "back_left_shroud_to_base" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "back_left_shroud"/>
+        <origin xyz  = "0.003 0.113 0.044" rpy = "${PI/2} ${PI} 0"/>
+    </joint>
+
+    <!-- Create rear bulkhead -->
+    <link name = "rear_bulkhead">
+        <inertial>
+            <xacro:volumeToMass volume = "33736"/>
+            <xacro:scaleInertia ixx = "23357426" iyy = "52151916" iyz = "-17892" izz = "75135296"/>
+        </inertial>
+
+        <visual>
+            <material name = "blue"/>
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/part6_rearbulkhead.stl" scale = "${meshScale_mm}"/>
+            </geometry>
+        </visual>
+
+        <collision>
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/part6_rearbulkhead_simplified.dae" scale = "${meshScale_mm}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Join rear bulkhead to body -->
+    <joint name = "rear_bulk_head_to_body" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "rear_bulkhead"/>
+        <origin xyz = "0.003 0.113 0.044" rpy = "${PI/2} 0 0"/>
+    </joint>
+
+    <!-- Create top plate -->
+    <link name = "top_PCB">
+        <inertial>
+            <xacro:volumeToMass volume = "4.038" scaling_factor = "${inch2meter}"/>
+            <xacro:scaleInertia ixx = "41.05" iyy = "4.405" izz = "45.448" scaling_factor = "${inch2meter}"/>
+        </inertial>
+
+        <visual name = "top_PCB_visual">
+            <geometry>
+                <mesh filename = "${VisualPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
+            </geometry>
+        </visual>
+
+        <collision name = "top_PCB_collision">
+            <geometry>
+                <mesh filename = "${CollisionPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Joint top plate to body -->
+    <joint name = "top_PCB_to_base" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "top_PCB"/>
+        <origin xyz  = "0 0 0.088" rpy = "0 0 0"/>
+    </joint>
+
+    <xacro:leftLeg name = "front" parent = "bottom_PCB">
+        <origin xyz = "0.05 -0.105 0.044" rpy = "${-PI/2} 0 0"/>
+    </xacro:leftLeg>
+
+    <xacro:leftLeg name = "back" parent = "bottom_PCB">
+        <origin xyz = "0.05 0.095 0.044" rpy = "${-PI/2} 0 0"/>
+    </xacro:leftLeg>
+
+    <xacro:rightLeg name = "front" parent = "bottom_PCB">
+        <origin xyz = "-0.045 -0.105 0.044" rpy = "${-PI/2} 0 0"/>
+    </xacro:rightLeg>
+
+    <xacro:rightLeg name = "back" parent = "bottom_PCB">
+        <origin xyz = "-0.045 0.095 0.044" rpy = "${-PI/2} 0 0"/>
+    </xacro:rightLeg>
+
+</robot>

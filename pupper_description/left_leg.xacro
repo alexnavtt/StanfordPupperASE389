@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+
+<robot name = "left_leg_macro" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Macro for the creation of a leg -->
+    <xacro:macro name = "leftLeg" params = "name parent *origin">
+
+        <!-- Create hub that connects to the motor -->
+        <xacro:property name = "hubName" value = "${name}_left_leg_hub"/>
+        <link name = "${hubName}">
+            <inertial>
+                <xacro:volumeToMass volume = "7096"/>
+                <xacro:scaleInertia ixx = "1456709" ixz = "446692" iyy = "1472451" izz = "1155732"/>
+            </inertial>
+
+            <visual name = "${hubName}_visual">
+                <material name = "blue"/>
+                <geometry> 
+                    <mesh filename = "${VisualPath}/Leg/part1_hub.stl" scale = "${meshScale_mm}"/>
+                </geometry>  
+            </visual>
+
+            <collision name = "${hubName}_collision">
+                <geometry>
+                    <mesh filename = "${CollisionPath}/Leg/part1_hub_siplified.dae" scale = "${meshScale_mm}"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <!-- Create the upper link portion (the thigh, if you will) -->
+        <xacro:property name = "upperName" value = "${name}_left_leg_upper_link"/>
+        <link name = "${upperName}">
+            <inertial>
+                <xacro:volumeToMass volume = "13804"/>
+                <xacro:scaleInertia ixx = "14050550" ixy = "156735" iyy = "957647" izz = "13227597"/>
+            </inertial>
+
+            <visual name = "${upperName}_visual">
+                <material name = "yellow"/>
+                <geometry>
+                    <mesh filename = "${VisualPath}/Leg/part2_upperlink.stl" scale = "${meshScale_mm}"/>
+                </geometry>
+            </visual>
+
+            <collision name = "${upperName}_collision">
+                <geometry>
+                    <mesh filename = "${CollisionPath}/Leg/part2_upperlink_simplified.dae" scale = "${meshScale_mm}"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <!-- Join the Hub and the Upper Link with a motor -->
+        <xacro:motor name = "${name}_left_shoulder" axis = "1 0 0" fixed_parent = "${hubName}" revolute_child = "${upperName}">
+            <origin xyz = "0 0 0.005" rpy = "0 0 0"/>
+            <origin xyz = "0 0 0.022" rpy = "0 ${-PI/2} 0"/>
+        </xacro:motor>
+
+        <!-- Create the covering for the upper portion of the leg -->
+        <xacro:property name = "upperCoverName" value = "${name}_left_leg_cover"/>
+        <link name = "${upperCoverName}">
+            <inertial>
+                <xacro:volumeToMass volume = "6414"/>
+                <xacro:scaleInertia ixx = "4268927" iyy = "991662" izz = "3827615" ixy = "171794" ixz = "0.7" iyz = "-24"/>
+            </inertial>
+
+            <visual name = "${upperCoverName}_visual">
+                <material name = "red"/>
+                <geometry>
+                    <mesh filename = "${VisualPath}/Leg/part3_shroud.stl" scale = "${meshScale_mm}"/>
+                </geometry>
+            </visual>
+
+            <collision name = "${upperCoverName}_collision">
+                <geometry>
+                    <mesh filename = "${CollisionPath}/Leg/part3_shroud_simplified.dae" scale = "${meshScale_mm}"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <!-- Connect the covering to the upper link -->
+        <joint name = "${name}_left_shroud_to_leg" type = "fixed">
+            <parent link = "${upperName}"/>
+            <child  link = "${upperCoverName}"/>
+            <origin xyz  = "0.007 0.085 0" rpy = "${PI} 0 0"/>
+        </joint>
+
+        <!-- Creat the lower link -->
+        <xacro:property name = "lowerName" value = "${name}_lower_left_link"/>
+        <link name = "${lowerName}">
+            <inertial>
+                <xacro:volumeToMass volume = "13170"/>
+                <xacro:scaleInertia ixx = "18151954" iyy = "437604" izz = "18307054" ixy = "-238617" ixz = "19947" iyz = "672611"/>
+            </inertial>
+
+            <visual>
+                <material name = "blueGreen"/>
+                <geometry>
+                    <mesh filename = "${VisualPath}/Leg/part4_lowerlink.stl" scale = "${meshScale_mm}"/>
+                </geometry>
+            </visual>
+
+            <collision name = "${lowerName}_collision">
+                <geometry>
+                    <mesh filename = "${CollisionPath}/Leg/part4_lowerlink_simplified.dae" scale = "${meshScale_mm}"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <!-- Connect Upper Link and Lower Link with a motor -->
+        <xacro:motor name = "${name}_left_elbow" axis = "0 0 -1" fixed_parent = "${upperName}" revolute_child = "${lowerName}">
+            <origin xyz = "0.023 0.082 0" rpy = "0 ${PI/2} 0"/>
+            <origin xyz = "0 0 -0.032" rpy = "${PI} ${PI} 0"/> 
+        </xacro:motor>
+
+        <!-- Connect leg to parent with a motor -->
+        <xacro:motor name = "${name}_left_parent_motor" axis = "-1 0 0" fixed_parent = "${parent}" revolute_child = "${hubName}">
+            <xacro:insert_block name = "origin"/>
+            <origin xyz = "0 0 0.036" rpy = "0 ${PI/2} 0"/>
+        </xacro:motor>
+
+    </xacro:macro>
+</robot>
