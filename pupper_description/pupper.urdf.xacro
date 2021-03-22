@@ -15,7 +15,7 @@
     <xacro:property name = "meshScale_mm"  value = "0.001 0.001 0.001"/>
     <xacro:property name = "meshScale_in"  value = "0.0254 0.0254 0.0254"/>
     <xacro:property name = "massScale"     value = "${1240/(1000**3)}"/>    <!-- Convert mm^3 to kg-->
-    <xacro:property name = "density"       value = "1240"/>                 <!-- NOTE: density in g/cm^3 -->
+    <xacro:property name = "density"       value = "1240"/>                 <!-- NOTE: density in kg/m^3 -->
     <xacro:property name = "inch2meter"    value = "${25.4/1000}"/>
     <xacro:property name = "inch2mm"       value = "25.4"/>
 
