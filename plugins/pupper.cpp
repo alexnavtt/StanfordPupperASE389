@@ -16,7 +16,7 @@ using std::endl;
 
 namespace gazebo
 {
-    //A plugin to control a Scrat's wheels
+    //A plugin to control a the Stanford Pupper V3 robot
     class PupperPlugin : public ModelPlugin
     {
     public:
