@@ -47,8 +47,10 @@
             <axis xyz = "${axis}"/>
         </joint>
 
-        <!-- Prevent crashing when damping is set -->
+        <!-- implicitSpringDamper: prevent crashing when damping is set -->
+        <!-- provideFeedback     : allows the joint to publish torque data -->
         <gazebo reference = "${name}_joint">
+            <provideFeedback>true</provideFeedback>
             <implicitSpringDamper>true</implicitSpringDamper>
         </gazebo>
 
