@@ -31,6 +31,10 @@
                  ixy = "${ixy*kConvert}" iyz = "${iyz*kConvert}" ixz = "${ixz*kConvert}"/>
     </xacro:macro>
 
+    <!-- Connect the plugin -->
+    <gazebo>
+        <plugin filename = "libpupper_plugin.so" name = "pupper_plugin"/>
+    </gazebo>
 
 
 
