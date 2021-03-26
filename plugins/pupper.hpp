@@ -13,6 +13,13 @@
 
 namespace gazebo{
 
+enum PupperLegs{
+    FRONT_LEFT_LEG,
+    FRONT_RIGHT_LEG,
+    BACK_RIGHT_LEG,
+    BACK_LEFT_LEG
+};
+
 //A plugin to control a the Stanford Pupper V3 robot
 class PupperPlugin : public ModelPlugin
 {
@@ -32,16 +39,22 @@ public:
     // TODO: Retrieve whatever data from these joints as we would actually get from the motors
     std::vector<float> getJointFeedback();
 
-    // TODO: Apply command to the joints as we would actually do on the robot
-    void controlJoints(std::vector<float> torques);
+    // Apply command to the joints as we would actually do on the robot
+    void controlJoints(enum PupperLegs leg, std::vector<float> torques);
+
+    void controlAllJoints(std::vector<float> torques);
 
 private:
-    physics::ModelPtr model;                    // Pointer to the model in Gazebo
-    physics::JointPtr front_left_joints[3];     // Array of joints on the front left leg
-    physics::JointPtr front_right_joints[3];    // Array of joints on the front right leg
-    physics::JointPtr back_left_joints[3];      // Array of joints on the back left leg
-    physics::JointPtr back_right_joints[3];     // Array of joints on the back right leg
-    event::ConnectionPtr updateConnection;      // Event connection between the Gazebo simulation and this plugin
+    physics::ModelPtr model_;                    // Pointer to the model in Gazebo
+    physics::JointPtr front_left_joints_[3];     // Array of joints on the front left leg
+    physics::JointPtr front_right_joints_[3];    // Array of joints on the front right leg
+    physics::JointPtr back_left_joints_[3];      // Array of joints on the back left leg
+    physics::JointPtr back_right_joints_[3];     // Array of joints on the back right leg
+    physics::JointPtr all_joints_[12];
+    event::ConnectionPtr updateConnection_;      // Event connection between the Gazebo simulation and this plugin
+
+    common::Time last_update_time_;             // Used to keep track of update rate
+    common::Time update_interval_;              // Seconds between each control update loop
 };
 
 
