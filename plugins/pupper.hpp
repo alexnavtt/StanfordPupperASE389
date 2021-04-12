@@ -33,10 +33,10 @@ public:
     // Load function - Called on model creation and is used for setup and initialization
     virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
 
-    // TODO: Called on every timestep of the simulation (control code goes here)
+    // Called on every timestep of the simulation (control code goes here)
     void onUpdate();
 
-    // TODO: Retrieve whatever data from these joints as we would actually get from the motors
+    // Retrieve whatever data from these joints as we would actually get from the motors
     std::vector<float> getJointFeedback();
 
     // Apply command to the joints as we would actually do on the robot
