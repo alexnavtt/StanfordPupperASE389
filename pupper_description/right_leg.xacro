@@ -100,6 +100,33 @@
             </collision>
         </link>
 
+        <!-- Create the foot pad -->
+        <link name = "${name}_right_foot">
+            <inertial>
+                <xacro:footInertia/>
+            </inertial>
+
+            <visual name = "${name}_right_foot_visual">
+                <material name = "red"/>
+                <geometry>
+                    <mesh filename = "${VisualPath}/Leg/hemisphere.stl" scale = "0.00026 0.00026 0.00026"/>
+                </geometry>
+            </visual>
+
+            <collision name = "${name}_right_foot_collision">
+                <geometry>
+                    <mesh filename = "${CollisionPath}/Leg/hemisphere_simplified.dae" scale = "0.00026 0.00026 0.00026"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <!-- Connect foot pad to lower link -->
+        <joint name = "${name}_right_foot_joint" type = "fixed">
+            <parent link = "${lowerName}"/>
+            <child  link = "${name}_right_foot"/>
+            <origin xyz = "0 -0.11 -0.009" rpy = "${PI/2} 0 ${PI/4 - 0.1}"/>
+        </joint>
+
         <!-- Connect leg to parent with a motor -->
         <xacro:motor name = "${name}_right_shoulder_1" axis = "-1 0 0" fixed_parent = "${parent}" revolute_child = "${hubName}">
             <xacro:insert_block name = "origin"/>
