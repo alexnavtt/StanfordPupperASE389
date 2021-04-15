@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Eigen3 REQUIRED)
+# find_package(NLopt REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -128,6 +129,9 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/PupperCplusplusController/PupperWBC.cpp
 )
+
+add_executable(PupperController src/PupperCplusplusController/PupperControl.cpp)
+target_link_libraries(PupperController ${catkin_LIBRARIES} ${PROJECT_NAME})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
