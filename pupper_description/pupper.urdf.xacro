@@ -14,8 +14,7 @@
     <!-- Conversions -->
     <xacro:property name = "meshScale_mm"  value = "0.001 0.001 0.001"/>
     <xacro:property name = "meshScale_in"  value = "0.0254 0.0254 0.0254"/>
-    <xacro:property name = "massScale"     value = "${1240/(1000**3)}"/>    <!-- Convert mm^3 to kg-->
-    <xacro:property name = "density"       value = "${1240*0.3}"/>                 <!-- NOTE: density in kg/m^3 -->
+    <xacro:property name = "density"       value = "${1240*0.3}"/>             <!-- NOTE: density in kg/m^3 -->
     <xacro:property name = "inch2meter"    value = "${25.4/1000}"/>
     <xacro:property name = "inch2mm"       value = "25.4"/>
 
@@ -31,6 +30,7 @@
                  ixy = "${ixy*kConvert}" iyz = "${iyz*kConvert}" ixz = "${ixz*kConvert}"/>
     </xacro:macro>
 
+    <!-- Inertia of a hemisphere via Wikipedia -->
     <xacro:macro name = "footInertia">
         <xacro:property name = "foot_mass" value = "0.01"/>
         <xacro:property name = "foot_radius" value = "0.0095"/>
@@ -164,7 +164,7 @@
         </inertial>
 
         <visual name = "back_right_shroud_visual">
-            <material name = "green"/>
+            <material name = "yellow"/>
             <geometry>
                 <mesh filename = "${VisualPath}/Body/part4_rightshroud.stl" scale = "${meshScale_mm}"/>
             </geometry>
@@ -192,7 +192,7 @@
         </inertial>
 
         <visual name = "back_left_shroud_visual">
-            <material name = "green"/>
+            <material name = "yellow"/>
             <geometry>
                 <mesh filename = "${VisualPath}/Body/part5_leftshroud.stl" scale = "${meshScale_mm}"/>
             </geometry>
@@ -239,6 +239,34 @@
         <parent link = "bottom_PCB"/>
         <child  link = "rear_bulkhead"/>
         <origin xyz = "0.003 0.113 0.044" rpy = "${PI/2} 0 0"/>
+    </joint>
+
+    <!-- Create a bulk mass for the battery -->
+    <link name = "battery">
+        <xacro:property name = "batt_x" value = "0.070"/>
+        <xacro:property name = "batt_y" value = "0.035"/>
+        <xacro:property name = "batt_z" value = "0.0485"/>
+        <xacro:property name = "batt_m" value = "0.228"/>
+
+        <inertial>
+            <mass value = "${batt_m}"/>
+            <inertia ixx = "${1/12 * batt_m * (batt_y**2 + batt_z**2)}" ixy = "0" ixz = "0"
+                     iyy = "${1/12 * batt_m * (batt_x**2 + batt_z**2)}" iyz = "0"
+                     izz = "${1/12 * batt_m * (batt_x**2 + batt_y**2)}"/>
+        </inertial>
+
+        <visual name = "battery_visual">
+            <material name = "pink"/>
+            <geometry>
+                <box size = "${batt_x} ${batt_y} ${batt_z}"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name = "battery_to_body" type = "fixed">
+        <parent link = "bottom_PCB"/>
+        <child  link = "battery"/>
+        <origin xyz = "0.002 0.03 ${batt_z/2}"/>
     </joint>
 
     <!-- Create top plate -->
