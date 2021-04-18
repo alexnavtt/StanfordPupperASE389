@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Eigen3 REQUIRED)
+# find_package(RBDL REQUIRED)
 # find_package(NLopt REQUIRED)
 
 ## System dependencies are found with CMake's conventions
@@ -121,8 +122,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  lib
   ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}/eigen3
 )
 
 ## Declare a C++ library
@@ -131,7 +132,9 @@ add_library(${PROJECT_NAME}
 )
 
 add_executable(PupperController src/PupperCplusplusController/PupperControl.cpp)
-target_link_libraries(PupperController ${catkin_LIBRARIES} ${PROJECT_NAME})
+target_link_libraries(PupperController 
+    ${catkin_LIBRARIES} 
+    ${PROJECT_NAME})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
