@@ -11,7 +11,7 @@ struct Task{
     }
     
     // A list of all targets for the robot state vector in the form
-    // V = {xCOM_pow, xCOM_rot, alphaCOM, betaCOM, gammaCOM, q0, q1, q2, ... , qn}
+    // V = {xCOM_pos, xCOM_rot, alphaCOM, betaCOM, gammaCOM, q0, q1, q2, ... , qn}
     std::vector<float> tasks;
     
     // Which of the setpoints are active for this task definition
