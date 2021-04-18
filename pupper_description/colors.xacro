@@ -22,4 +22,8 @@
     <color rgba = "0 1 1 1"/>
 </material>
 
+<material name = "pink">
+    <color rgba = "1 0 1 1"/>
+</material>
+
 </robot>
