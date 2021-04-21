@@ -44,6 +44,8 @@ public:
 
     void controlAllJoints(std::vector<float> torques);
 
+    void setJointPositions(std::vector<float> angles);
+
 private:
     physics::ModelPtr model_;                    // Pointer to the model in Gazebo
     physics::JointPtr front_left_joints_[3];     // Array of joints on the front left leg
@@ -55,6 +57,9 @@ private:
 
     common::Time last_update_time_;             // Used to keep track of update rate
     common::Time update_interval_;              // Seconds between each control update loop
+
+    std::array<double, 12> control_torques_;
+    void applyTorques_();
 };
 
 
