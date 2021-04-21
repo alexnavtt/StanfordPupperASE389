@@ -25,7 +25,7 @@
 
             <collision name = "${name}_collision">
                 <geometry>
-                    <cylinder radius = "{motorRad}" length = "${motorLength}"/>
+                    <cylinder radius = "${motorRad}" length = "${motorLength}"/>
                 </geometry>
             </collision>
         </link>

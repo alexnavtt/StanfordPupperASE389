@@ -85,7 +85,7 @@
     </visual>
     <collision name="middle_bulkhead_front_collision">
       <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part2_middlebulkhead1_simplified.dae" scale="{meshScale_mm}"/>
+        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part2_middlebulkhead1_simplified.dae" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
   </link>
@@ -109,7 +109,7 @@
     </visual>
     <collision name="middle_bulkhead_rear_collision">
       <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part3_middlebulkhead2_simplified.dae" scale="{meshScale_mm}"/>
+        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part3_middlebulkhead2_simplified.dae" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
   </link>
@@ -359,7 +359,7 @@
     </visual>
     <collision name="front_left_shoulder_1_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -381,6 +381,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="front_left_shoulder_1_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -403,7 +408,7 @@
     </visual>
     <collision name="front_left_shoulder_2_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -425,6 +430,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="front_left_shoulder_2_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -447,7 +457,7 @@
     </visual>
     <collision name="front_left_elbow_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -469,6 +479,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="front_left_elbow_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -600,7 +615,7 @@
     </visual>
     <collision name="back_left_shoulder_1_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -622,6 +637,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="back_left_shoulder_1_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -644,7 +664,7 @@
     </visual>
     <collision name="back_left_shoulder_2_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -666,6 +686,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="back_left_shoulder_2_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -688,7 +713,7 @@
     </visual>
     <collision name="back_left_elbow_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -710,6 +735,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="back_left_elbow_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -841,7 +871,7 @@
     </visual>
     <collision name="front_right_shoulder_1_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -863,6 +893,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="front_right_shoulder_1_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -885,7 +920,7 @@
     </visual>
     <collision name="front_right_shoulder_2_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -907,6 +942,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="front_right_shoulder_2_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -929,7 +969,7 @@
     </visual>
     <collision name="front_right_elbow_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -951,6 +991,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="front_right_elbow_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -1082,7 +1127,7 @@
     </visual>
     <collision name="back_right_shoulder_1_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -1104,6 +1149,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="back_right_shoulder_1_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -1126,7 +1176,7 @@
     </visual>
     <collision name="back_right_shoulder_2_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -1148,6 +1198,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="back_right_shoulder_2_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>
@@ -1170,7 +1225,7 @@
     </visual>
     <collision name="back_right_elbow_collision">
       <geometry>
-        <cylinder length="0.03" radius="{motorRad}"/>
+        <cylinder length="0.03" radius="0.012"/>
       </geometry>
     </collision>
   </link>
@@ -1192,6 +1247,11 @@
   <!-- implicitSpringDamper: prevent crashing when damping is set -->
   <!-- provideFeedback     : allows the joint to publish torque data -->
   <gazebo reference="back_right_elbow_joint">
+    <physics>
+      <ode>
+        <max_force>50</max_force>
+      </ode>
+    </physics>
     <provideFeedback>true</provideFeedback>
     <implicitSpringDamper>true</implicitSpringDamper>
   </gazebo>

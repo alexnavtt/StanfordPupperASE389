@@ -116,7 +116,7 @@
 
         <collision name = "middle_bulkhead_front_collision">
             <geometry>
-                <mesh filename = "${CollisionPath}/Body/part2_middlebulkhead1_simplified.dae" scale = "{meshScale_mm}"/>
+                <mesh filename = "${CollisionPath}/Body/part2_middlebulkhead1_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
         </collision>
     </link>
@@ -144,7 +144,7 @@
 
         <collision name = "middle_bulkhead_rear_collision">
             <geometry>
-                <mesh filename = "${CollisionPath}/Body/part3_middlebulkhead2_simplified.dae" scale = "{meshScale_mm}"/>
+                <mesh filename = "${CollisionPath}/Body/part3_middlebulkhead2_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
         </collision>
     </link>
