@@ -43,15 +43,24 @@
             <child  link = "${revolute_child}"/>
             <xacro:insert_block name = "revolute_origin"/>
             <limit upper = "1e10" lower = "-1e10" effort = "1e6" velocity = "1e6"/>
-            <dynamics damping = "0.3" friction = "0.1"/>
+            <dynamics damping = "0.3" friction = "0.3"/>
             <axis xyz = "${axis}"/>
         </joint>
 
         <!-- implicitSpringDamper: prevent crashing when damping is set -->
         <!-- provideFeedback     : allows the joint to publish torque data -->
         <gazebo reference = "${name}_joint">
+            <physics>
+                <ode>
+                    <max_force>50</max_force>
+                </ode>
+            </physics>
             <provideFeedback>true</provideFeedback>
             <implicitSpringDamper>true</implicitSpringDamper>
+        </gazebo>
+
+        <gazebo reference = "${revolute_child}">
+            <self_collide>true</self_collide>
         </gazebo>
 
     </xacro:macro>

@@ -120,6 +120,18 @@
             </collision>
         </link>
 
+        <gazebo reference = "${lowerName}">
+            <collision name = "${lowerName}_collision">
+                <surface>
+                    <contact>
+                        <ode>
+                            <min_depth>0.01</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+            </collision>
+        </gazebo>
+
         <!-- Connect foot pad to lower link -->
         <joint name = "${name}_right_foot_joint" type = "fixed">
             <parent link = "${lowerName}"/>
@@ -140,7 +152,7 @@
         </xacro:motor>
 
         <!-- Connect Upper Link and Lower Link with a motor -->
-        <xacro:motor name = "${name}_right_elbow" axis = "0 0 -1" fixed_parent = "${upperName}" revolute_child = "${lowerName}">
+        <xacro:motor name = "${name}_right_elbow" axis = "0 0 1" fixed_parent = "${upperName}" revolute_child = "${lowerName}">
             <origin xyz = "0.023 0.082 0" rpy = "0 ${PI/2} 0"/>
             <origin xyz = "0 0 -0.032" rpy = "${PI} 0 0"/> 
         </xacro:motor>

@@ -120,6 +120,18 @@
             </collision>
         </link>
 
+        <gazebo reference = "${lowerName}">
+            <collision name = "${lowerName}_collision">
+                <surface>
+                    <contact>
+                        <ode>
+                            <min_depth>0.01</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+            </collision>
+        </gazebo>
+
         <!-- Connect foot pad to lower link -->
         <joint name = "${name}_left_foot_joint" type = "fixed">
             <parent link = "${lowerName}"/>

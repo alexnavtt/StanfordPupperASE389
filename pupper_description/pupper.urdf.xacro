@@ -263,6 +263,7 @@
         </visual>
     </link>
 
+    <!-- Connect battery to body -->
     <joint name = "battery_to_body" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "battery"/>
