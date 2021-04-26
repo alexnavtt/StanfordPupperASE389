@@ -63,7 +63,7 @@ void PupperWBC::Load(string filename){
 
 // Set rbdl model contact constraints
 void PupperWBC::setContacts(const array<float, 4> feet_in_contact){
-
+    //TODO
 }
 
 // Retrieve body Jacobian
