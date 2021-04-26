@@ -38,12 +38,12 @@ private:
     RigidBodyDynamics::Math::MatrixNd getBodyJacobian_();
 
     // Retrieve the task Jacobian for specific task
-    RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(std::string task_name) const;
-    RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(unsigned priority) const;
+    RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(std::string task_name);
+    RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(unsigned priority);
 
     // Retrieve the null space for a specific task
-    RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(std::string task_name) const;
-    RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(unsigned priority) const;
+    RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(std::string task_name);
+    RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(unsigned priority);
 
     // Joint angles in radians
     RigidBodyDynamics::Math::VectorNd joint_angles_;

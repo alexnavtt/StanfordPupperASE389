@@ -56,15 +56,25 @@ void PupperWBC::Load(string filename){
 }
 
 // Retrieve body Jacobian
-MatrixNd PupperWBC::getBodyJacobian_(){
+MatrixNd PupperWBC::getBodyJacobian_() {
     // Create output
     static MatrixNd J = Eigen::MatrixXd::Zero(6, Pupper_.qdot_size);
     printf("\n\nBody Jacobian Test:\n");
 
     // Fill the Jacobian matrix
     const char* body_name = "bottom_PCB";
-    CalcBodySpatialJacobian(Pupper_, joint_angles_, Pupper_.GetBodyId(body_name), J, true);
+    CalcBodySpatialJacobian(Pupper_, joint_angles_, Pupper_.GetBodyId(body_name), J, false);
     cout << "Jacobian for \"" << body_name << "\" is: \n" << J.transpose() << endl;
 
     return J;
+}
+
+MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
+    MatrixNd Jb = getBodyJacobian_();
+    // MatrixNd U  = Eigen::MatrixXd::Zero(6 + )
+}
+
+MatrixNd PupperWBC::getTaskJacobian_(std::string task_name){
+    unsigned index = task_indices_.at(task_name);
+    getTaskJacobian_(index);
 }
