@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <cstring>
 #include <unordered_map>
 
 #include "eigen3/Eigen/Dense"
@@ -27,6 +28,9 @@ public:
 
     // Load the Pupper model from a URDF
     void Load(std::string filename);
+
+    // Set which feet are in contact
+    void setContacts(const std::array<float, 4> feet_in_contact);
 
     // Get the torque command fulfilling the current tasks
     std::array<float, 12> calculateOutputTorque();
@@ -64,6 +68,8 @@ private:
     // Joint selection matrix (takes the form [0_6, I_12]^T)
     RigidBodyDynamics::Math::MatrixNd U_;
 
+    //URDF XML String
+    char urdf_string_[7] = "awawaw";
 };
 
 #endif
