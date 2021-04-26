@@ -11,6 +11,8 @@
 #include "ros/subscribe_options.h"
 #include "ros/advertise_options.h"
 
+#include "ase389/PupperWBC.hpp"
+
 namespace gazebo{
 
 enum PupperLegs{

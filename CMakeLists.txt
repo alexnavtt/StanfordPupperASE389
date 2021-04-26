@@ -1,41 +1,55 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(ase389)
 
-## Compile as C++11, supported in ROS Melodic and newer
+## Compile as C++14, supported in ROS Melodic and newer
 add_compile_options(-std=c++14)
+
+# This line ensures we can find RBDL with the FindRBDL.cmake file in the source directory
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
+# ROS dependencies
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  rospy
-  std_msgs
   gazebo_ros
 )
 
+# Non-ROS dependencies
 find_package(Eigen3 REQUIRED)
 find_package(RBDL COMPONENTS URDFReader REQUIRED)
 
-catkin_package()
-  
-## Your package locations should be listed before other locations
-## Specify additional locations of header files
-include_directories(
-  include
-  ${RBDL_INCLUDE_DIR}
+# Set all our include paths to a single variable INCLUDES for ease of access
+set(INCLUDES
+  include 
   ${catkin_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}/eigen3
+  ${catkin_INCLUDE_DIRS}/eigen3  
+)
+
+# Create a catkin package, allowing this project to be included in other projects
+catkin_package(
+  INCLUDE_DIRS ${INCLUDES}
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS roscpp std_msgs
+  DEPENDS RBDL Eigen3
+)
+
+# Create a library to be accesible to other packages
+add_library(ase389 
+  src/PupperCplusplusController/PupperWBC.cpp
 )
   
+# Specify include directories
+include_directories(
+  ${INCLUDES}
+)
+  
+# Create an executable file and link its dependencies
 add_executable(PupperController 
-              src/PupperCplusplusController/PupperControl.cpp
-              src/PupperCplusplusController/PupperWBC.cpp
+  src/PupperCplusplusController/PupperControl.cpp
+  src/PupperCplusplusController/PupperWBC.cpp
 )
 
 target_link_libraries(PupperController 
-    ${catkin_LIBRARIES} 
-    ${RBDL_LIBRARY}
-    ${RBDL_URDFReader_LIBRARY}
+  ${catkin_LIBRARIES} 
+  ${RBDL_LIBRARY}
+  ${RBDL_URDFReader_LIBRARY}
 )
