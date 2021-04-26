@@ -1,6 +1,7 @@
 #include <iostream>
 #include "ase389/PupperWBC.hpp"
 #include "rbdl/addons/urdfreader/urdfreader.h"
+#include "ase389/PupperUrdfString.hpp"
 
 using std::vector;
 using std::array;
@@ -16,6 +17,7 @@ PupperWBC::PupperWBC(){
     joint_angles_     = VectorNd::Zero(NUM_JOINTS);
     joint_velocities_ = VectorNd::Zero(NUM_JOINTS);
     joint_torques_    = VectorNd::Zero(NUM_JOINTS);
+    
 }
 
 void PupperWBC::updateController(const array<float, NUM_JOINTS>& joint_angles, 
@@ -39,8 +41,8 @@ void PupperWBC::addTask(unsigned priority, string name, Task T){
 
 void PupperWBC::Load(string filename){
     // Load the model
-    RigidBodyDynamics::Addons::URDFReadFromFile(filename.c_str(), &Pupper_, true);
-    
+    // RigidBodyDynamics::Addons::URDFReadFromFile(filename.c_str(), &Pupper_, true, true);
+    RigidBodyDynamics::Addons::URDFReadFromString(pupper_urdf_string, &Pupper_, true, true);
     // Summarize model characteristics
     printf("Loaded model with %d DOFs\n", Pupper_.dof_count);
     printf("*\tQ Count:   \t%d\n", Pupper_.q_size);
@@ -51,8 +53,17 @@ void PupperWBC::Load(string filename){
     for (int i = 0; i < Pupper_.mBodies.size(); i++)
         cout << "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
+    //Test
+    array<float, 4> feet_in_contact = {1,1,1,1};
+    setContacts(feet_in_contact);
+
     // Test
     getBodyJacobian_();
+}
+
+// Set rbdl model contact constraints
+void PupperWBC::setContacts(const array<float, 4> feet_in_contact){
+
 }
 
 // Retrieve body Jacobian
