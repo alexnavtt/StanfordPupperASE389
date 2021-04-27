@@ -30,7 +30,7 @@ public:
     void Load(std::string filename);
 
     // Set which feet are in contact
-    void setContacts(const std::array<float, 4> feet_in_contact);
+    void setContacts(const std::array<bool, 4> feet_in_contact);
 
     // Get the torque command fulfilling the current tasks
     std::array<float, 12> calculateOutputTorque();
@@ -38,6 +38,8 @@ public:
 private:
     // The Pupper model for RBDL
     RigidBodyDynamics::Model Pupper_;
+    // Pupper constraints struct for RBDL
+    RigidBodyDynamics::ConstraintSet pup_constraints_;
 
     // Retrieve the body COM Jacobian
     RigidBodyDynamics::Math::MatrixNd getBodyJacobian_(std::string body_id);
@@ -59,7 +61,7 @@ private:
     // Joint torques in Nm
     RigidBodyDynamics::Math::VectorNd joint_torques_;
 
-    // Robot orientation from IMU (maybe RPY?)
+    // Robot orientation from IMU (Quaternion)
     Eigen::Quaternion<float> robot_orientation_;
 
     // Map of robot tasks organized by name
@@ -69,8 +71,6 @@ private:
     // Joint selection matrix (takes the form [0_6, I_12]^T)
     RigidBodyDynamics::Math::MatrixNd U_;
 
-    //URDF XML String
-    char urdf_string_[7] = "awawaw";
 };
 
 #endif
