@@ -12,6 +12,7 @@
 #include "rbdl/rbdl.h"
 
 #define NUM_JOINTS 18   // 12 motors plus 6 floating base joints
+#define NUM_Q 19        // 12 motors plus 3 xyz plus 4 quaternion, refer to: https://rbdl.github.io/df/dbe/joint_description.html
 
 class PupperWBC{
 public:
@@ -19,7 +20,7 @@ public:
     PupperWBC();
 
     // Take in the current robot data
-    void updateController(const std::array<float, NUM_JOINTS>& joint_angles, 
+    void updateController(const std::array<float, NUM_Q>& joint_angles, 
                           const std::array<float, NUM_JOINTS>& joint_velocities,
                           const std::array<float, NUM_JOINTS>& joint_torques);
 

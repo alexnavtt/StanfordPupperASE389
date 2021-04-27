@@ -1,6 +1,6 @@
 #ifndef PUPPER_URDF_HH_
 #define PUPPER_URDF_HH_
-
+// Note: use https://tomeko.net/online_tools/cpp_text_escape.php?lang=en to convert urdf to multi-line string 
 
 const char* pupper_urdf_string = 
 "<robot name=\"pupper\">\n"

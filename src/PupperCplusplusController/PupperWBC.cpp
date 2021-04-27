@@ -16,13 +16,13 @@ static Eigen::IOFormat f(3);
 
 // Constructor
 PupperWBC::PupperWBC(){
-    joint_angles_     = VectorNd::Zero(NUM_JOINTS);
+    joint_angles_     = VectorNd::Zero(NUM_Q);
     joint_velocities_ = VectorNd::Zero(NUM_JOINTS);
     joint_torques_    = VectorNd::Zero(NUM_JOINTS);
     
 }
 
-void PupperWBC::updateController(const array<float, NUM_JOINTS>& joint_angles, 
+void PupperWBC::updateController(const array<float, NUM_Q>& joint_angles, 
                                  const array<float, NUM_JOINTS>& joint_velocities,
                                  const array<float, NUM_JOINTS>& joint_torques)
 {
@@ -56,6 +56,13 @@ void PupperWBC::Load(string filename){
     for (int i = 0; i < Pupper_.mBodies.size(); i++)
         cout << "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
+    // // Confirm masses have been read correctly (since verbose output of urdf reader is incorrect):
+    // for(int i = 0; i < Pupper_.mBodies.size(); i++)
+    //     cout << "Body " << Pupper_.GetBodyName(i) << " mass: "<< Pupper_.mBodies[i].mMass << endl;
+    // // Confirm intertias have been read correctly:
+    // for(int i = 0; i < Pupper_.mBodies.size(); i++)
+    //     cout << "Body " << Pupper_.GetBodyName(i) << " inertia: \n"<< Pupper_.mBodies[i].mInertia.format(f) << endl;
+
     //Test
     array<bool, 4> feet_in_contact = {1,1,1,1};
     setContacts(feet_in_contact);
@@ -66,30 +73,47 @@ void PupperWBC::setContacts(const array<bool, 4> feet_in_contact){
     
     //feet_in_contact is a boolean mask with the order:
     // [back left, back right, front left, front right]
-    if (feet_in_contact[0] == true){
-        //const char* body_name = "back_lower_left_link";
-        uint back_lower_left_link_id = Pupper_.GetBodyId("back_lower_left_link");
-        uint back_lower_right_link_id = Pupper_.GetBodyId("back_lower_right_link");
-        uint front_lower_left_link_id = Pupper_.GetBodyId("front_lower_left_link");
-        uint front_lower_right_link_id = Pupper_.GetBodyId("front_lower_right_link");
+    uint back_lower_left_link_id = Pupper_.GetBodyId("back_lower_left_link");
+    uint back_lower_right_link_id = Pupper_.GetBodyId("back_lower_right_link");
+    uint front_lower_left_link_id = Pupper_.GetBodyId("front_lower_left_link");
+    uint front_lower_right_link_id = Pupper_.GetBodyId("front_lower_right_link");
 
-        const Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
-        const Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
-        // Contact normal direction in base coordinates
-        const Math::Vector3d world_normal(0.0, 0.0, 1.0); // TODO: modify based on orientation data
-        const char* constraint_name = "lower_left_contact";
-        
-        pup_constraints_.AddContactConstraint(back_lower_left_link_id, body_contact_point_left, world_normal, "back_left_contact");
-        pup_constraints_.AddContactConstraint(back_lower_right_link_id, body_contact_point_right, world_normal, "back_right_contact");
-        pup_constraints_.AddContactConstraint(front_lower_left_link_id, body_contact_point_left, world_normal, "front_left_contact");
-        pup_constraints_.AddContactConstraint(front_lower_right_link_id, body_contact_point_right, world_normal, "front_right_contact");
-    }
+    const Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
+    const Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
+    // Contact normal direction in base coordinates
+    const Math::Vector3d world_normal(0.0, 0.0, 1.0); // TODO: modify based on orientation data
+    const char* constraint_name = "lower_left_contact";
+    
+    pup_constraints_.AddContactConstraint(back_lower_left_link_id, body_contact_point_left, world_normal, "back_left_contact");
+    pup_constraints_.AddContactConstraint(back_lower_right_link_id, body_contact_point_right, world_normal, "back_right_contact");
+    pup_constraints_.AddContactConstraint(front_lower_left_link_id, body_contact_point_left, world_normal, "front_left_contact");
+    pup_constraints_.AddContactConstraint(front_lower_right_link_id, body_contact_point_right, world_normal, "front_right_contact");
+
     cout << "CONTACTS ADDED" << endl;
-    pup_constraints_.Bind(Pupper_); // Not sure if we need to bind for what we're doing 
+    pup_constraints_.Bind(Pupper_);
+    cout << "CONSTRAINTS BOUND" << endl;
     // Test
+    //            // X,Y,Z, Q1,Q2,Q3,Q4, BL1,BL2,BL3, BR1,BR2,BR3, FL1,FL2,FL3, FR1,FR2,FR3
+    joint_angles_ << 0,0,0,   0,0,0,1,    0, .3, 0,     0, 0, 0,    0, 0, 0,     0, 0, 0; 
+    cout << "JOINT ANGLES INIT: \n" << joint_angles_.transpose().format(f) << endl;
+    
+    Math::Vector3d p_contact_in_base = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, back_lower_left_link_id, body_contact_point_left, false);
+    cout << "Contact BL3 in base coord: \n" << p_contact_in_base.transpose().format(f) << endl;
+    
+    uint bottom_PCB_id = Pupper_.GetBodyId("bottom_PCB"); 
+    const Math::Vector3d bottom_pcb_point(0., 0., 0.);
+    Math::Vector3d p_bottom_pcb_in_base = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, bottom_PCB_id, bottom_pcb_point, false);
+    cout << "Bottom pcb in base coord: \n" << p_bottom_pcb_in_base.transpose().format(f) << endl;
+
     MatrixNd J_constraints = Eigen::MatrixXd::Zero(4, Pupper_.qdot_size);
     CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, J_constraints);
-    cout << "Jacobian for constraints is: \n" << J_constraints.format(f) << endl;
+    cout << "JACOBIAN CALCULATED" << endl;
+    cout << "Jacobian for constraints is: \n" << J_constraints.transpose().format(f) << endl;
+
+    if (feet_in_contact[0] == true){
+        // Return only rows of jacobian for feet in contact
+    }
+
 }
 
 // Retrieve body Jacobian
