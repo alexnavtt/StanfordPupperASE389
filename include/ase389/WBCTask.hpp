@@ -2,23 +2,19 @@
 #define WBCTASK_HH_
 
 #include <vector>
+#include <string>
+#include <array>
 
-struct Task{
-    // Default constructor
-    Task(){
-        active_tasks = std::vector<bool>(joint_count + 6, false);
-        tasks = std::vector<float>(joint_count + 6, 0);
-    }
-    
-    // A list of all targets for the robot state vector in the form
-    // V = {xCOM_pos, xCOM_rot, alphaCOM, betaCOM, gammaCOM, q0, q1, q2, ... , qn}
-    std::vector<float> tasks;
-    
-    // Which of the setpoints are active for this task definition
-    std::vector<bool> active_tasks;
-    
-    // Number of joints in the robot
-    static int joint_count;
+struct Task{    
+    // Which body this task is for (use JOINT for a joint position task)
+    std::string body_id;
+
+    // What type of task is this (body_pos, body_ori, or joint_pos)
+    std::string type;
+
+    // The desired task goal and which to consider for this task
+    std::vector<bool> active_targets;
+    std::vector<float> targets;
 };
 
 #endif

@@ -24,7 +24,7 @@ public:
                           const std::array<float, NUM_JOINTS>& joint_torques);
 
     // Add a task to the robot's task list
-    void addTask(unsigned priority, std::string name, Task task);
+    void addTask(unsigned priority, std::string name, Task* task);
 
     // Load the Pupper model from a URDF
     void Load(std::string filename);
@@ -36,10 +36,11 @@ public:
     std::array<float, 12> calculateOutputTorque();
 
 private:
+    // The Pupper model for RBDL
     RigidBodyDynamics::Model Pupper_;
 
     // Retrieve the body COM Jacobian
-    RigidBodyDynamics::Math::MatrixNd getBodyJacobian_();
+    RigidBodyDynamics::Math::MatrixNd getBodyJacobian_(std::string body_id);
 
     // Retrieve the task Jacobian for specific task
     RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(std::string task_name);
@@ -62,7 +63,7 @@ private:
     Eigen::Quaternion<float> robot_orientation_;
 
     // Map of robot tasks organized by name
-    std::vector<Task> robot_tasks_;
+    std::vector<Task*> robot_tasks_;
     std::unordered_map<std::string, unsigned> task_indices_;
 
     // Joint selection matrix (takes the form [0_6, I_12]^T)
