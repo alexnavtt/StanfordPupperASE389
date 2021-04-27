@@ -27,20 +27,20 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     model_ = _model;
 
     // Get the individual leg joints
-    front_left_joints_[0]  = model_->GetJoint("front_left_shoulder_1_joint");
-    front_left_joints_[1]  = model_->GetJoint("front_left_shoulder_2_joint");
+    front_left_joints_[0]  = model_->GetJoint("front_left_hip_joint");
+    front_left_joints_[1]  = model_->GetJoint("front_left_shoulder_joint");
     front_left_joints_[2]  = model_->GetJoint("front_left_elbow_joint");
 
-    front_right_joints_[0] = model_->GetJoint("front_right_shoulder_1_joint");
-    front_right_joints_[1] = model_->GetJoint("front_right_shoulder_2_joint");
+    front_right_joints_[0] = model_->GetJoint("front_right_hip_joint");
+    front_right_joints_[1] = model_->GetJoint("front_right_shoulder_joint");
     front_right_joints_[2] = model_->GetJoint("front_right_elbow_joint");
 
-    back_right_joints_[0]  = model_->GetJoint("back_right_shoulder_1_joint");
-    back_right_joints_[1]  = model_->GetJoint("back_right_shoulder_2_joint");
+    back_right_joints_[0]  = model_->GetJoint("back_right_hip_joint");
+    back_right_joints_[1]  = model_->GetJoint("back_right_shoulder_joint");
     back_right_joints_[2]  = model_->GetJoint("back_right_elbow_joint");
 
-    back_left_joints_[0]   = model_->GetJoint("back_left_shoulder_1_joint");
-    back_left_joints_[1]   = model_->GetJoint("back_left_shoulder_2_joint");
+    back_left_joints_[0]   = model_->GetJoint("back_left_hip_joint");
+    back_left_joints_[1]   = model_->GetJoint("back_left_shoulder_joint");
     back_left_joints_[2]   = model_->GetJoint("back_left_elbow_joint");
 
     // Also collect all joints into a single array

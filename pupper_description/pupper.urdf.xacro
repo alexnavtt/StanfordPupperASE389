@@ -2,8 +2,13 @@
 
 <robot name = "pupper" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:include filename = "$(find ase389)/pupper_description/motor.xacro"/>
+    <xacro:property name = "full_urdf" value = "true"/>
+
+    <xacro:if value = "${full_urdf}">
     <xacro:include filename = "$(find ase389)/pupper_description/colors.xacro"/>
+    </xacro:if>
+
+    <xacro:include filename = "$(find ase389)/pupper_description/motor.xacro"/>
     <xacro:include filename = "$(find ase389)/pupper_description/left_leg.xacro"/>
     <xacro:include filename = "$(find ase389)/pupper_description/right_leg.xacro"/>
 
@@ -59,6 +64,7 @@
             <xacro:scaleInertia ixx = "41.05" iyy = "4.405" izz = "45.448" scaling_factor = "${inch2meter}"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual name = "bottom_PCB_visual">
             <geometry>
                 <mesh filename = "${VisualPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
@@ -70,6 +76,7 @@
                 <mesh filename = "${CollisionPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
             </geometry>
         </collision>
+        </xacro:if>
     </link>
 
     <!-- Create Front bulkhead -->
@@ -79,6 +86,7 @@
             <xacro:scaleInertia ixx = "27491730" iyy = "74592784" izz = "83928296"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual>
             <material name = "red"/>
             <geometry>
@@ -91,6 +99,7 @@
                 <mesh filename = "${CollisionPath}/Body/part1_frontbulkhead_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
         </collision>
+        </xacro:if>
     </link>
 
     <!-- Join Front Bulkhead with Base -->
@@ -107,6 +116,7 @@
             <xacro:scaleInertia ixx = "22996456" iyy = "51008240" izz = "73639128"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual name = "middle_bulkhead_front_visual">
             <material name = "blue"/>
             <geometry>
@@ -119,6 +129,7 @@
                 <mesh filename = "${CollisionPath}/Body/part2_middlebulkhead1_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
         </collision>
+        </xacro:if>
     </link>
 
     <!-- Join Middle Bulkhead to Base -->
@@ -135,6 +146,7 @@
             <xacro:scaleInertia ixx = "21912060" iyy = "40583024" izz = "62043808"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual name = "middle_bulkhead_rear_visual">
             <material name = "blue"/>
             <geometry>
@@ -147,6 +159,7 @@
                 <mesh filename = "${CollisionPath}/Body/part3_middlebulkhead2_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
         </collision>
+        </xacro:if>
     </link>
 
     <!-- Join 2nd Bulkhead to Base -->
@@ -163,6 +176,7 @@
             <xacro:scaleInertia ixx = "30641556" iyy = "21280556" izz = "10692993"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual name = "back_right_shroud_visual">
             <material name = "yellow"/>
             <geometry>
@@ -175,6 +189,7 @@
                 <mesh filename = "${CollisionPath}/Body/part4_rightshroud_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
         </collision>
+        </xacro:if>
     </link>
 
     <!-- Connect back right shroud to body -->
@@ -191,6 +206,7 @@
             <xacro:scaleInertia ixx = "30641502" iyy = "21280568" izz = "10692940"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual name = "back_left_shroud_visual">
             <material name = "yellow"/>
             <geometry>
@@ -203,7 +219,8 @@
             <geometry>
                 <mesh filename = "${CollisionPath}/Body/part5_leftshroud_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
-        </collision>     
+        </collision>   
+        </xacro:if>  
     </link>
 
     <!-- Join back left shroud to body -->
@@ -220,6 +237,7 @@
             <xacro:scaleInertia ixx = "23357426" iyy = "52151916" iyz = "-17892" izz = "75135296"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual>
             <material name = "blue"/>
             <geometry>
@@ -232,6 +250,7 @@
                 <mesh filename = "${CollisionPath}/Body/part6_rearbulkhead_simplified.dae" scale = "${meshScale_mm}"/>
             </geometry>
         </collision>
+        </xacro:if>
     </link>
 
     <!-- Join rear bulkhead to body -->
@@ -255,12 +274,14 @@
                      izz = "${1/12 * batt_m * (batt_x**2 + batt_y**2)}"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual name = "battery_visual">
             <material name = "pink"/>
             <geometry>
                 <box size = "${batt_x} ${batt_y} ${batt_z}"/>
             </geometry>
         </visual>
+        </xacro:if>
     </link>
 
     <!-- Connect battery to body -->
@@ -277,6 +298,7 @@
             <xacro:scaleInertia ixx = "41.05" iyy = "4.405" izz = "45.448" scaling_factor = "${inch2meter}"/>
         </inertial>
 
+        <xacro:if value = "${full_urdf}">
         <visual name = "top_PCB_visual">
             <geometry>
                 <mesh filename = "${VisualPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
@@ -288,6 +310,7 @@
                 <mesh filename = "${CollisionPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
             </geometry>
         </collision>
+        </xacro:if>
     </link>
 
     <!-- Joint top plate to body -->
