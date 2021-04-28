@@ -36,7 +36,7 @@ public:
     // Get the torque command fulfilling the current tasks
     std::array<float, 12> calculateOutputTorque();
 
-private:
+// private:
     // The Pupper model for RBDL
     RigidBodyDynamics::Model Pupper_;
     // Pupper constraints struct for RBDL
