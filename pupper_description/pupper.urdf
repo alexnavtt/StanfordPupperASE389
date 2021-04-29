@@ -326,17 +326,6 @@
       </geometry>
     </collision>
   </link>
-  <gazebo reference="front_left_lower_link">
-    <collision name="front_left_lower_link_collision">
-      <surface>
-        <contact>
-          <ode>
-            <min_depth>0.01</min_depth>
-          </ode>
-        </contact>
-      </surface>
-    </collision>
-  </gazebo>
   <!-- Connect foot pad to lower link -->
   <joint name="front_left_foot_joint" type="fixed">
     <parent link="front_left_lower_link"/>
@@ -582,17 +571,6 @@
       </geometry>
     </collision>
   </link>
-  <gazebo reference="back_left_lower_link">
-    <collision name="back_left_lower_link_collision">
-      <surface>
-        <contact>
-          <ode>
-            <min_depth>0.01</min_depth>
-          </ode>
-        </contact>
-      </surface>
-    </collision>
-  </gazebo>
   <!-- Connect foot pad to lower link -->
   <joint name="back_left_foot_joint" type="fixed">
     <parent link="back_left_lower_link"/>
@@ -838,17 +816,6 @@
       </geometry>
     </collision>
   </link>
-  <gazebo reference="front_right_lower_link">
-    <collision name="front_right_lower_link_collision">
-      <surface>
-        <contact>
-          <ode>
-            <min_depth>0.01</min_depth>
-          </ode>
-        </contact>
-      </surface>
-    </collision>
-  </gazebo>
   <!-- Connect foot pad to lower link -->
   <joint name="front_right_foot_joint" type="fixed">
     <parent link="front_right_lower_link"/>
@@ -1094,17 +1061,6 @@
       </geometry>
     </collision>
   </link>
-  <gazebo reference="back_right_lower_link">
-    <collision name="back_right_lower_link_collision">
-      <surface>
-        <contact>
-          <ode>
-            <min_depth>0.01</min_depth>
-          </ode>
-        </contact>
-      </surface>
-    </collision>
-  </gazebo>
   <!-- Connect foot pad to lower link -->
   <joint name="back_right_foot_joint" type="fixed">
     <parent link="back_right_lower_link"/>

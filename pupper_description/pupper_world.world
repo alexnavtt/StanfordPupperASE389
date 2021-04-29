@@ -1,5 +1,5 @@
 <sdf version="1.6">
-    <world name="preset_example">
+    <world name="pupper_world">
         <include>
             <uri>model://sun</uri>
         </include>

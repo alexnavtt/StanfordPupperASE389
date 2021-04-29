@@ -4,7 +4,9 @@
 
 using std::cout;
 using std::endl;
+using std::array;
 using std::vector;
+using std::string;
 
 static double angleDiff(double angle1, double angle2){
     return fmod(angle1 - angle2 + M_PI, 2*M_PI) - M_PI;
@@ -12,6 +14,12 @@ static double angleDiff(double angle1, double angle2){
 
 namespace gazebo
 {
+
+// Constructor
+PupperPlugin::PupperPlugin(){
+    // Set contacts to false by default
+    std::fill(feet_in_contact_.begin(), feet_in_contact_.end(), false);
+}
 
 // Load the model
 void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -61,6 +69,13 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     // Set up update rate variables
     update_interval_  = common::Time(0, common::Time::SecToNano(0.02));  // In the form common::Time(sec, nanoSec): 50Hz
     last_update_time_ = common::Time::GetWallTime();
+
+    // Set up the connection to Gazebo topics
+    connection_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
+
+    // Set up the contact manager
+    connection_node_->Init("pupper_world");
+    contact_sub_ = connection_node_->Subscribe("~/physics/contacts", &PupperPlugin::contactCallback_, this);
 }
 
 
@@ -146,6 +161,32 @@ void PupperPlugin::onUpdate(){
     }
 
     applyTorques_();
+}
+
+void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
+
+    static const array<string,4> collision_names = {
+        "pupper::front_left_lower_link:",
+        "pupper::front_right_lower_link",
+        "pupper::back_right_lower_link:",
+        "pupper::back_left_lower_link::"
+    };
+
+    std::fill(feet_in_contact_.begin(), feet_in_contact_.end(), false);
+    for (auto C : _msg->contact()){
+        if (C.has_collision1())
+            for (size_t i = 0; i < 4; i++)
+                if (collision_names[i] == C.collision1().substr(0, 30))
+                    feet_in_contact_[i] = true;
+    }
+
+    // Debug: print contacts in order (FL, FR, BR, BL)
+    // cout << "{";
+    // for (bool b : feet_in_contact_){
+    //     cout << b << ", ";
+    // }
+    // cout << "}" << endl;
+
 }
 
 // Tell Gazebo about this plugin, so that Gazebo can call Load on this plugin.

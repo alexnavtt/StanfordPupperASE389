@@ -27,10 +27,10 @@ class PupperPlugin : public ModelPlugin
 {
 public:
     //Constructor
-    PupperPlugin(){}
+    PupperPlugin();
 
-    //Destructor
-    virtual ~PupperPlugin(){}
+    // Destructor
+    virtual ~PupperPlugin(){gazebo::transport::fini();}
 
     // Load function - Called on model creation and is used for setup and initialization
     virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
@@ -49,17 +49,24 @@ public:
     void setJointPositions(std::vector<float> angles);
 
 private:
+    // Model
     physics::ModelPtr model_;                    // Pointer to the model in Gazebo
     physics::JointPtr front_left_joints_[3];     // Array of joints on the front left leg
     physics::JointPtr front_right_joints_[3];    // Array of joints on the front right leg
     physics::JointPtr back_left_joints_[3];      // Array of joints on the back left leg
     physics::JointPtr back_right_joints_[3];     // Array of joints on the back right leg
     physics::JointPtr all_joints_[12];
-    event::ConnectionPtr updateConnection_;      // Event connection between the Gazebo simulation and this plugin
+    std::array<bool, 4> feet_in_contact_;
 
+    // Gazebo connections
+    event::ConnectionPtr updateConnection_;        // Event connection between the Gazebo simulation and this plugin
+    gazebo::transport::NodePtr connection_node_;   // Subscribes to gazebo update topics (used for contacts)
+    gazebo::transport::SubscriberPtr contact_sub_; // Used to subscribe to a specific topic
+    void contactCallback_(ConstContactsPtr &_msg);
+
+    // Control
     common::Time last_update_time_;             // Used to keep track of update rate
     common::Time update_interval_;              // Seconds between each control update loop
-
     std::array<double, 12> control_torques_;
     void applyTorques_();
 };
