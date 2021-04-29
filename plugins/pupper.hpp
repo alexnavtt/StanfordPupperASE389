@@ -11,6 +11,8 @@
 #include "ros/subscribe_options.h"
 #include "ros/advertise_options.h"
 
+#include "Eigen/Dense"
+
 #include "ase389/PupperWBC.hpp"
 
 namespace gazebo{
@@ -38,14 +40,11 @@ public:
     // Called on every timestep of the simulation (control code goes here)
     void onUpdate();
 
-    // Retrieve whatever data from these joints as we would actually get from the motors
-    std::vector<float> getJointFeedback();
-
     // Apply command to the joints as we would actually do on the robot
     void controlJoints(enum PupperLegs leg, std::vector<float> torques);
-
     void controlAllJoints(std::vector<float> torques);
 
+    // Debug function
     void setJointPositions(std::vector<float> angles);
 
 private:
@@ -64,10 +63,20 @@ private:
     gazebo::transport::SubscriberPtr contact_sub_; // Used to subscribe to a specific topic
     void contactCallback_(ConstContactsPtr &_msg);
 
+    // Robot State
+    std::array<float, ROBOT_NUM_JOINTS> joint_positions_;
+    std::array<float, ROBOT_NUM_JOINTS> joint_velocities_;
+    std::array<float, 3> body_COM_;
+    Eigen::Quaternion<float> body_quat_;
+    void updateJoints_();
+    void updateBody_();
+
     // Control
+    PupperWBC WBC_;
     common::Time last_update_time_;             // Used to keep track of update rate
     common::Time update_interval_;              // Seconds between each control update loop
-    std::array<double, 12> control_torques_;
+    std::array<float, ROBOT_NUM_JOINTS> control_torques_;
+    void updateController_();
     void applyTorques_();
 };
 

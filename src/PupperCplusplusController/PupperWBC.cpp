@@ -18,19 +18,18 @@ static Eigen::IOFormat f(3);
 PupperWBC::PupperWBC(){
     joint_angles_     = VectorNd::Zero(NUM_Q);
     joint_velocities_ = VectorNd::Zero(NUM_JOINTS);
-    joint_torques_    = VectorNd::Zero(NUM_JOINTS);
-    
+    control_torques_  = VectorNd::Zero(NUM_JOINTS);
 }
 
-void PupperWBC::updateController(const array<float, NUM_Q>& joint_angles, 
-                                 const array<float, NUM_JOINTS>& joint_velocities,
-                                 const array<float, NUM_JOINTS>& joint_torques)
-{
-    for (int i = 0; i < NUM_JOINTS; i++){
-        joint_angles_[i]     = joint_angles[i];
-        joint_velocities_[i] = joint_velocities[i];
-        joint_torques_[i]    = joint_torques[i];
+void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_angles, 
+                                 const array<float, ROBOT_NUM_JOINTS>& joint_velocities,
+                                 const Eigen::Quaternion<float>& body_quaternion){
+    for (int i = 0; i < ROBOT_NUM_JOINTS; i++){
+        joint_angles_[i+7]     = joint_angles[i];
+        joint_velocities_[i+6] = joint_velocities[i];
     }
+
+    robot_orientation_ = body_quaternion;
 }
 
 void PupperWBC::addTask(unsigned priority, string name, Task* T){

@@ -15,11 +15,22 @@ static double angleDiff(double angle1, double angle2){
 namespace gazebo
 {
 
+// =========================================================================================
+// -----------------------------------       INIT       ------------------------------------
+// =========================================================================================
+
 // Constructor
 PupperPlugin::PupperPlugin(){
     // Set contacts to false by default
     std::fill(feet_in_contact_.begin(), feet_in_contact_.end(), false);
+
+    // Initialize the COM quaternion as identity
+    body_quat_ = Eigen::Quaternion<float>::Identity();
+
+    // Load the pupper dynamic model controller
+    WBC_.Load("");
 }
+
 
 // Load the model
 void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -72,12 +83,45 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     // Set up the connection to Gazebo topics
     connection_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
-
-    // Set up the contact manager
     connection_node_->Init("pupper_world");
     contact_sub_ = connection_node_->Subscribe("~/physics/contacts", &PupperPlugin::contactCallback_, this);
 }
 
+
+
+
+// =========================================================================================
+// ---------------------------------       MAIN LOOP       ---------------------------------
+// =========================================================================================
+
+// Called on every simulation time step
+void PupperPlugin::onUpdate(){
+    static vector<float> test_angles = {-0.1,  M_PI_4,  M_PI_2, 
+                                         0.1, -M_PI_4, -M_PI_2,
+                                         0.1, -M_PI_4, -M_PI_2,
+                                        -0.1,  M_PI_4,  M_PI_2};
+
+    //Manage publisher update rate
+    if (common::Time::GetWallTime() - last_update_time_ > update_interval_){
+        updateBody_();
+        updateJoints_();
+        updateController_();
+        setJointPositions(test_angles);
+        last_update_time_ = common::Time::GetWallTime();
+    }
+
+    // This needs to be outside the loop or else the joints will go dead on non-update iterations
+    applyTorques_();
+}
+
+
+
+
+
+
+// =========================================================================================
+// ----------------------------       CONTROL SIMULATION       -----------------------------
+// =========================================================================================
 
 // Control the joints on one leg
 void PupperPlugin::controlJoints(enum PupperLegs leg, vector<float> torques){
@@ -126,18 +170,6 @@ void PupperPlugin::setJointPositions(vector<float> angles){
 }
 
 
-// Get torque measurements from the joints
-vector<float> PupperPlugin::getJointFeedback(){
-    vector<float> joint_torques(12);
-
-    for (uint8_t i = 0; i < 12; i++){
-        physics::JointWrench joint_wrench = all_joints_[i]->GetForceTorque(0);
-        joint_torques[i] = (float)joint_wrench.body1Torque.Z();
-    }
-
-    return joint_torques;        
-}
-
 // Update the simulation with the current control torques
 void PupperPlugin::applyTorques_(){
     for (int i = 0; i < 12; i++){
@@ -145,23 +177,49 @@ void PupperPlugin::applyTorques_(){
     }
 }
 
-// Called on every simulation time step
-void PupperPlugin::onUpdate(){
-    static vector<float> test_angles = {-0.1,  M_PI_4,  M_PI_2, 
-                                         0.1, -M_PI_4, -M_PI_2,
-                                         0.1, -M_PI_4, -M_PI_2,
-                                        -0.1,  M_PI_4,  M_PI_2};
 
-    //Manage publisher update rate
-    if (common::Time::GetWallTime() - last_update_time_ > update_interval_)
-    {
-        getJointFeedback();
-        setJointPositions(test_angles);
-        last_update_time_ = common::Time::GetWallTime();
+// =========================================================================================
+// ----------------------------       UPDATE INFORMATION       -----------------------------
+// =========================================================================================
+
+
+// Get torque measurements from the joints
+void PupperPlugin::updateJoints_(){
+    for (uint8_t i = 0; i < 12; i++){
+        joint_positions_[i] = (float) all_joints_[i]->Position();
+        joint_velocities_[i] = (float) all_joints_[i]->GetVelocity(0);
+        // physics::JointWrench joint_wrench = all_joints_[i]->GetForceTorque(0);
+        // joint_torques[i] = (float)joint_wrench.body1Torque.Z();
     }
-
-    applyTorques_();
 }
+
+// Update the body center of mass position and orienation
+void PupperPlugin::updateBody_(){
+    auto body_pose = model_->WorldPose();
+
+    body_COM_[0] = body_pose.Pos().X();
+    body_COM_[1] = body_pose.Pos().Y();
+    body_COM_[2] = body_pose.Pos().Z();
+
+    body_quat_.x() = body_pose.Rot().X();
+    body_quat_.y() = body_pose.Rot().Y();
+    body_quat_.z() = body_pose.Rot().Z();
+    body_quat_.w() = body_pose.Rot().W();
+
+    auto q = body_pose.Rot();
+}
+
+// Tell the controller the current state of the robot
+void PupperPlugin::updateController_(){
+    WBC_.updateController(joint_positions_, joint_velocities_, body_quat_);
+}
+
+
+
+
+// =========================================================================================
+// ----------------------------       SUBSCRIBER CALLBACK       ----------------------------
+// =========================================================================================
 
 void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
 

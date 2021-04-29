@@ -11,6 +11,7 @@
 #include "ase389/WBCTask.hpp"
 #include "rbdl/rbdl.h"
 
+#define ROBOT_NUM_JOINTS 12
 #define NUM_JOINTS 18   // 12 motors plus 6 floating base joints
 #define NUM_Q 19        // 12 motors plus 3 xyz plus 4 quaternion, refer to: https://rbdl.github.io/df/dbe/joint_description.html
 
@@ -20,9 +21,9 @@ public:
     PupperWBC();
 
     // Take in the current robot data
-    void updateController(const std::array<float, NUM_Q>& joint_angles, 
-                          const std::array<float, NUM_JOINTS>& joint_velocities,
-                          const std::array<float, NUM_JOINTS>& joint_torques);
+    void updateController(const std::array<float, ROBOT_NUM_JOINTS>& joint_angles, 
+                          const std::array<float, ROBOT_NUM_JOINTS>& joint_velocities,
+                          const Eigen::Quaternion<float>& body_quaternion);
 
     // Add a task to the robot's task list
     void addTask(unsigned priority, std::string name, Task* task);
@@ -59,8 +60,8 @@ public:
     // Joint velocities in rad/s
     RigidBodyDynamics::Math::VectorNd joint_velocities_;
 
-    // Joint torques in Nm
-    RigidBodyDynamics::Math::VectorNd joint_torques_;
+    // Control torques in Nm
+    RigidBodyDynamics::Math::VectorNd control_torques_;
 
     // Robot orientation from IMU (Quaternion)
     Eigen::Quaternion<float> robot_orientation_;
