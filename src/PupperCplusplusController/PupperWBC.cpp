@@ -93,8 +93,8 @@ void PupperWBC::setContacts(const array<bool, 4> feet_in_contact){
     pup_constraints_.Bind(Pupper_);
     cout << "CONSTRAINTS BOUND" << endl;
     // Test
-    //            // X,Y,Z, Q1,Q2,Q3,Q4, BL1,BL2,BL3, BR1,BR2,BR3, FL1,FL2,FL3, FR1,FR2,FR3
-    joint_angles_ << 0,0,0,   0,0,0,1,    0, .3, 0,     0, 0, 0,    0, 0, 0,     0, 0, 0; 
+    //            // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3, BR1,BR2,BR3, FL1,FL2,FL3,  FR1,FR2,FR3, Q4
+    joint_angles_ << 0,0,0,   0,0,0,1,    0, 0, 0,     0, 0, 0,    0, 0, 0,     0, 0, 0; 
     cout << "JOINT ANGLES INIT: \n" << joint_angles_.transpose().format(f) << endl;
     
     Math::Vector3d p_contact_in_base = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, back_lower_left_link_id, body_contact_point_left, false);
