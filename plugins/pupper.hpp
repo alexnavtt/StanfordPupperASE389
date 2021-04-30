@@ -6,11 +6,6 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
-#include "ros/ros.h"
-#include "ros/callback_queue.h"
-#include "ros/subscribe_options.h"
-#include "ros/advertise_options.h"
-
 #include "Eigen/Dense"
 
 #include "ase389/PupperWBC.hpp"
