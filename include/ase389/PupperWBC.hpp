@@ -64,7 +64,7 @@ public:
     RigidBodyDynamics::Math::VectorNd control_torques_;
 
     // Robot orientation from IMU (Quaternion)
-    Eigen::Quaternion<float> robot_orientation_;
+    RigidBodyDynamics::Math::Quaternion robot_orientation_;
 
     // Map of robot tasks organized by name
     std::vector<Task*> robot_tasks_;

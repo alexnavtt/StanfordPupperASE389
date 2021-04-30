@@ -21,17 +21,24 @@ PupperWBC::PupperWBC(){
     control_torques_  = VectorNd::Zero(NUM_JOINTS);
 }
 
+// Update the controller with the current state of the robot
 void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_angles, 
                                  const array<float, ROBOT_NUM_JOINTS>& joint_velocities,
                                  const Eigen::Quaternion<float>& body_quaternion){
     for (int i = 0; i < ROBOT_NUM_JOINTS; i++){
-        joint_angles_[i+7]     = joint_angles[i];
+        joint_angles_[i+6]     = joint_angles[i];
         joint_velocities_[i+6] = joint_velocities[i];
     }
 
-    robot_orientation_ = body_quaternion;
+    robot_orientation_.w() = body_quaternion.w();
+    robot_orientation_.x() = body_quaternion.x();
+    robot_orientation_.y() = body_quaternion.y();
+    robot_orientation_.z() = body_quaternion.z();
+
+    Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
 }
 
+// Add a task to the IHWBC controller
 void PupperWBC::addTask(unsigned priority, string name, Task* T){
     if (robot_tasks_.size() <= priority){
         robot_tasks_.resize(priority + 1);
@@ -118,14 +125,10 @@ void PupperWBC::setContacts(const array<bool, 4> feet_in_contact){
 // Retrieve body Jacobian
 MatrixNd PupperWBC::getBodyJacobian_(string body_id) {
     // Create output
-    MatrixNd J = Eigen::MatrixXd::Zero(6, Pupper_.qdot_size);
-    printf("\n\nBody Jacobian Test:\n");
+    MatrixNd J = MatrixNd::Zero(6, Pupper_.qdot_size);
 
     // Fill the Jacobian matrix
-    ConstraintSet s;
     CalcBodySpatialJacobian(Pupper_, joint_angles_, Pupper_.GetBodyId(body_id.c_str()), J, true);
-    cout << "Jacobian for \"" << body_id << "\" is: \n" << J.transpose().format(f) << endl;
-
     return J;
 }
 
