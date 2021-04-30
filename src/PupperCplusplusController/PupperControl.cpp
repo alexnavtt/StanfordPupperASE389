@@ -15,6 +15,7 @@ int main(int argc, char** argv){
     Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.type    = "body_pos";
+    CoM_Position_Task.task_weight = 1;
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
     CoM_Position_Task.targets = {0.10};
 
@@ -22,11 +23,13 @@ int main(int argc, char** argv){
     Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.type    = "body_ori";
+    CoM_Orientation_Task.task_weight = 1;
     CoM_Orientation_Task.targets = {0, 0, 0, 1};    // identity quaternion 
 
     // Add the task with priority 0 (highest)
     Pup.addTask(0, "COM_pos", &CoM_Position_Task);
     Pup.addTask(1, "COM_ori", &CoM_Orientation_Task);
+    
     //                // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3,    BR1,BR2,BR3,      FL1,FL2,FL3,      FR1,FR2,FR3     Q4
     Pup.joint_angles_ << 0,0,0,   .7071068,.7071068,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     RigidBodyDynamics::Math::MatrixNd G = RigidBodyDynamics::Math::MatrixNd::Zero(3, Pup.Pupper_.qdot_size);

@@ -12,6 +12,9 @@ struct Task{
     // What type of task is this (body_pos, body_ori, or joint_pos)
     std::string type;
 
+    // The weight to be used in IHWBC
+    float task_weight;
+
     // The desired task goal and which to consider for this task
     std::vector<bool> active_targets;
     std::vector<float> targets;
