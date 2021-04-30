@@ -50,6 +50,9 @@ public:
     RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(std::string task_name);
     RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(unsigned priority);
 
+    // Retrieve the contact Jacobian for the active contacts
+    RigidBodyDynamics::Math::MatrixNd getContactJacobian_();
+
     // Retrieve the null space for a specific task
     RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(std::string task_name);
     RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(unsigned priority);
