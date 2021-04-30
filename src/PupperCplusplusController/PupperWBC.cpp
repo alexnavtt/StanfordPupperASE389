@@ -1,7 +1,6 @@
 #include <iostream>
 #include "ase389/PupperWBC.hpp"
 #include "rbdl/addons/urdfreader/urdfreader.h"
-#include "ase389/PupperUrdfString.hpp"
 
 using std::vector;
 using std::array;
@@ -26,6 +25,7 @@ void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_ang
                                  const array<float, ROBOT_NUM_JOINTS>& joint_velocities,
                                  const Eigen::Quaternion<float>& body_quaternion){
     for (int i = 0; i < ROBOT_NUM_JOINTS; i++){
+        // TODO: This indexing is still messed up
         joint_angles_[i+6]     = joint_angles[i];
         joint_velocities_[i+6] = joint_velocities[i];
     }
@@ -47,10 +47,9 @@ void PupperWBC::addTask(unsigned priority, string name, Task* T){
     task_indices_[name] = priority;
 }
 
-void PupperWBC::Load(string filename){
+void PupperWBC::Load(string urdf_file_string){
     // Load the model
-    //RigidBodyDynamics::Addons::URDFReadFromFile(filename.c_str(), &Pupper_, true, true);
-    RigidBodyDynamics::Addons::URDFReadFromString(pupper_urdf_string, &Pupper_, true, false);
+    RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, false);
 
     // Summarize model characteristics
     printf("Loaded model with %d DOFs\n", Pupper_.dof_count);

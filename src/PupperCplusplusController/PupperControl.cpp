@@ -1,5 +1,6 @@
 #include <iostream>
 #include "ase389/PupperWBC.hpp"
+#include "ase389/PupperUrdfString.hpp"
 
 using std::array;
 using std::cout;
@@ -9,7 +10,7 @@ static std::string urdf_relative_path = "pupper_description/pupper.urdf";
 
 int main(int argc, char** argv){
     PupperWBC Pup;
-    Pup.Load(urdf_relative_path);
+    Pup.Load(pupper_urdf_string);
 
     // Task for Body center of mass to be 10cm high
     Task CoM_Position_Task;
@@ -29,7 +30,7 @@ int main(int argc, char** argv){
     // Add the task with priority 0 (highest)
     Pup.addTask(0, "COM_pos", &CoM_Position_Task);
     Pup.addTask(1, "COM_ori", &CoM_Orientation_Task);
-    
+
     //                // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3,    BR1,BR2,BR3,      FL1,FL2,FL3,      FR1,FR2,FR3     Q4
     Pup.joint_angles_ << 0,0,0,   .7071068,.7071068,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     RigidBodyDynamics::Math::MatrixNd G = RigidBodyDynamics::Math::MatrixNd::Zero(3, Pup.Pupper_.qdot_size);

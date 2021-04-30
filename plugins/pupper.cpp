@@ -1,4 +1,5 @@
 #include "pupper.hpp"
+#include "ase389/PupperUrdfString.hpp"
 
 #include <iostream>
 
@@ -28,7 +29,7 @@ PupperPlugin::PupperPlugin(){
     body_quat_ = Eigen::Quaternion<float>::Identity();
 
     // Load the pupper dynamic model controller
-    WBC_.Load("");
+    WBC_.Load(pupper_urdf_string);
 }
 
 
