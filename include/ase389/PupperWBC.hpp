@@ -7,9 +7,10 @@
 #include <cstring>
 #include <unordered_map>
 
+#include "osqp.h"
+#include "rbdl/rbdl.h"
 #include "eigen3/Eigen/Dense"
 #include "ase389/WBCTask.hpp"
-#include "rbdl/rbdl.h"
 
 #define ROBOT_NUM_JOINTS 12
 #define NUM_JOINTS 18   // 12 motors plus 6 floating base joints
@@ -76,6 +77,11 @@ public:
     // Joint selection matrix (takes the form [0_6, I_12]^T)
     RigidBodyDynamics::Math::MatrixNd U_;
 
+    // OSQP Solver
+    std::unique_ptr<OSQPSettings> QP_settings_;
+    std::unique_ptr<OSQPData> QP_data_;
+    void convertEigenToCSC_(const RigidBodyDynamics::Math::MatrixNd &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i);
+    void testQPSolver();
 };
 
 #endif

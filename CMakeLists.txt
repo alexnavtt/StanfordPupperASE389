@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 # Non-ROS dependencies
 find_package(Eigen3 REQUIRED)
 find_package(RBDL COMPONENTS URDFReader REQUIRED)
+find_package(osqp REQUIRED)
 
 # Set all our include paths to a single variable INCLUDES for ease of access
 set(INCLUDES
@@ -32,10 +33,16 @@ catkin_package(
   DEPENDS RBDL Eigen3
 )
 
-# Create a library to be accesible to other packages
+# Create a library for our class to be accesible to other packages
 add_library(ase389 
   src/PupperCplusplusController/PupperWBC.cpp
 )
+
+# Link all necessary libraries to out library
+target_link_libraries(${PROJECT_NAME}
+  osqp::osqp 
+  ${RBDL_LIBRARY} 
+  ${RBDL_URDFReader_LIBRARY})
   
 # Specify include directories
 include_directories(
@@ -45,11 +52,5 @@ include_directories(
 # Create an executable file and link its dependencies
 add_executable(PupperController 
   src/PupperCplusplusController/PupperControl.cpp
-  src/PupperCplusplusController/PupperWBC.cpp
 )
-
-target_link_libraries(PupperController 
-  ${catkin_LIBRARIES} 
-  ${RBDL_LIBRARY}
-  ${RBDL_URDFReader_LIBRARY}
-)
+target_link_libraries(PupperController ${PROJECT_NAME})
