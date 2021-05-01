@@ -1,3 +1,4 @@
+#include <memory>
 #include <iostream>
 #include "ase389/PupperWBC.hpp"
 #include "rbdl/addons/urdfreader/urdfreader.h"
@@ -18,6 +19,11 @@ PupperWBC::PupperWBC(){
     joint_angles_     = VectorNd::Zero(NUM_Q);
     joint_velocities_ = VectorNd::Zero(NUM_JOINTS);
     control_torques_  = VectorNd::Zero(NUM_JOINTS);
+
+    QP_settings_ = std::make_unique<OSQPSettings>();
+    QP_data_     = std::make_unique<OSQPData>();
+
+    testQPSolver();
 }
 
 // Update the controller with the current state of the robot
@@ -187,4 +193,103 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     }
 
     return array<float,12>();
+}
+
+void PupperWBC::testQPSolver(){
+    // Load problem data
+    c_float P_x[3] = {4.0, 1.0, 2.0, };
+    c_int P_nnz = 3;
+    c_int P_i[3] = {0, 0, 1, };
+    c_int P_p[3] = {0, 1, 3, };
+    c_float q[2] = {1.0, 1.0, };
+    // c_float A_x[4] = {1.0, 1.0, 1.0, 1.0, };
+    // c_int A_nnz = 4;
+    // c_int A_i[4] = {0, 1, 0, 2, };
+    // c_int A_p[3] = {0, 2, 4, };
+    c_float l[3] = {1.0, 0.0, 0.0, };
+    c_float u[3] = {1.0, 0.7, 0.7, };
+    c_int n = 2;
+    c_int m = 3;
+
+    // Exitflag
+    c_int exitflag = 0;
+
+    // Workspace structures
+    OSQPWorkspace *work;
+    OSQPSettings  *settings = QP_settings_.get();
+    OSQPData      *data     = QP_data_.get();
+
+    MatrixNd A(3,2);
+    A << 1, 1, 1, 0, 0, 1;
+    vector<c_float> A_x;
+    vector<c_int> A_p, A_i;
+    convertEigenToCSC_(A, A_x, A_p, A_i);
+
+    // Populate data
+    if (data) {
+        data->n = n;
+        data->m = m;
+        data->P = csc_matrix(n, n, P_nnz, P_x, P_i, P_p);
+        data->q = q;
+        data->A = csc_matrix(m, n, A_p.back(), A_x.data(), A_i.data(), A_p.data());
+        data->l = l;
+        data->u = u;
+    }
+
+    // Define solver settings as default
+    if (settings) {
+        osqp_set_default_settings(settings);
+        settings->alpha = 1.0; // Change alpha parameter
+    }
+
+    // Setup workspace
+    exitflag = osqp_setup(&work, data, settings);
+
+    // Solve Problem
+    osqp_solve(work);
+
+    // Cleanup
+    if (data) {
+        if (data->A) c_free(data->A);
+        if (data->P) c_free(data->P);
+        c_free(data);
+    }
+    if (settings) c_free(settings);
+
+    cout << exitflag << endl;
+}
+
+void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vector<c_int> &P_p, vector<c_int> &P_i){
+    // Clear any existing data from the vectors
+    P_x.clear();
+    P_p.clear();
+    P_i.clear();
+    
+    const int num_rows = P.rows();
+    int num_non_zero = 0;
+    for (Eigen::Index c = 0; c < P.cols(); c++){
+        // Look through the matrix column by column
+        const double* col = P.col(c).data();
+        bool first_found = false;
+
+        // Iterate through the column to look for non-zero elements
+        for (int i = 0; i < num_rows; i++){
+            if (col[i] != 0){
+                num_non_zero++;
+
+                // Store the value of the element in P_x and its row index in P_i
+                P_x.push_back(col[i]);
+                P_i.push_back(i);
+
+                // If this is the first non-zero element, record that in the column pointer vector
+                if (!first_found){
+                    P_p.push_back(P_x.size()-1);
+                    first_found = true;
+                }
+            }
+        }
+    }
+
+    // Column pointer vector should have number of non-zero elements as its last element
+    P_p.push_back(num_non_zero);
 }
