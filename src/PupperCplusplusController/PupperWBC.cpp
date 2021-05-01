@@ -262,15 +262,16 @@ void PupperWBC::testQPSolver(){
 void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vector<c_int> &P_p, vector<c_int> &P_i){
     // Clear any existing data from the vectors
     P_x.clear();
-    P_p.clear();
     P_i.clear();
+
+    P_p.clear();
+    P_p.push_back(0);
     
     const int num_rows = P.rows();
     int num_non_zero = 0;
     for (Eigen::Index c = 0; c < P.cols(); c++){
         // Look through the matrix column by column
         const double* col = P.col(c).data();
-        bool first_found = false;
 
         // Iterate through the column to look for non-zero elements
         for (int i = 0; i < num_rows; i++){
@@ -280,16 +281,9 @@ void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vect
                 // Store the value of the element in P_x and its row index in P_i
                 P_x.push_back(col[i]);
                 P_i.push_back(i);
-
-                // If this is the first non-zero element, record that in the column pointer vector
-                if (!first_found){
-                    P_p.push_back(P_x.size()-1);
-                    first_found = true;
-                }
             }
         }
-    }
 
-    // Column pointer vector should have number of non-zero elements as its last element
-    P_p.push_back(num_non_zero);
+        P_p.push_back(P_x.size());
+    }
 }
