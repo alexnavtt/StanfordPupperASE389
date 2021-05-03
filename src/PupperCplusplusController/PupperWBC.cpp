@@ -37,7 +37,6 @@ void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_ang
                                  const array<float, ROBOT_NUM_JOINTS>& joint_velocities,
                                  const Eigen::Quaternion<float>& body_quaternion){
     for (int i = 0; i < ROBOT_NUM_JOINTS; i++){
-        // TODO: This indexing is still messed up
         joint_angles_[i+6]     = joint_angles[i];
         joint_velocities_[i+6] = joint_velocities[i];
     }
