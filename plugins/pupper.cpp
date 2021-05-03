@@ -65,10 +65,10 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     // Also collect all joints into a single array
     for (int i = 0; i < 3; i++){
+        all_joints_[i + 3*BACK_LEFT_LEG]   = back_left_joints_[i];
+        all_joints_[i + 3*BACK_RIGHT_LEG]  = back_right_joints_[i];
         all_joints_[i + 3*FRONT_LEFT_LEG]  = front_left_joints_[i];
         all_joints_[i + 3*FRONT_RIGHT_LEG] = front_right_joints_[i];
-        all_joints_[i + 3*BACK_RIGHT_LEG]  = back_right_joints_[i];
-        all_joints_[i + 3*BACK_LEFT_LEG]   = back_left_joints_[i];
     }
 
     for (int i = 0; i < 12; i++){
@@ -107,6 +107,7 @@ void PupperPlugin::onUpdate(){
         updateBody_();
         updateJoints_();
         updateController_();
+        // control_torques_ = WBC_.calculateOutputTorque();
         setJointPositions(test_angles);
         last_update_time_ = common::Time::GetWallTime();
     }

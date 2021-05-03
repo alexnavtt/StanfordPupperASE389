@@ -12,11 +12,12 @@
 
 namespace gazebo{
 
+// This order matches that of RBDL: it should not be changed
 enum PupperLegs{
+    BACK_LEFT_LEG,
+    BACK_RIGHT_LEG,
     FRONT_LEFT_LEG,
     FRONT_RIGHT_LEG,
-    BACK_RIGHT_LEG,
-    BACK_LEFT_LEG
 };
 
 //A plugin to control a the Stanford Pupper V3 robot
