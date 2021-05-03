@@ -23,7 +23,13 @@ PupperWBC::PupperWBC(){
     QP_settings_ = std::make_unique<OSQPSettings>();
     QP_data_     = std::make_unique<OSQPData>();
 
-    testQPSolver();
+    // Defaul to identity quaternion
+    robot_orientation_.x() = 0;
+    robot_orientation_.y() = 0;
+    robot_orientation_.z() = 0;
+    robot_orientation_.w() = 1;
+
+    // testQPSolver();
 }
 
 // Update the controller with the current state of the robot
@@ -67,6 +73,8 @@ void PupperWBC::Load(string urdf_file_string){
     for (int i = 0; i < Pupper_.mBodies.size(); i++)
         cout << "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
+    Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
+
     // // Confirm masses have been read correctly (since verbose output of urdf reader is incorrect):
     // for(int i = 0; i < Pupper_.mBodies.size(); i++)
     //     cout << "Body " << Pupper_.GetBodyName(i) << " mass: "<< Pupper_.mBodies[i].mMass << endl;
@@ -75,8 +83,8 @@ void PupperWBC::Load(string urdf_file_string){
     //     cout << "Body " << Pupper_.GetBodyName(i) << " inertia: \n"<< Pupper_.mBodies[i].mInertia.format(f) << endl;
 
     //Test
-    array<bool, 4> feet_in_contact = {1,1,1,1};
-    setContacts(feet_in_contact);
+    // array<bool, 4> feet_in_contact = {1,1,1,1};
+    // setContacts(feet_in_contact);
 }
 
 // Set rbdl model contact constraints
@@ -127,7 +135,7 @@ void PupperWBC::setContacts(const array<bool, 4> feet_in_contact){
 
 }
 
-// Retrieve body Jacobian
+// Retrieve body Jacobian by ID
 MatrixNd PupperWBC::getBodyJacobian_(string body_id) {
     // Create output
     MatrixNd J = MatrixNd::Zero(6, Pupper_.qdot_size);
@@ -268,16 +276,14 @@ void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vect
     P_p.push_back(0);
     
     const int num_rows = P.rows();
-    int num_non_zero = 0;
-    for (Eigen::Index c = 0; c < P.cols(); c++){
+    const int num_cols = P.cols();
+    for (Eigen::Index c = 0; c < num_cols; c++){
         // Look through the matrix column by column
         const double* col = P.col(c).data();
 
         // Iterate through the column to look for non-zero elements
         for (int i = 0; i < num_rows; i++){
             if (col[i] != 0){
-                num_non_zero++;
-
                 // Store the value of the element in P_x and its row index in P_i
                 P_x.push_back(col[i]);
                 P_i.push_back(i);
