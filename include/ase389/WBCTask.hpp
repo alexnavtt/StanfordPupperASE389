@@ -13,7 +13,7 @@ struct Task{
     std::string type;
 
     // The weight to be used in IHWBC
-    float task_weight;
+    float task_weight = 0;
 
     // The desired task goal and which to consider for this task
     std::vector<bool> active_targets;
