@@ -305,7 +305,11 @@ void PupperWBC::formQP(){
         cost_t_mat += T->task_weight * j.transpose() * j; // nq x nq
         cost_t_vec += T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
     }
-    
+    double lambda_t = 1.0;
+    for (int i = 0; i < NUM_JOINTS; i++){
+        cost_t_mat(i,i) += lambda_t;
+    }
+
     // Form reaction force cost matrix and vector
     MatrixNd cost_rf_mat = MatrixNd::Identity(4,4);
     VectorNd cost_rf_vec = VectorNd::Zero(4);
@@ -351,11 +355,17 @@ void PupperWBC::formQP(){
     l.head(6) = eq_vec_0;
     cout << "o5" << endl;
     u.head(6) = eq_vec_0;
-    cout << "o6" << endl;
     
     c_int m = A.rows();
     c_int n = A.cols();
 
+    cout << "P Matrix: \n" << P.format(f) << endl << endl;
+    cout << "q Matrix: \n" << q.format(f) << endl << endl;
+
+    cout << "A Matrix: \n" << A.format(f) << endl << endl;
+    cout << "l vector: \n" << l.format(f) << endl << endl;
+    cout << "u vector: \n" << u.format(f) << endl << endl;
+    
     // Convert eigen vectors to standard vectors;
     cout << "o7" << endl;
     vector<c_float> q_c(q.data(), q.data()+q.size());
@@ -402,10 +412,12 @@ void PupperWBC::formQP(){
     // Solve Problem
     osqp_solve(work);
 
+
     cout << "Solution Vec: \n";
     for (int i = 0; i < 22; i++){
         cout << work->solution->x[i] << endl;
     }
+    cout << "Solution ABOVE" << endl;
 
     // Cleanup
     if (data) {
