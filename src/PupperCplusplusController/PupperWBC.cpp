@@ -77,6 +77,7 @@ void PupperWBC::Load(std::string urdf_file_string){
         cout << "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
+    initConstraintSets_();
 
     // // Confirm masses have been read correctly (since verbose output of urdf reader is incorrect):
     // for(int i = 0; i < Pupper_.mBodies.size(); i++)
@@ -160,18 +161,18 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
             U(i, i) = T->active_targets[i];
         }
 
-        Jt = U * Jb.topRows(3);
+        Jt = U * Jb.bottomRows(3);
 
         cout << "Position Only: " << endl;
-        cout << Jt.transpose() << endl;
+        cout << Jt << endl;
 
     }else if (T->type == "body_ori"){
         MatrixNd Jb = getBodyJacobian_(T->body_id);
 
         // In general we care about all 4 parts of a quaternion, so 
         // there's no selection matrix for this one
-        Jt = Jb.bottomRows(3);
-        cout << "Orientation only: \n" << Jt.transpose() << endl;
+        Jt = Jb.topRows(3);
+        cout << "Orientation only: \n" << Jt << endl;
 
     }else if(T->type == "joint_pos"){
         Jt = MatrixNd::Zero(Pupper_.qdot_size, Pupper_.qdot_size);
@@ -310,6 +311,10 @@ void PupperWBC::formQP(){
     VectorNd q = VectorNd::Zero(NUM_JOINTS+4);
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
     P.bottomRightCorner(4,4) = cost_rf_mat;
+    cout << "cost_t_mat: \n" << cost_t_mat.format(f) << endl;
+    cout << "cost_rf_mat: \n" << cost_rf_mat.format(f) << endl;
+    cout << "P: \n" << P.format(f) << endl;
+    // assert(false);
     q.head(NUM_JOINTS) = cost_t_vec;
 
     // Form equality and inequality constraints 
@@ -352,11 +357,15 @@ void PupperWBC::formQP(){
     c_int n = A.cols();
 
     // Convert eigen vectors to standard vectors;
+    cout << "07" << endl;
+    // vector<c_float> q_c(q.data(), q.data()+q.size()-1);
+    // vector<c_float> l_c(l.data(), l.data()+l.size()-1);
+    // vector<c_float> u_c(u_c.data(), u_c.data()+u_c.size()-1);
     vector<c_float> q_c;
     vector<c_float> l_c;
     vector<c_float> u_c;
     convertEigenToCfloat_(q,q_c);
-    cout << "o7" << endl;
+    // cout << "o7" << endl;
     convertEigenToCfloat_(l,l_c);
     convertEigenToCfloat_(u,u_c);
     cout << "o8" << endl;

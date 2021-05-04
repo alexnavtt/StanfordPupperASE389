@@ -72,9 +72,9 @@ int main(int argc, char** argv){
     // }
 
     // Load constraint set
-    Pup.initConstraintSets_();
+    // Pup.initConstraintSets_();
     //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
-    //Pup.getContactJacobian_();
+    // Pup.getContactJacobian_();
 
     Pup.formQP();
     return 0;
