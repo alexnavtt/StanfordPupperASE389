@@ -16,6 +16,11 @@
 #define NUM_JOINTS 18   // 12 motors plus 6 floating base joints
 #define NUM_Q 19        // 12 motors plus 3 xyz plus 4 quaternion, refer to: https://rbdl.github.io/df/dbe/joint_description.html
 
+// To make the code a little more readable
+typedef RigidBodyDynamics::Math::MatrixNd Matrix;
+typedef RigidBodyDynamics::Math::VectorNd Vector;
+typedef RigidBodyDynamics::Math::Quaternion Quat;
+
 class PupperWBC{
 public:
     // Constructor
@@ -43,36 +48,29 @@ public:
     RigidBodyDynamics::ConstraintSet pup_constraints_;
 
     // Retrieve the body COM Jacobian
-    RigidBodyDynamics::Math::MatrixNd getBodyJacobian_(std::string body_id);
+    Matrix getBodyJacobian_(std::string body_id);
 
     // Retrieve the task Jacobian for specific task
-    RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(std::string task_name);
-    RigidBodyDynamics::Math::MatrixNd getTaskJacobian_(unsigned priority);
+    Matrix getTaskJacobian_(std::string task_name);
+    Matrix getTaskJacobian_(unsigned priority);
 
     // Initialize RBDL constraints 
     void initConstraintSets_();
 
     // Retrieve the contact Jacobian for the active contacts
-    RigidBodyDynamics::Math::MatrixNd getContactJacobian_();
-    
-    // Retrieve the null space for a specific task
-    RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(std::string task_name);
-    RigidBodyDynamics::Math::MatrixNd getTaskNullSpace_(unsigned priority);
+    Matrix getContactJacobian_();
 
-    // Joint angles in radians
-    RigidBodyDynamics::Math::VectorNd joint_angles_;
-
-    // Joint velocities in rad/s
-    RigidBodyDynamics::Math::VectorNd joint_velocities_;
+    // Store the robot state
+    Vector joint_angles_;        // joint angles in radians
+    Vector joint_velocities_;    // joint velocities in rad/s
+    Quat   robot_orientation_;   // robot orientation from IMU (Quaternion)
+    Matrix Jc_;                  // contact Jacobian
+    Matrix massMat_;             // mass matrix
+    Vector b_g_;                 // coriolis plus gravity
+    std::array<bool, 4> feet_in_contact_;                   // Feet in contact (boolean array: [back left, back right, front left, front right])
 
     // Control torques in Nm
-    RigidBodyDynamics::Math::VectorNd control_torques_;
-
-    // Robot orientation from IMU (Quaternion)
-    RigidBodyDynamics::Math::Quaternion robot_orientation_;
-
-    // Feet in contact (boolean array: [back left, back right, front left, front right])
-    std::array<bool, 4> feet_in_contact_;
+    Vector control_torques_;
 
     // Body ids of lower links 
     uint back_left_lower_link_id_;
@@ -84,16 +82,12 @@ public:
     std::vector<Task*> robot_tasks_;
     std::unordered_map<std::string, unsigned> task_indices_;
 
-    // Joint selection matrix (takes the form [0_6, I_12]^T)
-    RigidBodyDynamics::Math::MatrixNd U_;
-
     // OSQP Solver
     std::unique_ptr<OSQPSettings> QP_settings_;
     std::unique_ptr<OSQPData> QP_data_;
-    void convertEigenToCSC_(const RigidBodyDynamics::Math::MatrixNd &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i);
-    void convertEigenToCfloat_(const RigidBodyDynamics::Math::VectorNd &q, std::vector<c_float> &q_c);
-    void testQPSolver();
-    void formQP();
+    void convertEigenToCSC_(const Matrix &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i);
+    void formQP(Matrix &P, Vector &q, Matrix &A, Vector &l, Vector &u);
+    Vector solveQP(int n, int m, Matrix  &P, c_float *q, Matrix  &A, c_float *lb, c_float *ub);
 };
 
 #endif
