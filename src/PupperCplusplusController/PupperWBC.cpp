@@ -84,21 +84,21 @@ void PupperWBC::Load(std::string urdf_file_string){
     printf("*\tJoint Count:\t%zd\n", Pupper_.mJoints.size());
     printf("*\tBody Names:\n");
     for (int i = 0; i < Pupper_.mBodies.size(); i++)
-        cout << "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
+        // cout<< "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
     initConstraintSets_();
 
     // // Confirm masses have been read correctly (since verbose output of urdf reader is incorrect):
     // for(int i = 0; i < Pupper_.mBodies.size(); i++)
-    //     cout << "Body " << Pupper_.GetBodyName(i) << " mass: "<< Pupper_.mBodies[i].mMass << endl;
+    //     // cout<< "Body " << Pupper_.GetBodyName(i) << " mass: "<< Pupper_.mBodies[i].mMass << endl;
     // // Confirm intertias have been read correctly:
     // for(int i = 0; i < Pupper_.mBodies.size(); i++)
-    //     cout << "Body " << Pupper_.GetBodyName(i) << " inertia: \n"<< Pupper_.mBodies[i].mInertia.format(f) << endl;
+    //     // cout<< "Body " << Pupper_.GetBodyName(i) << " inertia: \n"<< Pupper_.mBodies[i].mInertia.format(f) << endl;
 }
 
 std::array<float, 12> PupperWBC::calculateOutputTorque(){
-    cout << "in" << endl;
+    // cout<< "in" << endl;
     // Objective function terms
     MatrixNd P = MatrixNd::Zero(NUM_JOINTS + 4, NUM_JOINTS + 4);
     VectorNd q = VectorNd::Zero(NUM_JOINTS + 4);
@@ -107,26 +107,26 @@ std::array<float, 12> PupperWBC::calculateOutputTorque(){
     MatrixNd A = MatrixNd::Zero(             6, NUM_JOINTS + 4);
     VectorNd lower_bounds = VectorNd::Zero(6);
     VectorNd upper_bounds = VectorNd::Zero(6);
-    cout << "here" << endl;
+    // cout<< "here" << endl;
     // Solve for q_ddot and reaction forces
     formQP(P, q, A, lower_bounds, upper_bounds);
-    cout << "formed" << endl;
+    // cout<< "formed" << endl;
     VectorNd optimal_solution = solveQP(A.cols(), A.rows(), P, q.data(), A, lower_bounds.data(), upper_bounds.data());
     VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
     VectorNd F_r    = optimal_solution.tail(4);
 
-    cout << "Solution: -----------------" << endl;
+    // cout<< "Solution: -----------------" << endl;
     for (int i = 0; i < optimal_solution.size(); i++){
-        cout << optimal_solution[i] << endl;
+        // cout<< optimal_solution[i] << endl;
     }
-    cout << " --------------------------" << endl;
+    // cout<< " --------------------------" << endl;
 
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
 
-    cout << "Torques: " << endl;
+    // cout<< "Torques: " << endl;
     for (int i = 0; i < tau.size(); i++){
-        cout << tau[i] << endl;  
+        // cout<< tau[i] << endl;  
     }
 
     array<float, 12> output;
@@ -153,13 +153,13 @@ void PupperWBC::initConstraintSets_(){
     pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_normal, "front_right_contact");
 
     pup_constraints_.Bind(Pupper_);
-    cout << "Constraints Initialized..." << endl;
+    // cout<< "Constraints Initialized..." << endl;
 }
 
 // Retrieve body Jacobian by ID
 MatrixNd PupperWBC::getBodyJacobian_(string body_id) {
     // Create output
-    MatrixNd J = MatrixNd::Zero(6, Pupper_.qdot_size);
+    MatrixNd J = MatrixNd::Zero(6, NUM_JOINTS);
 
     // Fill the Jacobian matrix
     CalcBodySpatialJacobian(Pupper_, joint_angles_, Pupper_.GetBodyId(body_id.c_str()), J, true);
@@ -182,8 +182,13 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
 
         Jt = U * Jb.bottomRows(3);
 
-        cout << "Position Only: " << endl;
-        cout << Jt << endl;
+        double* data = Jt.data();
+        for (int i = 0; i < Jt.size(); i++){
+            if (abs(data[i] < 0.001)) data[i] = 0;
+        }
+
+        // cout<< "Position Only: " << endl;
+        // cout<< Jt << endl;
 
     }else if (T->type == "body_ori"){
         MatrixNd Jb = getBodyJacobian_(T->body_id);
@@ -191,7 +196,7 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
         // In general we care about all 4 parts of a quaternion, so 
         // there's no selection matrix for this one
         Jt = Jb.topRows(3);
-        cout << "Orientation only: \n" << Jt << endl;
+        // cout<< "Orientation only: \n" << Jt << endl;
 
     }else if(T->type == "joint_pos"){
         Jt = MatrixNd::Zero(Pupper_.qdot_size, Pupper_.qdot_size);
@@ -201,7 +206,7 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
             Jt(i, i) = T->active_targets[i];
         }
 
-        cout << "Joint position Jacobian: \n" << Jt.format(f) << endl;
+        // cout<< "Joint position Jacobian: \n" << Jt.format(f) << endl;
     }else{
         throw(std::runtime_error("Unrecognized WBC Task format"));
     }
@@ -249,11 +254,10 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         VectorNd x_ddot_desired = VectorNd::Zero(j.rows());
         cost_t_mat += T->task_weight * j.transpose() * j; // nq x nq
         cost_t_vec += T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
-        cout << "Cost t mat: \n" << cost_t_mat.format(f) << endl;
     }
 
     // Add a cost to penalize high joint accelerations
-    double lambda_t = 1.0;
+    double lambda_t = 0.1;
     for (int i = 0; i < NUM_JOINTS; i++){
         cost_t_mat(i,i) += lambda_t;
     }
@@ -289,12 +293,12 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     l = eq_vec_0;
     u = eq_vec_0;
 
-    cout << "P Matrix: \n" << P.format(f) << endl << endl;
-    cout << "q Matrix: \n" << q.format(f) << endl << endl;
+    // cout<< "P Matrix: \n" << P.format(f) << endl << endl;
+    // cout<< "q Matrix: \n" << q.format(f) << endl << endl;
 
-    cout << "A Matrix: \n" << A.format(f) << endl << endl;
-    cout << "l vector: \n" << l.format(f) << endl << endl;
-    cout << "u vector: \n" << u.format(f) << endl << endl;
+    // cout<< "A Matrix: \n" << A.format(f) << endl << endl;
+    // cout<< "l vector: \n" << l.format(f) << endl << endl;
+    // cout<< "u vector: \n" << u.format(f) << endl << endl;
 }
 
 
@@ -304,7 +308,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
     //Convert matrices into csc form
     vector<c_float> P_x;
     vector<c_int> P_p, P_i;
-    convertEigenToCSC_(P, P_x, P_p, P_i);
+    convertEigenToCSC_(P, P_x, P_p, P_i, true);
     vector<c_float> A_x;
     vector<c_int> A_p, A_i;
     convertEigenToCSC_(A, A_x, A_p, A_i);
@@ -354,7 +358,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
 }
 
 
-void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vector<c_int> &P_p, vector<c_int> &P_i){
+void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vector<c_int> &P_p, vector<c_int> &P_i, bool triup){
     // Clear any existing data from the vectors
     P_x.clear();
     P_i.clear();
@@ -375,6 +379,8 @@ void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vect
                 P_x.push_back(col[i]);
                 P_i.push_back(i);
             }
+
+            if (triup and i == c) break;
         }
 
         P_p.push_back(P_x.size());

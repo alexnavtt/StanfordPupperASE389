@@ -85,7 +85,7 @@ public:
     // OSQP Solver
     std::unique_ptr<OSQPSettings> QP_settings_;
     std::unique_ptr<OSQPData> QP_data_;
-    void convertEigenToCSC_(const Matrix &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i);
+    void convertEigenToCSC_(const Matrix &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i, bool triup = false);
     void formQP(Matrix &P, Vector &q, Matrix &A, Vector &l, Vector &u);
     Vector solveQP(int n, int m, Matrix  &P, c_float *q, Matrix  &A, c_float *lb, c_float *ub);
 };
