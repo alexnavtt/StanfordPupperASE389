@@ -357,17 +357,10 @@ void PupperWBC::formQP(){
     c_int n = A.cols();
 
     // Convert eigen vectors to standard vectors;
-    cout << "07" << endl;
-    // vector<c_float> q_c(q.data(), q.data()+q.size()-1);
-    // vector<c_float> l_c(l.data(), l.data()+l.size()-1);
-    // vector<c_float> u_c(u_c.data(), u_c.data()+u_c.size()-1);
-    vector<c_float> q_c;
-    vector<c_float> l_c;
-    vector<c_float> u_c;
-    convertEigenToCfloat_(q,q_c);
-    // cout << "o7" << endl;
-    convertEigenToCfloat_(l,l_c);
-    convertEigenToCfloat_(u,u_c);
+    cout << "o7" << endl;
+    vector<c_float> q_c(q.data(), q.data()+q.size());
+    vector<c_float> l_c(l.data(), l.data()+l.size());
+    vector<c_float> u_c(u.data(), u.data()+u.size());
     cout << "o8" << endl;
 
     //Convert matrices into csc form
@@ -413,9 +406,9 @@ void PupperWBC::formQP(){
     if (data) {
         if (data->A) c_free(data->A);
         if (data->P) c_free(data->P);
-        c_free(data);
+        // c_free(data);
     }
-    if (settings) c_free(settings);
+    // if (settings) c_free(settings);
 
     cout << exitflag << endl;
 }
