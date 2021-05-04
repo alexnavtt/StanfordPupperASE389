@@ -75,13 +75,17 @@ int main(int argc, char** argv){
     // Pup.initConstraintSets_();
     //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     // Pup.getContactJacobian_();
-    
-    Pup.formQP();
+
+    std::array<float,12> joint_positions  = {0,0,0,0,0,0,0,0,0,0,0,0};
+    std::array<float,12> joint_velocities = {0,0,0,0,0,0,0,0,0,0,0,0};
+    Eigen::Quaternion<float> robot_quat = Eigen::Quaternion<float>::Identity();
+    std::array<bool,4> feet_in_contact = {true, true, true, true};
+    Pup.updateController(joint_positions, joint_velocities, robot_quat, feet_in_contact);
+    Pup.calculateOutputTorque();
 
     //Test body to base coordinates 
     const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
     RigidBodyDynamics::Math::Vector3d body_point_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), body_contact_point_left, false);
     cout << "Front left contact point in base coord: \n" << body_point_pos.format(f) << endl;
-
     return 0;
 }

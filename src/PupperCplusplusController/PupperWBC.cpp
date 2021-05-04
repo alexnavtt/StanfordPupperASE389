@@ -30,6 +30,11 @@ PupperWBC::PupperWBC(){
     robot_orientation_.z() = 0;
     robot_orientation_.w() = 1;
 
+    // Robot dynamics matrices
+    Jc_      = MatrixNd::Zero(4, NUM_JOINTS);
+    massMat_ = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
+    b_g_     = VectorNd::Zero(NUM_JOINTS);
+
     // testQPSolver();
 }
 
@@ -49,6 +54,11 @@ void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_ang
     robot_orientation_.z() = body_quaternion.z();
 
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
+
+    // Update the problem matrices
+    CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, true);
+    CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_, false);
+    NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
 
     feet_in_contact_ = feet_in_contact;
 }
@@ -87,6 +97,37 @@ void PupperWBC::Load(std::string urdf_file_string){
     //     cout << "Body " << Pupper_.GetBodyName(i) << " inertia: \n"<< Pupper_.mBodies[i].mInertia.format(f) << endl;
 }
 
+std::array<float, 12> PupperWBC::calculateOutputTorque(){
+    // Objective function terms
+    MatrixNd P = MatrixNd::Zero(NUM_JOINTS + 4, NUM_JOINTS + 4);
+    VectorNd q = VectorNd::Zero(NUM_JOINTS + 4);
+    
+    // Constraint terms
+    MatrixNd A = MatrixNd::Zero(             6, NUM_JOINTS + 4);
+    VectorNd lower_bounds = VectorNd::Zero(6);
+    VectorNd upper_bounds = VectorNd::Zero(6);
+
+    // Solve for q_ddot and reaction forces
+    formQP(P, q, A, lower_bounds, upper_bounds);
+    VectorNd optimal_solution = solveQP(A.cols(), A.rows(), P, q.data(), A, lower_bounds.data(), upper_bounds.data());
+    VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
+    VectorNd F_r    = optimal_solution.tail(4);
+
+    cout << "Solution: -----------------" << endl;
+    for (int i = 0; i < optimal_solution.size(); i++){
+        cout << optimal_solution[i] << endl;
+    }
+    cout << " --------------------------" << endl;
+
+    // Solve for the command torques
+    VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
+
+    cout << "Torques: " << endl;
+    for (int i = 0; i < tau.size(); i++){
+        cout << tau[i] << endl;
+    }
+}
+
 void PupperWBC::initConstraintSets_(){
     // Perform initialization of RBDL constraints
     back_left_lower_link_id_ = Pupper_.GetBodyId("back_left_lower_link");
@@ -107,34 +148,6 @@ void PupperWBC::initConstraintSets_(){
 
     pup_constraints_.Bind(Pupper_);
     cout << "Constraints Initialized..." << endl;
-}
-
-
-MatrixNd PupperWBC::getContactJacobian_(){
-    // Retrieve contact Jacobian using CalcConstraintJacobian
-    // Note: feet_in_contact_ is a boolean mask with the order: [back left, back right, front left, front right]
-    
-    MatrixNd J_c = Eigen::MatrixXd::Zero(4, Pupper_.qdot_size);
-    CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, J_c);
-    cout << "Contact Jacobian is: \n" << J_c.transpose().format(f) << endl;
-
-    // // Retrieve contact Jacobian using CalcPointJacobian
-    // const Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
-    // const Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
-
-    // MatrixNd J_c_manual = MatrixNd::Zero(4, Pupper_.qdot_size); 
-    // MatrixNd J_ci = MatrixNd::Zero(3, Pupper_.qdot_size); 
-    // for (int i = 0; i < 4; i++){
-    //     J_ci.setZero();
-    //     if (i==0) CalcPointJacobian(Pupper_, joint_angles_, back_left_lower_link_id_, body_contact_point_left, J_ci);
-    //     if (i==1) CalcPointJacobian(Pupper_, joint_angles_, back_right_lower_link_id_, body_contact_point_right, J_ci);
-    //     if (i==2) CalcPointJacobian(Pupper_, joint_angles_, front_left_lower_link_id_, body_contact_point_left, J_ci);
-    //     if (i==3) CalcPointJacobian(Pupper_, joint_angles_, front_right_lower_link_id_, body_contact_point_right, J_ci);
-    //     // TODO: Rotate Jacobian to align with world z
-    //     J_c_manual.row(i) = J_ci.row(2);
-    // }
-    // cout << "Contact Jacobian Manual: \n" << J_c_manual.transpose().format(f) << endl;
-    return J_c;
 }
 
 // Retrieve body Jacobian by ID
@@ -196,79 +209,8 @@ MatrixNd PupperWBC::getTaskJacobian_(std::string task_name){
     getTaskJacobian_(index);
 }
 
-array<float, 12> PupperWBC::calculateOutputTorque(){
-    for (int i = 0; i < robot_tasks_.size(); i++){
-        getTaskJacobian_(i);
-    }
 
-    return array<float,12>();
-}
-
-void PupperWBC::testQPSolver(){
-    // Load problem data
-    c_float P_x[3] = {4.0, 1.0, 2.0, };
-    c_int P_nnz = 3;
-    c_int P_i[3] = {0, 0, 1, };
-    c_int P_p[3] = {0, 1, 3, };
-    c_float q[2] = {1.0, 1.0, };
-    // c_float A_x[4] = {1.0, 1.0, 1.0, 1.0, };
-    // c_int A_nnz = 4;
-    // c_int A_i[4] = {0, 1, 0, 2, };
-    // c_int A_p[3] = {0, 2, 4, };
-    c_float l[3] = {1.0, 0.0, 0.0, };
-    c_float u[3] = {1.0, 0.7, 0.7, };
-    c_int n = 2;
-    c_int m = 3;
-
-    // Exitflag
-    c_int exitflag = 0;
-
-    // Workspace structures
-    OSQPWorkspace *work;
-    OSQPSettings  *settings = QP_settings_.get();
-    OSQPData      *data     = QP_data_.get();
-
-    MatrixNd A(3,2);
-    A << 1, 1, 1, 0, 0, 1;
-    vector<c_float> A_x;
-    vector<c_int> A_p, A_i;
-    convertEigenToCSC_(A, A_x, A_p, A_i);
-
-    // Populate data
-    if (data) {
-        data->n = n;
-        data->m = m;
-        data->P = csc_matrix(n, n, P_nnz, P_x, P_i, P_p);
-        data->q = q;
-        data->A = csc_matrix(m, n, A_p.back(), A_x.data(), A_i.data(), A_p.data());
-        data->l = l;
-        data->u = u;
-    }
-
-    // Define solver settings as default
-    if (settings) {
-        osqp_set_default_settings(settings);
-        settings->alpha = 1.0; // Change alpha parameter
-    }
-
-    // Setup workspace
-    exitflag = osqp_setup(&work, data, settings);
-
-    // Solve Problem
-    osqp_solve(work);
-
-    // Cleanup
-    if (data) {
-        if (data->A) c_free(data->A);
-        if (data->P) c_free(data->P);
-        c_free(data);
-    }
-    if (settings) c_free(settings);
-
-    cout << exitflag << endl;
-}
-
-void PupperWBC::formQP(){
+void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, VectorNd &u){
     // Optimization problem form:
     // min .5(x'Px) + q'x
     // st l <= Ax <= u
@@ -284,6 +226,12 @@ void PupperWBC::formQP(){
     //       
     //       Determine how to neglect the non-contacting portions of the opt. problem. 
     
+
+
+    // ---------------------------------------------------------------
+    // ------------------------- OBJECTIVE ---------------------------
+    // ---------------------------------------------------------------
+
     // Form task cost matrix and vector
     MatrixNd cost_t_mat = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     VectorNd cost_t_vec = VectorNd::Zero(NUM_JOINTS);
@@ -292,12 +240,13 @@ void PupperWBC::formQP(){
         Task* T = robot_tasks_[i];
         
         MatrixNd j = getTaskJacobian_(i);
-        //int n_t = T[i].targets.size(); // Note: task target doesn't match jacobian row size for 1st task
-        int n_t = j.rows();
-        VectorNd x_ddot_desired = VectorNd::Zero(n_t);
+        VectorNd x_ddot_desired = VectorNd::Zero(j.rows());
         cost_t_mat += T->task_weight * j.transpose() * j; // nq x nq
         cost_t_vec += T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+        cout << "Cost t mat: \n" << cost_t_mat.format(f) << endl;
     }
+
+    // Add a cost to penalize high joint accelerations
     double lambda_t = 1.0;
     for (int i = 0; i < NUM_JOINTS; i++){
         cost_t_mat(i,i) += lambda_t;
@@ -310,51 +259,31 @@ void PupperWBC::formQP(){
     cost_rf_mat *= lambda_rf;
     
     // Form P matrix and q vector
-    MatrixNd P = MatrixNd::Zero(NUM_JOINTS+4,NUM_JOINTS+4);
-    VectorNd q = VectorNd::Zero(NUM_JOINTS+4);
+    // MatrixNd P = MatrixNd::Zero(NUM_JOINTS+4,NUM_JOINTS+4);
+    // VectorNd q = VectorNd::Zero(NUM_JOINTS+4);
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
-    P.bottomRightCorner(4,4) = cost_rf_mat;
-    cout << "cost_t_mat: \n" << cost_t_mat.format(f) << endl;
-    cout << "cost_rf_mat: \n" << cost_rf_mat.format(f) << endl;
-    cout << "P: \n" << P.format(f) << endl;
-    // assert(false);
+    P.bottomRightCorner(4,4)               = cost_rf_mat;
     q.head(NUM_JOINTS) = cost_t_vec;
 
-    // Form equality and inequality constraints 
-    // Enforce floating base dynamics:
-    MatrixNd J_c = getContactJacobian_();
-    cout << "J_c = \n" << J_c.transpose().format(f) << endl ;
-    // Calculate mass matrix 
-    Math::MatrixNd M = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
-    CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, M, false); // update kinematics set to false for speed
-    // Calculate coriolis and gravity forces (note: gravity is included by default)
-    VectorNd b_g = VectorNd::Zero(NUM_JOINTS);
-    NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g);
 
-    MatrixNd eq_mat_0(6,NUM_JOINTS+4);
-    VectorNd eq_vec_0(6);
-    cout << "start debug" << endl;
-    eq_mat_0.leftCols(NUM_JOINTS) = M.topRows(6);
-    eq_mat_0.rightCols(4) = -J_c.transpose().topRows(6); // stacked horizontally [ M, -J_c']
+    // -----------------------------------------------------------------
+    // ------------------------- CONSTRAINTS ---------------------------
+    // -----------------------------------------------------------------
 
-    cout << "o1" << endl;
-    eq_vec_0 << b_g.head(6); // Is this correct for vectors??
-    cout << "o2" << endl;
+    // Equality constraint of the form (first six rows only) 
+    // A*q_ddot + b_g = Jc^T * Fr
+
+    // Encorporate the non-linear effects in the dynamics equation
+    VectorNd eq_vec_0 = b_g_.head(6);
+
     // Constraints currently only floating-based dynamics 
-    MatrixNd A(eq_mat_0.rows(),eq_mat_0.cols());
-    cout << "o3" << endl;
-    A << eq_mat_0;
-    cout << "o4" << endl;
+    MatrixNd eq_mat_0(6,NUM_JOINTS+4);
+    eq_mat_0 << massMat_.topRows(6), -Jc_.transpose().topRows(6);
+    A = eq_mat_0;
 
     // For equality constraints, set lower and upper equal
-    VectorNd l = VectorNd::Zero(6);
-    VectorNd u = VectorNd::Zero(6);
-    l.head(6) = eq_vec_0;
-    cout << "o5" << endl;
-    u.head(6) = eq_vec_0;
-    
-    c_int m = A.rows();
-    c_int n = A.cols();
+    l = eq_vec_0;
+    u = eq_vec_0;
 
     cout << "P Matrix: \n" << P.format(f) << endl << endl;
     cout << "q Matrix: \n" << q.format(f) << endl << endl;
@@ -362,20 +291,11 @@ void PupperWBC::formQP(){
     cout << "A Matrix: \n" << A.format(f) << endl << endl;
     cout << "l vector: \n" << l.format(f) << endl << endl;
     cout << "u vector: \n" << u.format(f) << endl << endl;
-    
-    // Convert eigen vectors to standard vectors;
-    cout << "07" << endl;
-    // vector<c_float> q_c(q.data(), q.data()+q.size()-1);
-    // vector<c_float> l_c(l.data(), l.data()+l.size()-1);
-    // vector<c_float> u_c(u_c.data(), u_c.data()+u_c.size()-1);
-    vector<c_float> q_c;
-    vector<c_float> l_c;
-    vector<c_float> u_c;
-    convertEigenToCfloat_(q,q_c);
-    // cout << "o7" << endl;
-    convertEigenToCfloat_(l,l_c);
-    convertEigenToCfloat_(u,u_c);
-    cout << "o8" << endl;
+}
+
+
+
+VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A, c_float  *lb, c_float  *ub){
 
     //Convert matrices into csc form
     vector<c_float> P_x;
@@ -398,10 +318,10 @@ void PupperWBC::formQP(){
         data->n = n;
         data->m = m;
         data->P = csc_matrix(n, n, P_p.back(), P_x.data(), P_i.data(), P_p.data());
-        data->q = q_c.data();
+        data->q = q;
         data->A = csc_matrix(m, n, A_p.back(), A_x.data(), A_i.data(), A_p.data());
-        data->l = l_c.data();
-        data->u = u_c.data();
+        data->l = lb;
+        data->u = ub;
     }
 
     // Define solver settings as default
@@ -415,21 +335,20 @@ void PupperWBC::formQP(){
 
     // Solve Problem
     osqp_solve(work);
-    
-    for (int i =0; i < 22; i++){
-        cout << work->solution->x[i] << endl;
-    }
-    cout << "Solution ABOVE" << endl;
+
     // Cleanup
     if (data) {
         if (data->A) c_free(data->A);
         if (data->P) c_free(data->P);
-        c_free(data);
     }
-    if (settings) c_free(settings);
 
-    cout << exitflag << endl;
+    // Return solution
+    VectorNd q_ddot(NUM_JOINTS + 4);
+    std::copy(work->solution->x, work->solution->x + q_ddot.size(), q_ddot.data());
+
+    return q_ddot;
 }
+
 
 void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vector<c_int> &P_p, vector<c_int> &P_i){
     // Clear any existing data from the vectors
@@ -455,12 +374,5 @@ void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vect
         }
 
         P_p.push_back(P_x.size());
-    }
-}
-void PupperWBC::convertEigenToCfloat_(const VectorNd &q, vector<c_float> &q_c){
-    // Convert Eigen vector to std::vector<c_float> for use in osqp
-    q_c.clear();
-    for (Eigen::Index i = 0; i < q.size(); i++){
-        q_c.push_back(q(i));
     }
 }
