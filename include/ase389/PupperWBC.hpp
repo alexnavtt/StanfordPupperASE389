@@ -7,7 +7,7 @@
 #include <cstring>
 #include <unordered_map>
 
-#include "osqp.h"
+#include "osqp/osqp.h"
 #include "rbdl/rbdl.h"
 #include "eigen3/Eigen/Dense"
 #include "ase389/WBCTask.hpp"
