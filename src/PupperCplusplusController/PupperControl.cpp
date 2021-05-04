@@ -75,7 +75,11 @@ int main(int argc, char** argv){
     // Pup.initConstraintSets_();
     //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     // Pup.getContactJacobian_();
-    
-    Pup.formQP();
+    std::array<float,12> joint_positions  = {0,0,0,0,0,0,0,0,0,0,0,0};
+    std::array<float,12> joint_velocities = {0,0,0,0,0,0,0,0,0,0,0,0};
+    Eigen::Quaternion<float> robot_quat = Eigen::Quaternion<float>::Identity();
+    std::array<bool,4> feet_in_contact = {true, true, true, true};
+    Pup.updateController(joint_positions, joint_velocities, robot_quat, feet_in_contact);
+    Pup.calculateOutputTorque();
     return 0;
 }
