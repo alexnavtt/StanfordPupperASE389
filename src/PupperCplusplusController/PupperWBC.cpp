@@ -98,6 +98,7 @@ void PupperWBC::Load(std::string urdf_file_string){
 }
 
 std::array<float, 12> PupperWBC::calculateOutputTorque(){
+    cout << "in" << endl;
     // Objective function terms
     MatrixNd P = MatrixNd::Zero(NUM_JOINTS + 4, NUM_JOINTS + 4);
     VectorNd q = VectorNd::Zero(NUM_JOINTS + 4);
@@ -106,9 +107,10 @@ std::array<float, 12> PupperWBC::calculateOutputTorque(){
     MatrixNd A = MatrixNd::Zero(             6, NUM_JOINTS + 4);
     VectorNd lower_bounds = VectorNd::Zero(6);
     VectorNd upper_bounds = VectorNd::Zero(6);
-
+    cout << "here" << endl;
     // Solve for q_ddot and reaction forces
     formQP(P, q, A, lower_bounds, upper_bounds);
+    cout << "formed" << endl;
     VectorNd optimal_solution = solveQP(A.cols(), A.rows(), P, q.data(), A, lower_bounds.data(), upper_bounds.data());
     VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
     VectorNd F_r    = optimal_solution.tail(4);
@@ -124,8 +126,12 @@ std::array<float, 12> PupperWBC::calculateOutputTorque(){
 
     cout << "Torques: " << endl;
     for (int i = 0; i < tau.size(); i++){
-        cout << tau[i] << endl;
+        cout << tau[i] << endl;  
     }
+
+    array<float, 12> output;
+    std::copy(tau.data(), tau.data() + tau.size(), output.data());
+    return output;
 }
 
 void PupperWBC::initConstraintSets_(){
@@ -206,7 +212,7 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
 // Overloaded version of getTaskJacobian_
 MatrixNd PupperWBC::getTaskJacobian_(std::string task_name){
     unsigned index = task_indices_.at(task_name);
-    getTaskJacobian_(index);
+    return getTaskJacobian_(index);
 }
 
 
@@ -259,8 +265,6 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     cost_rf_mat *= lambda_rf;
     
     // Form P matrix and q vector
-    // MatrixNd P = MatrixNd::Zero(NUM_JOINTS+4,NUM_JOINTS+4);
-    // VectorNd q = VectorNd::Zero(NUM_JOINTS+4);
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
     P.bottomRightCorner(4,4)               = cost_rf_mat;
     q.head(NUM_JOINTS) = cost_t_vec;
@@ -274,7 +278,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // A*q_ddot + b_g = Jc^T * Fr
 
     // Encorporate the non-linear effects in the dynamics equation
-    VectorNd eq_vec_0 = b_g_.head(6);
+    VectorNd eq_vec_0 = -b_g_.head(6);
 
     // Constraints currently only floating-based dynamics 
     MatrixNd eq_mat_0(6,NUM_JOINTS+4);
