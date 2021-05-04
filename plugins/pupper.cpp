@@ -30,6 +30,24 @@ PupperPlugin::PupperPlugin(){
 
     // Load the pupper dynamic model controller
     WBC_.Load(pupper_urdf_string);
+
+    // Task for Body center of mass to be 10cm high
+    static Task CoM_Position_Task;
+    CoM_Position_Task.body_id = "bottom_PCB";
+    CoM_Position_Task.type    = "body_pos";
+    CoM_Position_Task.task_weight = 1;
+    CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
+    CoM_Position_Task.targets = {0.10};
+
+    // Task for Body center of mass to be flat
+    static Task CoM_Orientation_Task;
+    CoM_Orientation_Task.body_id = "bottom_PCB";
+    CoM_Orientation_Task.type    = "body_ori";
+    CoM_Orientation_Task.task_weight = 1;
+    CoM_Orientation_Task.targets = {0, 0, 0, 1};    // identity quaternion 
+
+    WBC_.addTask(0, "COM_POSITION", &CoM_Position_Task);
+    // WBC_.addTask(1, "COM_ORIENTATION", &CoM_Orientation_Task);
 }
 
 
@@ -86,6 +104,10 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     connection_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
     connection_node_->Init("pupper_world");
     contact_sub_ = connection_node_->Subscribe("~/physics/contacts", &PupperPlugin::contactCallback_, this);
+
+    start_time = common::Time::GetWallTime();
+
+    cout << "Loaded successfully" << endl;
 }
 
 
@@ -97,18 +119,22 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
 // Called on every simulation time step
 void PupperPlugin::onUpdate(){
-    static vector<float> test_angles = {-0.1,  M_PI_4,  M_PI_2, 
-                                         0.1, -M_PI_4, -M_PI_2,
-                                         0.1, -M_PI_4, -M_PI_2,
-                                        -0.1,  M_PI_4,  M_PI_2};
+    static vector<float> test_angles = { 0.0,  M_PI_4,  M_PI_2, 
+                                         0.0, -M_PI_4, -M_PI_2,
+                                         0.0,  M_PI_4,  M_PI_2,
+                                         0.0, -M_PI_4, -M_PI_2};
+
+    // First two seconds
+    if (common::Time::GetWallTime() - start_time < common::Time(2, 0)){
+        setJointPositions(test_angles);
+    }
 
     //Manage publisher update rate
-    if (common::Time::GetWallTime() - last_update_time_ > update_interval_){
+    else if (common::Time::GetWallTime() - last_update_time_ > update_interval_){
         updateBody_();
         updateJoints_();
         updateController_();
-        // control_torques_ = WBC_.calculateOutputTorque();
-        setJointPositions(test_angles);
+        control_torques_ = WBC_.calculateOutputTorque();
         last_update_time_ = common::Time::GetWallTime();
     }
 
@@ -213,7 +239,7 @@ void PupperPlugin::updateBody_(){
 
 // Tell the controller the current state of the robot
 void PupperPlugin::updateController_(){
-    WBC_.updateController(joint_positions_, joint_velocities_, body_quat_);
+    WBC_.updateController(joint_positions_, joint_velocities_, body_quat_, {true, true, true, true});
 }
 
 

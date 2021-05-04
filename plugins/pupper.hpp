@@ -74,6 +74,8 @@ private:
     std::array<float, ROBOT_NUM_JOINTS> control_torques_;
     void updateController_();
     void applyTorques_();
+
+    common::Time start_time;
 };
 
 
