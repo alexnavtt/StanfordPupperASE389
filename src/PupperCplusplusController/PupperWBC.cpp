@@ -284,6 +284,12 @@ void PupperWBC::formQP(){
     //       
     //       Determine how to neglect the non-contacting portions of the opt. problem. 
     
+
+
+    // ---------------------------------------------------------------
+    // ------------------------- OBJECTIVE ---------------------------
+    // ---------------------------------------------------------------
+
     // Form task cost matrix and vector
     MatrixNd cost_t_mat = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     VectorNd cost_t_vec = VectorNd::Zero(NUM_JOINTS);
@@ -295,6 +301,7 @@ void PupperWBC::formQP(){
         //int n_t = T[i].targets.size(); // Note: task target doesn't match jacobian row size for 1st task
         int n_t = j.rows();
         VectorNd x_ddot_desired = VectorNd::Zero(n_t);
+        // x_ddot_desired(2) = 0.5;
         cost_t_mat += T->task_weight * j.transpose() * j; // nq x nq
         cost_t_vec += T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
     }
@@ -309,17 +316,17 @@ void PupperWBC::formQP(){
     MatrixNd P = MatrixNd::Zero(NUM_JOINTS+4,NUM_JOINTS+4);
     VectorNd q = VectorNd::Zero(NUM_JOINTS+4);
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
-    P.bottomRightCorner(4,4) = cost_rf_mat;
-    cout << "cost_t_mat: \n" << cost_t_mat.format(f) << endl;
-    cout << "cost_rf_mat: \n" << cost_rf_mat.format(f) << endl;
-    cout << "P: \n" << P.format(f) << endl;
-    // assert(false);
+    P.bottomRightCorner(4,4)               = cost_rf_mat;
     q.head(NUM_JOINTS) = cost_t_vec;
+
+
+    // -----------------------------------------------------------------
+    // ------------------------- CONSTRAINTS ---------------------------
+    // -----------------------------------------------------------------
 
     // Form equality and inequality constraints 
     // Enforce floating base dynamics:
     MatrixNd J_c = getContactJacobian_();
-    cout << "J_c = \n" << J_c.transpose().format(f) << endl ;
     // Calculate mass matrix 
     Math::MatrixNd M = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, M, false); // update kinematics set to false for speed
@@ -328,21 +335,15 @@ void PupperWBC::formQP(){
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g);
 
     MatrixNd eq_mat_0(6,NUM_JOINTS+4);
-    VectorNd eq_vec_0(6);
     cout << "start debug" << endl;
     eq_mat_0.leftCols(NUM_JOINTS) = M.topRows(6);
-    cout << "o0" << endl;
-    cout << "-J_c.transpose().topRows(6) size " << -J_c.transpose().topRows(6).rows() << "x" << -J_c.transpose().topRows(6).cols() << endl;
     eq_mat_0.rightCols(4) = -J_c.transpose().topRows(6); // stacked horizontally [ M, -J_c']
 
-    cout << "o1" << endl;
-    eq_vec_0 << b_g.head(6); // Is this correct for vectors??
-    cout << "o2" << endl;
+    VectorNd eq_vec_0 = b_g.head(6);
+
     // Constraints currently only floating-based dynamics 
     MatrixNd A(eq_mat_0.rows(),eq_mat_0.cols());
-    cout << "o3" << endl;
     A << eq_mat_0;
-    cout << "o4" << endl;
 
     // For equality constraints, set lower and upper equal
     VectorNd l = VectorNd::Zero(6);
@@ -400,6 +401,11 @@ void PupperWBC::formQP(){
 
     // Solve Problem
     osqp_solve(work);
+
+    cout << "Solution Vec: \n";
+    for (int i = 0; i < 22; i++){
+        cout << work->solution->x[i] << endl;
+    }
 
     // Cleanup
     if (data) {
