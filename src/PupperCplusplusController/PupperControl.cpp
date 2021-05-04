@@ -45,8 +45,8 @@ int main(int argc, char** argv){
     CoM_Orientation_Task.targets = {0, 0, 0, 1};    // identity quaternion 
 
     // Add the tasks with priority 0 and 1
-    // Pup.addTask(0, "COM_pos", &CoM_Position_Task);
-    // Pup.addTask(1, "COM_ori", &CoM_Orientation_Task);
+    Pup.addTask(0, "COM_pos", &CoM_Position_Task);
+    Pup.addTask(1, "COM_ori", &CoM_Orientation_Task);
 
     // Contact Jacobian Test
     //                // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3,    BR1,BR2,BR3,      FL1,FL2,FL3,      FR1,FR2,FR3     Q4
@@ -71,5 +71,11 @@ int main(int argc, char** argv){
     //     cout << "                           DOF: " << Pup.Pupper_.mJoints[i].mDoFCount << endl;
     // }
 
+    // Load constraint set
+    Pup.initConstraintSets_();
+    //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
+    //Pup.getContactJacobian_();
+
+    //Pup.formQP();
     return 0;
 }
