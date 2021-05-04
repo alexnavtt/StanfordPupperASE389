@@ -77,5 +77,11 @@ int main(int argc, char** argv){
     // Pup.getContactJacobian_();
     
     Pup.formQP();
+
+    //Test body to base coordinates 
+    const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
+    RigidBodyDynamics::Math::Vector3d body_point_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), body_contact_point_left, false);
+    cout << "Front left contact point in base coord: \n" << body_point_pos.format(f) << endl;
+
     return 0;
 }
