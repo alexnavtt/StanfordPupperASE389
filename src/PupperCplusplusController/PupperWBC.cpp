@@ -315,6 +315,7 @@ void PupperWBC::formQP(){
     // Form equality and inequality constraints 
     // Enforce floating base dynamics:
     MatrixNd J_c = getContactJacobian_();
+    cout << "J_c = \n" << J_c.transpose().format(f) << endl ;
     // Calculate mass matrix 
     Math::MatrixNd M = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, M, false); // update kinematics set to false for speed
@@ -325,8 +326,9 @@ void PupperWBC::formQP(){
     MatrixNd eq_mat_0(6,NUM_JOINTS+4);
     VectorNd eq_vec_0(6);
     cout << "start debug" << endl;
-    cout << "M.topRows(6) size " << M.topRows(6).rows() << "x" << M.topRows(6).cols() << endl;
     eq_mat_0.leftCols(NUM_JOINTS) = M.topRows(6);
+    cout << "o0" << endl;
+    cout << "-J_c.transpose().topRows(6) size " << -J_c.transpose().topRows(6).rows() << "x" << -J_c.transpose().topRows(6).cols() << endl;
     eq_mat_0.rightCols(4) = -J_c.transpose().topRows(6); // stacked horizontally [ M, -J_c']
 
     cout << "o1" << endl;
