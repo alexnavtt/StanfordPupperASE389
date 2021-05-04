@@ -133,7 +133,7 @@ MatrixNd PupperWBC::getContactJacobian_(){
     //     J_c_manual.row(i) = J_ci.row(2);
     // }
     // cout << "Contact Jacobian Manual: \n" << J_c_manual.transpose().format(f) << endl;
-    // return J_c;
+    return J_c;
 }
 
 // Retrieve body Jacobian by ID
@@ -338,13 +338,16 @@ void PupperWBC::formQP(){
     MatrixNd A(eq_mat_0.rows(),eq_mat_0.cols());
     cout << "o3" << endl;
     A << eq_mat_0;
+    cout << "o4" << endl;
 
     // For equality constraints, set lower and upper equal
     VectorNd l = VectorNd::Zero(6);
     VectorNd u = VectorNd::Zero(6);
     l.head(6) = eq_vec_0;
+    cout << "o5" << endl;
     u.head(6) = eq_vec_0;
-
+    cout << "o6" << endl;
+    
     c_int m = A.rows();
     c_int n = A.cols();
 
@@ -353,8 +356,10 @@ void PupperWBC::formQP(){
     vector<c_float> l_c;
     vector<c_float> u_c;
     convertEigenToCfloat_(q,q_c);
+    cout << "o7" << endl;
     convertEigenToCfloat_(l,l_c);
     convertEigenToCfloat_(u,u_c);
+    cout << "o8" << endl;
 
     //Convert matrices into csc form
     vector<c_float> P_x;
@@ -435,7 +440,7 @@ void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vect
 void PupperWBC::convertEigenToCfloat_(const VectorNd &q, vector<c_float> &q_c){
     // Convert Eigen vector to std::vector<c_float> for use in osqp
     q_c.clear();
-    for (int i = 0; i <= q.size(); i++){
+    for (Eigen::Index i = 0; i < q.size(); i++){
         q_c.push_back(q(i));
     }
 }
