@@ -75,7 +75,7 @@ int main(int argc, char** argv){
     // Pup.initConstraintSets_();
     //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     // Pup.getContactJacobian_();
-
+    
     Pup.formQP();
     return 0;
 }

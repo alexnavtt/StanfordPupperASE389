@@ -290,14 +290,13 @@ void PupperWBC::formQP(){
 
     for (int i = 0; i < robot_tasks_.size(); i++ ){
         Task* T = robot_tasks_[i];
-
+        
         MatrixNd j = getTaskJacobian_(i);
         //int n_t = T[i].targets.size(); // Note: task target doesn't match jacobian row size for 1st task
         int n_t = j.rows();
         VectorNd x_ddot_desired = VectorNd::Zero(n_t);
-
-        cost_t_mat += T[i].task_weight * j.transpose() * j; // nq x nq
-        cost_t_vec += T[i].task_weight * j.transpose() * x_ddot_desired; // nq x 1
+        cost_t_mat += T->task_weight * j.transpose() * j; // nq x nq
+        cost_t_vec += T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
     }
     
     // Form reaction force cost matrix and vector
