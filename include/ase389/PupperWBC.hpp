@@ -96,6 +96,10 @@ public:
     void convertEigenToCSC_(const Matrix &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i, bool triup = false);
     void formQP(Matrix &P, VectorNd &q, Matrix &A, VectorNd &l, VectorNd &u);
     VectorNd solveQP(int n, int m, Matrix  &P, c_float *q, Matrix  &A, c_float *lb, c_float *ub);
+
+    // Used for timing
+    double tic;
+    double toc;
 };
 
 #endif
