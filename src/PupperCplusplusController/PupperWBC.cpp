@@ -12,15 +12,41 @@ using std::endl;
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
-static Eigen::IOFormat f(3);
+namespace {
+    Eigen::IOFormat f(3);
+
+    VectorNd quatDiff(Eigen::Quaternion<double> q1, Eigen::Quaternion<double> q2){
+        // Not 100% sure about this order
+        Eigen::Quaternion<double> error = q1 * q2.conjugate();
+        // Get the 3d axis difference
+        VectorNd error3d = VectorNd::Zero(3);
+        error3d = error.vec() * error.w()/abs(error.w());
+
+        printf("q1: (x:%.2f, y:%.2f, z:%.2f, w:%.2f)\n", q1.x(), q1.y(), q1.z(), q1.w());
+        printf("q2: (x:%.2f, y:%.2f, z:%.2f, w:%.2f)\n", q2.x(), q2.y(), q2.z(), q2.w());
+        printf("error: (x:%.2f, y:%.2f, z:%.2f, w:%.2f)\n", error.x(), error.y(), error.z(), error.w());
+
+        cout << "Error3d: ";
+        for (int i = 0; i < 3; i++){
+            cout << error3d(i) << ", ";
+        }
+        cout << endl;
+
+        return error3d;
+    }
+}
+
 
 // Constructor
 PupperWBC::PupperWBC(){
+    // Correctly size the robot state vectors
     joint_angles_     = VectorNd::Zero(NUM_Q);
     joint_velocities_ = VectorNd::Zero(NUM_JOINTS);
     control_torques_  = VectorNd::Zero(NUM_JOINTS);
+    robot_position_   = VectorNd::Zero(3);
     feet_in_contact_ = {true, true, true, true};
 
+    // Create solver structs
     QP_settings_ = std::make_unique<OSQPSettings>();
     QP_data_     = std::make_unique<OSQPData>();
 
@@ -34,20 +60,24 @@ PupperWBC::PupperWBC(){
     Jc_      = MatrixNd::Zero(4, NUM_JOINTS);
     massMat_ = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     b_g_     = VectorNd::Zero(NUM_JOINTS);
-
-    // testQPSolver();
 }
 
 // Update the controller with the current state of the robot
-void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_angles, 
-                                 const array<float, ROBOT_NUM_JOINTS>& joint_velocities,
-                                 const Eigen::Quaternion<float>& body_quaternion,
+void PupperWBC::updateController(const VectorNd& joint_angles, 
+                                 const VectorNd& joint_velocities,
+                                 const Eigen::Vector3d& body_position,
+                                 const Eigen::Quaterniond& body_quaternion,
                                  const array<bool, 4>& feet_in_contact){
+    // Copy over the joint states
     for (int i = 0; i < ROBOT_NUM_JOINTS; i++){
         joint_angles_[i+6]     = joint_angles[i];
         joint_velocities_[i+6] = joint_velocities[i];
     }
 
+    // Record the body position vector
+    robot_position_ = body_position;
+
+    // Record the body orientation quaternion
     robot_orientation_.w() = body_quaternion.w();
     robot_orientation_.x() = body_quaternion.x();
     robot_orientation_.y() = body_quaternion.y();
@@ -60,20 +90,61 @@ void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_ang
     CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_, false);
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
 
+    // Copy which feet are in contact
     feet_in_contact_ = feet_in_contact;
 }
 
 // Add a task to the IHWBC controller
-void PupperWBC::addTask(unsigned priority, string name, Task* T){
-    if (robot_tasks_.size() <= priority){
-        robot_tasks_.resize(priority + 1);
+void PupperWBC::addTask(string name, Task* T){
+    task_indices_[name] = robot_tasks_.size();
+    robot_tasks_.push_back(T);
+
+    switch(T->type){
+        case BODY_POS:
+        T->active_targets.resize(3, false);
+        if (Pupper_.GetBodyId(T->body_id.c_str()) == -1){
+            string message = "Task name " + T->body_id + " did not match any known body";
+            throw(std::runtime_error(message));
+        }
+        break;
+
+        case BODY_ORI:
+        if (Pupper_.GetBodyId(T->body_id.c_str()) == -1){
+            string message = "Task name " + T->body_id + " did not match any known body";
+            throw(std::runtime_error(message));
+        }
+        T->quat_measured = Eigen::Quaterniond::Identity();
+        break;
+
+        case JOINT_POS:
+        assert(T->joint_target.size() == ROBOT_NUM_JOINTS);
+        T->joint_measured = VectorNd::Zero(T->joint_target.size());
+        T->active_targets.resize(T->joint_target.size(), false);
     }
-    robot_tasks_[priority] = T;
-    task_indices_[name] = priority;
 }
 
+// Update the measured state of the task focus
+void PupperWBC::updateJointTask(std::string name, VectorNd state){
+    Task* T = robot_tasks_[task_indices_[name]];
+    assert(T->type == JOINT_POS);
+    T->joint_measured = state;
+}
+
+void PupperWBC::updateBodyPosTask(std::string name, Eigen::Vector3d state){
+    Task* T = robot_tasks_[task_indices_[name]];
+    assert(T->type == BODY_POS);
+    T->pos_measured = state;
+}
+
+void PupperWBC::updateBodyOriTask(std::string name, Eigen::Quaternion<double> state){
+    Task* T = robot_tasks_[task_indices_[name]];
+    assert(T->type == BODY_ORI);
+    T->quat_measured = state;
+}
+
+// Load the model
 void PupperWBC::Load(std::string urdf_file_string){
-    // Load the model
+    // Get the model information from the URDF
     RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, false);
 
     // Summarize model characteristics
@@ -84,21 +155,15 @@ void PupperWBC::Load(std::string urdf_file_string){
     printf("*\tJoint Count:\t%zd\n", Pupper_.mJoints.size());
     printf("*\tBody Names:\n");
     for (int i = 0; i < Pupper_.mBodies.size(); i++)
-        // cout<< "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
+        cout<< "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
+    // Set the robot state
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
     initConstraintSets_();
-
-    // // Confirm masses have been read correctly (since verbose output of urdf reader is incorrect):
-    // for(int i = 0; i < Pupper_.mBodies.size(); i++)
-    //     // cout<< "Body " << Pupper_.GetBodyName(i) << " mass: "<< Pupper_.mBodies[i].mMass << endl;
-    // // Confirm intertias have been read correctly:
-    // for(int i = 0; i < Pupper_.mBodies.size(); i++)
-    //     // cout<< "Body " << Pupper_.GetBodyName(i) << " inertia: \n"<< Pupper_.mBodies[i].mInertia.format(f) << endl;
 }
 
-std::array<float, 12> PupperWBC::calculateOutputTorque(){
-    // cout<< "in" << endl;
+
+array<float, 12> PupperWBC::calculateOutputTorque(){
     // Objective function terms
     MatrixNd P = MatrixNd::Zero(NUM_JOINTS + 4, NUM_JOINTS + 4);
     VectorNd q = VectorNd::Zero(NUM_JOINTS + 4);
@@ -107,27 +172,27 @@ std::array<float, 12> PupperWBC::calculateOutputTorque(){
     MatrixNd A = MatrixNd::Zero(             6, NUM_JOINTS + 4);
     VectorNd lower_bounds = VectorNd::Zero(6);
     VectorNd upper_bounds = VectorNd::Zero(6);
-    // cout<< "here" << endl;
+
     // Solve for q_ddot and reaction forces
     formQP(P, q, A, lower_bounds, upper_bounds);
-    // cout<< "formed" << endl;
     VectorNd optimal_solution = solveQP(A.cols(), A.rows(), P, q.data(), A, lower_bounds.data(), upper_bounds.data());
     VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
     VectorNd F_r    = optimal_solution.tail(4);
 
-    // cout<< "Solution: -----------------" << endl;
-    for (int i = 0; i < optimal_solution.size(); i++){
-        // cout<< optimal_solution[i] << endl;
-    }
-    // cout<< " --------------------------" << endl;
+    // cout << "Solution: -----------------" << endl;
+    // for (int i = 0; i < optimal_solution.size(); i++){
+    //     cout<< optimal_solution[i] << endl;
+    // }
+    // cout << " --------------------------" << endl;
 
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
-
+    tau = tau;
+    cout << "Back left hip control torque: " << tau(0) << endl;
     // cout<< "Torques: " << endl;
-    for (int i = 0; i < tau.size(); i++){
-        // cout<< tau[i] << endl;  
-    }
+    // for (int i = 0; i < tau.size(); i++){
+    //     cout<< tau[i] << endl;  
+    // }
 
     array<float, 12> output;
     std::copy(tau.data(), tau.data() + tau.size(), output.data());
@@ -153,7 +218,6 @@ void PupperWBC::initConstraintSets_(){
     pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_normal, "front_right_contact");
 
     pup_constraints_.Bind(Pupper_);
-    // cout<< "Constraints Initialized..." << endl;
 }
 
 // Retrieve body Jacobian by ID
@@ -171,7 +235,10 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
     Task* T = robot_tasks_[priority];
     MatrixNd Jt;
 
-    if (T->type == "body_pos"){
+    switch(T->type){
+    // Body Position Task
+    case BODY_POS:
+    {
         MatrixNd Jb = getBodyJacobian_(T->body_id);
 
         // Create selection matrix to zero out rows we don't care about
@@ -181,33 +248,33 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
         }
 
         Jt = U * Jb.bottomRows(3);
+        break;
+    }
 
-        double* data = Jt.data();
-        for (int i = 0; i < Jt.size(); i++){
-            if (abs(data[i] < 0.001)) data[i] = 0;
-        }
-
-        // cout<< "Position Only: " << endl;
-        // cout<< Jt << endl;
-
-    }else if (T->type == "body_ori"){
+    // Body Orientation Task
+    case BODY_ORI:
+    {
         MatrixNd Jb = getBodyJacobian_(T->body_id);
 
         // In general we care about all 4 parts of a quaternion, so 
         // there's no selection matrix for this one
         Jt = Jb.topRows(3);
-        // cout<< "Orientation only: \n" << Jt << endl;
+        break;
+    }
 
-    }else if(T->type == "joint_pos"){
+    // Joint position task
+    case JOINT_POS:
         Jt = MatrixNd::Zero(Pupper_.qdot_size, Pupper_.qdot_size);
 
         // For joint position Jacobians the value is either 1 or zero
         for (int i = 0; i < T->active_targets.size(); i++){
             Jt(i, i) = T->active_targets[i];
         }
+        break;
 
         // cout<< "Joint position Jacobian: \n" << Jt.format(f) << endl;
-    }else{
+
+    default:
         throw(std::runtime_error("Unrecognized WBC Task format"));
     }
 
@@ -243,6 +310,8 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // ------------------------- OBJECTIVE ---------------------------
     // ---------------------------------------------------------------
 
+    // Objective is of the form 1/2(x'Px) + q'x
+
     // Form task cost matrix and vector
     MatrixNd cost_t_mat = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     VectorNd cost_t_vec = VectorNd::Zero(NUM_JOINTS);
@@ -252,8 +321,26 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         
         MatrixNd j = getTaskJacobian_(i);
         VectorNd x_ddot_desired = VectorNd::Zero(j.rows());
-        cost_t_mat += T->task_weight * j.transpose() * j; // nq x nq
-        cost_t_vec += T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+
+        switch(T->type){
+            case BODY_ORI:
+                x_ddot_desired = T->Kp * quatDiff(T->quat_measured, T->quat_target);
+                break;
+
+            case BODY_POS:
+                x_ddot_desired = T->Kp * (T->pos_measured - T->pos_target);
+                break;
+
+            case JOINT_POS:
+                x_ddot_desired = T->Kp * (T->joint_measured - T->joint_target);
+                break;
+        }
+
+        cost_t_mat += 2 * T->task_weight * j.transpose() * j; // nq x nq
+        cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+
+        // cout << "j.transpose() size: (" << j.transpose().rows() << "x" << j.transpose().cols() << ")\n";
+        // cout << "x_ddot_desired size: " << x_ddot_desired.size() << endl;
     }
 
     // Add a cost to penalize high joint accelerations
@@ -265,7 +352,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // Form reaction force cost matrix and vector
     MatrixNd cost_rf_mat = MatrixNd::Identity(4,4);
     VectorNd cost_rf_vec = VectorNd::Zero(4);
-    float lambda_rf = 1.0; // Reaction force penalty
+    float lambda_rf = 0.1; // Reaction force penalty
     cost_rf_mat *= lambda_rf;
     
     // Form P matrix and q vector
@@ -306,11 +393,9 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A, c_float  *lb, c_float  *ub){
 
     //Convert matrices into csc form
-    vector<c_float> P_x;
-    vector<c_int> P_p, P_i;
+    vector<c_float> P_x, A_x;
+    vector<c_int>   P_p, P_i, A_p, A_i;
     convertEigenToCSC_(P, P_x, P_p, P_i, true);
-    vector<c_float> A_x;
-    vector<c_int> A_p, A_i;
     convertEigenToCSC_(A, A_x, A_p, A_i);
 
     // Exitflag
@@ -335,7 +420,8 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
     // Define solver settings as default
     if (settings) {
         osqp_set_default_settings(settings);
-        settings->alpha = 1.0; // Change alpha parameter
+        settings->alpha = 1.0;       // Change alpha parameter
+        settings->verbose = false;   // Prevent OSQP from printing after solving
     }
 
     // Setup workspace
