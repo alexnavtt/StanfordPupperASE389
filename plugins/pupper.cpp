@@ -26,7 +26,7 @@ PupperPlugin::PupperPlugin(){
     std::fill(feet_in_contact_.begin(), feet_in_contact_.end(), false);
 
     // Initialize the COM quaternion as identity
-    body_quat_ = Eigen::Quaternion<float>::Identity();
+    body_quat_ = Eigen::Quaterniond::Identity();
 
     // Load the pupper dynamic model controller
     WBC_.Load(pupper_urdf_string);
@@ -34,20 +34,24 @@ PupperPlugin::PupperPlugin(){
     // Task for Body center of mass to be 10cm high
     static Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
-    CoM_Position_Task.type    = "body_pos";
+    CoM_Position_Task.type    = BODY_POS;
     CoM_Position_Task.task_weight = 1;
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
-    CoM_Position_Task.targets = {0.10};
+    CoM_Position_Task.pos_target << 0, 0, 0.10;
+    CoM_Position_Task.Kp = 1000;
+    CoM_Position_Task.Kd = 0;
 
     // Task for Body center of mass to be flat
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
-    CoM_Orientation_Task.type    = "body_ori";
+    CoM_Orientation_Task.type    = BODY_ORI;
     CoM_Orientation_Task.task_weight = 1;
-    CoM_Orientation_Task.targets = {0, 0, 0, 1};    // identity quaternion 
+    CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
+    CoM_Orientation_Task.Kp = 1000;
+    CoM_Orientation_Task.Kd = 0;
 
-    WBC_.addTask(0, "COM_POSITION", &CoM_Position_Task);
-    // WBC_.addTask(1, "COM_ORIENTATION", &CoM_Orientation_Task);
+    WBC_.addTask("COM_POSITION", &CoM_Position_Task);
+    WBC_.addTask("COM_ORIENTATION", &CoM_Orientation_Task);
 }
 
 
@@ -93,11 +97,16 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         control_torques_[i] = 0;
     }
 
+    // Resize joint vectors
+    joint_positions_  = Eigen::VectorXd::Zero(ROBOT_NUM_JOINTS);
+    joint_velocities_ = Eigen::VectorXd::Zero(ROBOT_NUM_JOINTS);
+    body_COM_         = Eigen::VectorXd::Zero(3);
+
     //Connect plugin to Gazebo world instance
     this->updateConnection_ = event::Events::ConnectWorldUpdateBegin(std::bind(&PupperPlugin::onUpdate, this));
 
     // Set up update rate variables
-    update_interval_  = common::Time(0, common::Time::SecToNano(0.02));  // In the form common::Time(sec, nanoSec): 50Hz
+    update_interval_  = common::Time(0, common::Time::SecToNano(0.002));  // In the form common::Time(sec, nanoSec): 500Hz
     last_update_time_ = common::Time::GetWallTime();
 
     // Set up the connection to Gazebo topics
@@ -131,9 +140,12 @@ void PupperPlugin::onUpdate(){
 
     //Manage publisher update rate
     else if (common::Time::GetWallTime() - last_update_time_ > update_interval_){
+        // Get the robot state from the simulation
         updateBody_();
         updateJoints_();
+        // Copy that robot state into the Whole Body Controller
         updateController_();
+        // Calculate control commands
         control_torques_ = WBC_.calculateOutputTorque();
         last_update_time_ = common::Time::GetWallTime();
     }
@@ -239,7 +251,9 @@ void PupperPlugin::updateBody_(){
 
 // Tell the controller the current state of the robot
 void PupperPlugin::updateController_(){
-    WBC_.updateController(joint_positions_, joint_velocities_, body_quat_, {true, true, true, true});
+    WBC_.updateController(joint_positions_, joint_velocities_, body_COM_, body_quat_, {true, true, true, true});
+    WBC_.updateBodyPosTask("COM_POSITION", body_COM_);
+    WBC_.updateBodyOriTask("COM_ORIENTATION", body_quat_);
 }
 
 
