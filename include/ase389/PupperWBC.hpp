@@ -18,7 +18,7 @@
 
 // To make the code a little more readable
 typedef RigidBodyDynamics::Math::MatrixNd Matrix;
-typedef RigidBodyDynamics::Math::VectorNd Vector;
+typedef RigidBodyDynamics::Math::VectorNd VectorNd;
 typedef RigidBodyDynamics::Math::Quaternion Quat;
 
 class PupperWBC{
@@ -27,13 +27,19 @@ public:
     PupperWBC();
 
     // Take in the current robot data
-    void updateController(const std::array<float, ROBOT_NUM_JOINTS>& joint_angles, 
-                          const std::array<float, ROBOT_NUM_JOINTS>& joint_velocities,
-                          const Eigen::Quaternion<float>& body_quaternion,
+    void updateController(const VectorNd& joint_angles, 
+                          const VectorNd& joint_velocities,
+                          const Eigen::Vector3d& body_position,
+                          const Eigen::Quaterniond& body_quaternion,
                           const std::array<bool, 4>& feet_in_contact);
 
     // Add a task to the robot's task list
-    void addTask(unsigned priority, std::string name, Task* task);
+    void addTask(std::string name, Task* task);
+
+    // Update a task with its current measurement
+    void updateJointTask(  std::string name, VectorNd state);
+    void updateBodyPosTask(std::string name, Eigen::Vector3d state);
+    void updateBodyOriTask(std::string name, Eigen::Quaternion<double> state);
 
     // Load the Pupper model from a URDF
     void Load(std::string filename);
@@ -61,16 +67,18 @@ public:
     Matrix getContactJacobian_();
 
     // Store the robot state
-    Vector joint_angles_;        // joint angles in radians
-    Vector joint_velocities_;    // joint velocities in rad/s
+    VectorNd joint_angles_;        // joint angles in radians
+    VectorNd joint_velocities_;    // joint velocities in rad/s
+    VectorNd robot_position_;      // robot center of mass position in meters
+    VectorNd robot_velocity_;      // robot center of mass velocity in m/s
     Quat   robot_orientation_;   // robot orientation from IMU (Quaternion)
     Matrix Jc_;                  // contact Jacobian
     Matrix massMat_;             // mass matrix
-    Vector b_g_;                 // coriolis plus gravity
+    VectorNd b_g_;                 // coriolis plus gravity
     std::array<bool, 4> feet_in_contact_;                   // Feet in contact (boolean array: [back left, back right, front left, front right])
 
     // Control torques in Nm
-    Vector control_torques_;
+    VectorNd control_torques_;
 
     // Body ids of lower links 
     uint back_left_lower_link_id_;
@@ -86,8 +94,8 @@ public:
     std::unique_ptr<OSQPSettings> QP_settings_;
     std::unique_ptr<OSQPData> QP_data_;
     void convertEigenToCSC_(const Matrix &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i, bool triup = false);
-    void formQP(Matrix &P, Vector &q, Matrix &A, Vector &l, Vector &u);
-    Vector solveQP(int n, int m, Matrix  &P, c_float *q, Matrix  &A, c_float *lb, c_float *ub);
+    void formQP(Matrix &P, VectorNd &q, Matrix &A, VectorNd &l, VectorNd &u);
+    VectorNd solveQP(int n, int m, Matrix  &P, c_float *q, Matrix  &A, c_float *lb, c_float *ub);
 };
 
 #endif

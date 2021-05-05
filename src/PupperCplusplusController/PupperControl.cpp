@@ -34,21 +34,34 @@ int main(int argc, char** argv){
     // Task for Body center of mass to be 10cm high
     Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
-    CoM_Position_Task.type    = "body_pos";
-    CoM_Position_Task.task_weight = 100;
+    CoM_Position_Task.type    = BODY_POS;
+    CoM_Position_Task.task_weight = 0.1;
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
-    CoM_Position_Task.targets = {0.10};
+    CoM_Position_Task.pos_target << 0, 0, 0.10;
+    CoM_Position_Task.Kp = 100;
+    CoM_Position_Task.Kd = 0;
 
     // Task for Body center of mass to be flat
     Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
-    CoM_Orientation_Task.type    = "body_ori";
+    CoM_Orientation_Task.type    = BODY_ORI;
     CoM_Orientation_Task.task_weight = 1;
-    CoM_Orientation_Task.targets = {0, 0, 0, 1};    // identity quaternion 
+    CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
+    CoM_Orientation_Task.Kp = 500;
+    CoM_Orientation_Task.Kd = 0;
+
+    Task JointPositionTask;
+    JointPositionTask.type = JOINT_POS;
+    JointPositionTask.task_weight = 0.1;
+    JointPositionTask.joint_target = VectorNd::Zero(12);
+    JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
+    JointPositionTask.Kp = 1000;
+    JointPositionTask.Kd = 0;
 
     // Add the tasks with priority 0 and 1
-    Pup.addTask(0, "COM_pos", &CoM_Position_Task);
-    Pup.addTask(1, "COM_ori", &CoM_Orientation_Task);
+    Pup.addTask("COM_elevation", &CoM_Position_Task);
+    Pup.addTask("COM_orientation", &CoM_Orientation_Task);
+    Pup.addTask("JointPos", &JointPositionTask);
 
     // Contact Jacobian Test
     //                // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3,    BR1,BR2,BR3,      FL1,FL2,FL3,      FR1,FR2,FR3     Q4
@@ -78,11 +91,13 @@ int main(int argc, char** argv){
     //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     // Pup.getContactJacobian_();
 
-    std::array<float,12> joint_positions  = {0,0,0,0,0,0,0,0,0,0,0,0}; // Question: Can we make these doubles?
-    std::array<float,12> joint_velocities = {0,0,0,0,0,0,0,0,0,0,0,0}; // Question: Can we make these doubles?
-    Eigen::Quaternion<float> robot_quat = Eigen::Quaternion<float>::Identity(); // Question: Can we make these doubles?
+    VectorNd joint_positions  = VectorNd::Zero(12);
+    VectorNd joint_velocities = VectorNd::Zero(12);
+    Eigen::Quaterniond robot_quat = Eigen::Quaterniond::Identity();
     std::array<bool,4> feet_in_contact = {true, true, true, true};
-    Pup.updateController(joint_positions, joint_velocities, robot_quat, feet_in_contact);
+    Eigen::Vector3d body_position;
+    body_position << 0, 0, 0.12;
+    Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
     Pup.calculateOutputTorque();
 
     //Test height calculation
@@ -98,13 +113,13 @@ int main(int argc, char** argv){
     // robot_quat.y() = -0.1009519;
     // robot_quat.z() = -0.0096908;
     // robot_quat.w() = 0.9948437;
-    joint_positions  = {0,0,0,.2,.2,.2,0,0,0,.2,.2,.2};
+    joint_positions  << 0,0,0,.2,.2,.2,0,0,0,.2,.2,.2;
     robot_quat.x() = 0; // Rotate about y -.7 radians (pick up left feet): [ 0, -0.3428978, 0, 0.9393727 ]
     robot_quat.y() = -0.3428978;
     robot_quat.z() = 0;
     robot_quat.w() = 0.9393727;
     // robot_quat.normalize();
-    Pup.updateController(joint_positions, joint_velocities, robot_quat, feet_in_contact);
+    Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
     
     const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
     const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);

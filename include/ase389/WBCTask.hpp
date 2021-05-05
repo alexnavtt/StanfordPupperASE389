@@ -4,20 +4,39 @@
 #include <vector>
 #include <string>
 #include <array>
+#include "Eigen/Dense"
+
+enum TaskType{
+    BODY_POS,
+    BODY_ORI,
+    JOINT_POS
+};
 
 struct Task{    
     // Which body this task is for (use JOINT for a joint position task)
     std::string body_id;
 
     // What type of task is this (body_pos, body_ori, or joint_pos)
-    std::string type;
+    TaskType type;
 
     // The weight to be used in IHWBC
     float task_weight = 0;
 
     // The desired task goal and which to consider for this task
     std::vector<bool> active_targets;
-    std::vector<float> targets;
+    
+    Eigen::VectorXd joint_target;
+    Eigen::VectorXd joint_measured;
+
+    Eigen::Quaternion<double> quat_target;
+    Eigen::Quaternion<double> quat_measured;
+
+    Eigen::Vector3d pos_target;
+    Eigen::Vector3d pos_measured;
+
+    // Coefficients for the PD error term 
+    double Kp;
+    double Kd;
 };
 
 #endif

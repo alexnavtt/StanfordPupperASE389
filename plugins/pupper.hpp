@@ -60,10 +60,10 @@ private:
     void contactCallback_(ConstContactsPtr &_msg);
 
     // Robot State
-    std::array<float, ROBOT_NUM_JOINTS> joint_positions_;
-    std::array<float, ROBOT_NUM_JOINTS> joint_velocities_;
-    std::array<float, 3> body_COM_;
-    Eigen::Quaternion<float> body_quat_;
+    Eigen::VectorXd joint_positions_;
+    Eigen::VectorXd joint_velocities_;
+    Eigen::VectorXd body_COM_;
+    Eigen::Quaterniond body_quat_;
     void updateJoints_();
     void updateBody_();
 
