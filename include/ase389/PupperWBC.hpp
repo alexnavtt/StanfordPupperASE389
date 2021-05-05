@@ -65,7 +65,7 @@ public:
     void initConstraintSets_();
 
     // Retrieve the contact Jacobian for the active contacts
-    Matrix getContactJacobian_();
+    void updateContactJacobian_();
 
     // Store the robot state
     VectorNd joint_angles_;        // joint angles in radians
@@ -101,6 +101,9 @@ public:
     // Used for timing
     double tic;
     double toc;
+
+    // Used for numerical derivative of task jacobians (j_dot)
+    double t_prev;
 };
 
 #endif

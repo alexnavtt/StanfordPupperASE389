@@ -12,6 +12,7 @@ enum TaskType{
     JOINT_POS
 };
 
+// Note: for embeddded use, we want to avoid dynamically sized vectors/matrices
 struct Task{    
     // Which body this task is for (use JOINT for a joint position task)
     std::string body_id;
@@ -37,6 +38,11 @@ struct Task{
     // Coefficients for the PD error term 
     double Kp;
     double Kd;
+
+    // Previous Jacobian
+    Eigen::MatrixXd j_prev; // Remove for embedded
+    bool j_prev_updated = false;
+
 };
 
 #endif

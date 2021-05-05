@@ -26,8 +26,9 @@ namespace {
     }
 
     double now(){
+        // returns time in seconds since last epoch
         auto now = std::chrono::system_clock::now().time_since_epoch().count();
-        return now/(double)1e9; // now is in nanoseconds
+        return now/(double)1e9; // system_clock::now is in nanoseconds
     }
 }
 
@@ -55,6 +56,9 @@ PupperWBC::PupperWBC(){
     Jc_      = MatrixNd::Zero(4, NUM_JOINTS);
     massMat_ = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     b_g_     = VectorNd::Zero(NUM_JOINTS);
+
+    // Time for numerical derivative of jacobian
+    t_prev = now();
 }
 
 // Update the controller with the current state of the robot
@@ -80,16 +84,17 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
 
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
 
+    // Copy which feet are in contact
+    feet_in_contact_ = feet_in_contact;
+
     // Update the problem matrices
     massMat_.setZero(); // Required!
     Jc_.setZero(); // Just to be safe; not clear if this is required 
     b_g_.setZero(); // Just to be safe; not clear if this is required 
-    CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, true);
+    updateContactJacobian_();
     CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_, false);
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
 
-    // Copy which feet are in contact
-    feet_in_contact_ = feet_in_contact;
 }
 
 // Add a task to the IHWBC controller
@@ -231,7 +236,7 @@ MatrixNd PupperWBC::getBodyJacobian_(string body_id) {
     return J;
 }
 
-// Get the derivative of a task with respect to the joint angles
+// Get the derivative of a task with respect to the joint angles (Jacobian)
 MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
     Task* T = robot_tasks_[priority];
     MatrixNd Jt;
@@ -288,10 +293,23 @@ MatrixNd PupperWBC::getTaskJacobian_(std::string task_name){
     return getTaskJacobian_(index);
 }
 
+void PupperWBC::updateContactJacobian_(){
+    CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, true);
+    for (int i=0; i<4; i++){
+        if (feet_in_contact_[i]){
+            //cout << "Foot " << i << " is in contact." << endl;
+            continue;
+        }
+        else{
+            Jc_.row(i).setZero();
+        }
+    }
+    //cout << "Jc_': \n" << Jc_.transpose().format(f) << endl;
+}
 
 void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, VectorNd &u){
     // Optimization problem form:
-    // min .5(x'Px) + q'x
+    // min 1/2(x'Px) + q'x
     // st l <= Ax <= u
 
     // x is a concatenated vector of qdotdot and Fr 
@@ -321,6 +339,23 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         Task* T = robot_tasks_[i];
         
         MatrixNd j = getTaskJacobian_(i);
+
+        // Calculate j_dot
+        MatrixNd j_dot;
+        double delta_t = (now() - t_prev); // seconds
+        if (T->j_prev_updated == true){
+            j_dot = (j - T->j_prev)/delta_t;
+            cout << "j_prev: \n" << T->j_prev.format(f) << endl;
+            cout << "j_dot calculated" << endl;
+            cout << "delta_t: " << delta_t << endl;
+        }
+        else{
+            j_dot = MatrixNd::Zero(j.rows(),j.cols());
+            T->j_prev_updated = true;
+        }
+        T->j_prev = j;
+        MatrixNd j_dot_q_dot = j_dot * joint_velocities_;
+
         VectorNd x_ddot_desired = VectorNd::Zero(j.rows());
 
         switch(T->type){
@@ -341,8 +376,14 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         // cout << "x_ddot_desired size: " << x_ddot_desired.size() << endl;
 
         cost_t_mat += 2 * T->task_weight * j.transpose() * j; // nq x nq
-        cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+        cost_t_vec += 2 * T->task_weight * j.transpose() * (j_dot_q_dot + x_ddot_desired); // nq x 1 
+        // Without j_dot_q_dot:
+        //cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+
+        //cout << "j_dot_q_dot_" << i << ": \n" << j_dot_q_dot << endl;
     }
+    // For j_dot calculation
+    t_prev = now();
 
     // Add a cost to penalize high joint accelerations
     double lambda_t = 0.1;
@@ -388,7 +429,6 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // cout<< "l vector: \n" << l.format(f) << endl << endl;
     // cout<< "u vector: \n" << u.format(f) << endl << endl;
 }
-
 
 
 VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A, c_float  *lb, c_float  *ub){
@@ -446,6 +486,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
 
 
 void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vector<c_int> &P_p, vector<c_int> &P_i, bool triup){
+    // Convert Eigen types to CSC used in OSQP solver
     // Clear any existing data from the vectors
     P_x.clear();
     P_i.clear();
