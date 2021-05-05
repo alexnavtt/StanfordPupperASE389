@@ -1,3 +1,4 @@
+#include <chrono>
 #include <memory>
 #include <iostream>
 #include "ase389/PupperWBC.hpp"
@@ -21,18 +22,12 @@ namespace {
         // Get the 3d axis difference
         VectorNd error3d = VectorNd::Zero(3);
         error3d = error.vec() * error.w()/abs(error.w());
-
-        printf("q1: (x:%.2f, y:%.2f, z:%.2f, w:%.2f)\n", q1.x(), q1.y(), q1.z(), q1.w());
-        printf("q2: (x:%.2f, y:%.2f, z:%.2f, w:%.2f)\n", q2.x(), q2.y(), q2.z(), q2.w());
-        printf("error: (x:%.2f, y:%.2f, z:%.2f, w:%.2f)\n", error.x(), error.y(), error.z(), error.w());
-
-        cout << "Error3d: ";
-        for (int i = 0; i < 3; i++){
-            cout << error3d(i) << ", ";
-        }
-        cout << endl;
-
         return error3d;
+    }
+
+    double now(){
+        auto now = std::chrono::system_clock::now().time_since_epoch().count();
+        return now/(double)1e9; // now is in nanoseconds
     }
 }
 
@@ -190,12 +185,12 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
 
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
-    tau = tau;
-    cout << "Back left hip control torque: " << tau(0) << endl;
+    // cout << "Back left hip control torque: " << tau(0) << endl;
     // cout<< "Torques: " << endl;
     // for (int i = 0; i < tau.size(); i++){
     //     cout<< tau[i] << endl;  
     // }
+    printf("Time: %.5f\n", now());
 
     array<float, 12> output;
     std::copy(tau.data(), tau.data() + tau.size(), output.data());
@@ -267,15 +262,15 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
 
     // Joint position task
     case JOINT_POS:
-        Jt = MatrixNd::Zero(Pupper_.qdot_size, Pupper_.qdot_size);
+        Jt = MatrixNd::Zero(ROBOT_NUM_JOINTS, NUM_JOINTS);
 
         // For joint position Jacobians the value is either 1 or zero
         for (int i = 0; i < T->active_targets.size(); i++){
-            Jt(i, i) = T->active_targets[i];
+            Jt(i, i+6) = (T->active_targets[i] ? 1 : 0);
         }
+        // cout<< "Joint position Jacobian: \n" << Jt.format(f) << endl;
         break;
 
-        // cout<< "Joint position Jacobian: \n" << Jt.format(f) << endl;
 
     default:
         throw(std::runtime_error("Unrecognized WBC Task format"));
@@ -339,11 +334,11 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
                 break;
         }
 
-        cost_t_mat += 2 * T->task_weight * j.transpose() * j; // nq x nq
-        cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
-
         // cout << "j.transpose() size: (" << j.transpose().rows() << "x" << j.transpose().cols() << ")\n";
         // cout << "x_ddot_desired size: " << x_ddot_desired.size() << endl;
+
+        cost_t_mat += 2 * T->task_weight * j.transpose() * j; // nq x nq
+        cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
     }
 
     // Add a cost to penalize high joint accelerations
