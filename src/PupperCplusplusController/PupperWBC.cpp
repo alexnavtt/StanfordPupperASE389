@@ -318,7 +318,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
 
     // Exitflag
     c_int exitflag = 0;
-
+    
     // Workspace structures
     OSQPWorkspace *work;
     OSQPSettings  *settings = QP_settings_.get();
@@ -339,6 +339,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
     if (settings) {
         osqp_set_default_settings(settings);
         settings->alpha = 1.0; // Change alpha parameter
+        settings->verbose = 0; 
     }
 
     // Setup workspace
