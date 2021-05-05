@@ -56,6 +56,9 @@ void PupperWBC::updateController(const array<float, ROBOT_NUM_JOINTS>& joint_ang
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
 
     // Update the problem matrices
+    massMat_.setZero(); // Required!
+    Jc_.setZero(); // Just to be safe; not clear if this is required 
+    b_g_.setZero(); // Just to be safe; not clear if this is required 
     CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, true);
     CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_, false);
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
