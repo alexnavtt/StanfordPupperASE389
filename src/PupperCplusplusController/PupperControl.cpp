@@ -29,11 +29,13 @@ int main(int argc, char** argv){
     PupperWBC Pup;
     Pup.Load(pupper_urdf_string);
 
+    // NOTE: The body spatial jacobians are given in body coordinates, not world frame.
+
     // Task for Body center of mass to be 10cm high
     Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.type    = "body_pos";
-    CoM_Position_Task.task_weight = 1;
+    CoM_Position_Task.task_weight = 100;
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
     CoM_Position_Task.targets = {0.10};
 
@@ -76,16 +78,57 @@ int main(int argc, char** argv){
     //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     // Pup.getContactJacobian_();
 
-    std::array<float,12> joint_positions  = {0,0,0,0,0,0,0,0,0,0,0,0};
-    std::array<float,12> joint_velocities = {0,0,0,0,0,0,0,0,0,0,0,0};
-    Eigen::Quaternion<float> robot_quat = Eigen::Quaternion<float>::Identity();
+    std::array<float,12> joint_positions  = {0,0,0,0,0,0,0,0,0,0,0,0}; // Question: Can we make these doubles?
+    std::array<float,12> joint_velocities = {0,0,0,0,0,0,0,0,0,0,0,0}; // Question: Can we make these doubles?
+    Eigen::Quaternion<float> robot_quat = Eigen::Quaternion<float>::Identity(); // Question: Can we make these doubles?
     std::array<bool,4> feet_in_contact = {true, true, true, true};
     Pup.updateController(joint_positions, joint_velocities, robot_quat, feet_in_contact);
     Pup.calculateOutputTorque();
 
-    //Test body to base coordinates 
+    //Test height calculation
+    //////////////////////////////////////////////////////////////////////////////////////
+ 
+    // Pupper rotated with front right leg and back right leg in contact
+    // From Gazebo: height = .0965
+    // Calculated:  h0: 0.100148
+    //              h1: 0.0945443
+    // Values read from gazebo
+    // joint_positions  = {-.113567,.75649,1.60267,.05627936,-.81907876,-1.805184605,-.116226,.780257,1.58085,.0454920574,-.87633305,-1.77936025};
+    // robot_quat.x() = 0.000888; 
+    // robot_quat.y() = -0.1009519;
+    // robot_quat.z() = -0.0096908;
+    // robot_quat.w() = 0.9948437;
+    joint_positions  = {0,0,0,.2,.2,.2,0,0,0,.2,.2,.2};
+    robot_quat.x() = 0; // Rotate about y -.7 radians (pick up left feet): [ 0, -0.3428978, 0, 0.9393727 ]
+    robot_quat.y() = -0.3428978;
+    robot_quat.z() = 0;
+    robot_quat.w() = 0.9393727;
+    // robot_quat.normalize();
+    Pup.updateController(joint_positions, joint_velocities, robot_quat, feet_in_contact);
+    
     const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
-    RigidBodyDynamics::Math::Vector3d body_point_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), body_contact_point_left, false);
-    cout << "Front left contact point in base coord: \n" << body_point_pos.format(f) << endl;
+    const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
+    RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
+    RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+    // Retrieve Orientation of pupper base
+    Eigen::Matrix3f Rsb = robot_quat.toRotationMatrix();
+    cout << "Rsb: \n" << Rsb.format(f) << endl;
+    cout << "Rsb': \n" << Rsb.transpose().format(f) << endl;
+    // Calculate height in global (space) coordinates
+    //RigidBodyDynamics::Math::Vector3d nz_s(0,0,1);
+    Eigen::Vector3f r0f = r0.cast <float> ();
+    Eigen::Vector3f r1f = r1.cast <float> ();
+    cout << "Cast succesfully..." << endl;
+    cout << "r0 Front right contact point in base coord: \n" << r0f.format(f) << endl;
+    cout << "r1 Back right contact point in base coord: \n" << r1f.format(f) << endl;
+
+    Eigen::Vector3f r0_s = Rsb * r0f ;
+    Eigen::Vector3f r1_s = Rsb * r1f ;
+    cout << "r0 in world frame: \n" << r0_s.format(f) << endl;
+    cout << "r1 in world frame: \n" << r1_s.format(f) << endl;
+
+    cout << "h0: " << -r0_s(2) << endl;
+    cout << "h1: " << -r1_s(2) << endl;
     return 0;
+
 }
