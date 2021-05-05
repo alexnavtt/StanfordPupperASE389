@@ -30,7 +30,7 @@ int main(int argc, char** argv){
     Pup.Load(pupper_urdf_string);
 
     // Task for Body center of mass to be 10cm high
-    static Task CoM_Position_Task;
+    Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.type    = BODY_POS;
     CoM_Position_Task.task_weight = 0.1;
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
     CoM_Position_Task.Kd = 0;
 
     // Task for Body center of mass to be flat
-    static Task CoM_Orientation_Task;
+    Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.type    = BODY_ORI;
     CoM_Orientation_Task.task_weight = 1;
@@ -48,9 +48,18 @@ int main(int argc, char** argv){
     CoM_Orientation_Task.Kp = 500;
     CoM_Orientation_Task.Kd = 0;
 
+    Task JointPositionTask;
+    JointPositionTask.type = JOINT_POS;
+    JointPositionTask.task_weight = 0.1;
+    JointPositionTask.joint_target = VectorNd::Zero(12);
+    JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
+    JointPositionTask.Kp = 1000;
+    JointPositionTask.Kd = 0;
+
     // Add the tasks with priority 0 and 1
     Pup.addTask("COM_elevation", &CoM_Position_Task);
     Pup.addTask("COM_orientation", &CoM_Orientation_Task);
+    Pup.addTask("JointPos", &JointPositionTask);
 
     // Contact Jacobian Test
     //                // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3,    BR1,BR2,BR3,      FL1,FL2,FL3,      FR1,FR2,FR3     Q4
