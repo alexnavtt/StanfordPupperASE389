@@ -123,21 +123,25 @@ void PupperWBC::addTask(string name, Task* T){
 
 // Update the measured state of the task focus
 void PupperWBC::updateJointTask(std::string name, VectorNd state){
-    Task* T = robot_tasks_[task_indices_[name]];
+    Task* T = getTask(name);
     assert(T->type == JOINT_POS);
     T->joint_measured = state;
 }
 
 void PupperWBC::updateBodyPosTask(std::string name, Eigen::Vector3d state){
-    Task* T = robot_tasks_[task_indices_[name]];
+    Task* T = getTask(name);
     assert(T->type == BODY_POS);
     T->pos_measured = state;
 }
 
 void PupperWBC::updateBodyOriTask(std::string name, Eigen::Quaternion<double> state){
-    Task* T = robot_tasks_[task_indices_[name]];
+    Task* T = getTask(name);
     assert(T->type == BODY_ORI);
     T->quat_measured = state;
+}
+
+Task* PupperWBC::getTask(string name){
+    return robot_tasks_[task_indices_[name]];
 }
 
 // Load the model
@@ -190,7 +194,6 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // for (int i = 0; i < tau.size(); i++){
     //     cout<< tau[i] << endl;  
     // }
-    printf("Time: %.5f\n", now());
 
     array<float, 12> output;
     std::copy(tau.data(), tau.data() + tau.size(), output.data());

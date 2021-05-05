@@ -35,6 +35,7 @@ public:
 
     // Add a task to the robot's task list
     void addTask(std::string name, Task* task);
+    Task* getTask(std::string name);
 
     // Update a task with its current measurement
     void updateJointTask(  std::string name, VectorNd state);
