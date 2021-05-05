@@ -176,9 +176,9 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd q = VectorNd::Zero(NUM_JOINTS + 4);
     
     // Constraint terms
-    MatrixNd A = MatrixNd::Zero(             6, NUM_JOINTS + 4);
-    VectorNd lower_bounds = VectorNd::Zero(6);
-    VectorNd upper_bounds = VectorNd::Zero(6);
+    MatrixNd A = MatrixNd::Zero(             10, NUM_JOINTS + 4);
+    VectorNd lower_bounds = VectorNd::Zero(10);
+    VectorNd upper_bounds = VectorNd::Zero(10);
 
     // Solve for q_ddot and reaction forces
     formQP(P, q, A, lower_bounds, upper_bounds);
@@ -206,7 +206,7 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
 }
 
 void PupperWBC::initConstraintSets_(){
-    // Perform initialization of RBDL constraints
+    // Perform initialization of RBDL contact constraints
     back_left_lower_link_id_ = Pupper_.GetBodyId("back_left_lower_link");
     back_right_lower_link_id_ = Pupper_.GetBodyId("back_right_lower_link");
     front_left_lower_link_id_ = Pupper_.GetBodyId("front_left_lower_link");
@@ -296,11 +296,8 @@ MatrixNd PupperWBC::getTaskJacobian_(std::string task_name){
 void PupperWBC::updateContactJacobian_(){
     CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, true);
     for (int i=0; i<4; i++){
-        if (feet_in_contact_[i]){
-            //cout << "Foot " << i << " is in contact." << endl;
-            continue;
-        }
-        else{
+        if (!feet_in_contact_[i]){
+            //cout << "Foot " << i << " is floating." << endl;
             Jc_.row(i).setZero();
         }
     }
@@ -408,26 +405,42 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // -----------------------------------------------------------------
 
     // Equality constraint of the form (first six rows only) 
-    // A*q_ddot + b_g = Jc^T * Fr
+    // A*q_ddot + b_g = Jc^T * Fr (floating-based dynamics)
 
-    // Encorporate the non-linear effects in the dynamics equation
+    // Incorporate the non-linear effects in the dynamics equation
     VectorNd eq_vec_0 = -b_g_.head(6);
-
-    // Constraints currently only floating-based dynamics 
     MatrixNd eq_mat_0(6,NUM_JOINTS+4);
     eq_mat_0 << massMat_.topRows(6), -Jc_.transpose().topRows(6);
-    A = eq_mat_0;
+    
+    // Reaction force constraints of the form:
+    // l <= Fr <= u      (l = u = 0 for feet not in contact)
+    
+    MatrixNd ineq_mat_0(4,NUM_JOINTS+4);
+    VectorNd ineq_vec_l0 = VectorNd::Zero(4);
+    VectorNd ineq_vec_u0 = (double)100.0 * VectorNd::Ones(4);
 
-    // For equality constraints, set lower and upper equal
-    l = eq_vec_0;
-    u = eq_vec_0;
+    for (int i=0; i<4; i++){
+        if (!feet_in_contact_[i]){
+            ineq_vec_u0[i] = 0; // force Fr = 0 for floating feet
+        }
+    }
 
-    // cout<< "P Matrix: \n" << P.format(f) << endl << endl;
-    // cout<< "q Matrix: \n" << q.format(f) << endl << endl;
+    ineq_mat_0 << MatrixNd::Zero(4,NUM_JOINTS) , MatrixNd::Identity(4,4);
+    
+    A.topRows(6) = eq_mat_0;
+    A.bottomRows(4) = ineq_mat_0;
 
-    // cout<< "A Matrix: \n" << A.format(f) << endl << endl;
-    // cout<< "l vector: \n" << l.format(f) << endl << endl;
-    // cout<< "u vector: \n" << u.format(f) << endl << endl;
+    l.topRows(6) = eq_vec_0; // For equality constraints, set lower and upper equal
+    u.topRows(6) = eq_vec_0;
+    l.bottomRows(4) = ineq_vec_l0;
+    u.bottomRows(4) = ineq_vec_u0;
+
+    cout<< "P Matrix: \n" << P.format(f) << endl << endl;
+    cout<< "q Matrix: \n" << q.format(f) << endl << endl;
+
+    cout<< "A Matrix: \n" << A.format(f) << endl << endl;
+    cout<< "l vector: \n" << l.format(f) << endl << endl;
+    cout<< "u vector: \n" << u.format(f) << endl << endl;
 }
 
 
