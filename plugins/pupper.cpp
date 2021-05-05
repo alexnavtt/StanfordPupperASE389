@@ -142,13 +142,19 @@ void PupperPlugin::onUpdate(){
                                          0.0,  M_PI_4,  M_PI_2,
                                          0.0, -M_PI_4, -M_PI_2};
 
+    common::Time now = common::Time::GetWallTime();
+    double dTime = now.Double();
+
+    WBC_.getTask("COM_POSITION")->pos_target.z() = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz
+    // cout << WBC_.getTask("COM_POSITION")->pos_target.z();
+
     // First two seconds
-    if (common::Time::GetWallTime() - start_time < common::Time(2, 0)){
+    if (now - start_time < common::Time(2, 0)){
         setJointPositions(test_angles);
     }
 
     //Manage publisher update rate
-    else if (common::Time::GetWallTime() - last_update_time_ > update_interval_){
+    else if (now - last_update_time_ > update_interval_){
         // Get the robot state from the simulation
         updateBody_();
         updateJoints_();
@@ -254,8 +260,6 @@ void PupperPlugin::updateBody_(){
     body_quat_.y() = body_pose.Rot().Y();
     body_quat_.z() = body_pose.Rot().Z();
     body_quat_.w() = body_pose.Rot().W();
-
-    auto q = body_pose.Rot();
 }
 
 // Tell the controller the current state of the robot
