@@ -35,24 +35,24 @@ PupperPlugin::PupperPlugin(){
     static Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.type    = BODY_POS;
-    CoM_Position_Task.task_weight = 1;
+    CoM_Position_Task.task_weight = 100; // 1
     CoM_Position_Task.active_targets = {true, true, true};    // only account for z-position
     CoM_Position_Task.pos_target << 0, 0, 0.10;
-    CoM_Position_Task.Kp = 1000;
+    CoM_Position_Task.Kp = 10;//1000;
     CoM_Position_Task.Kd = 0;
 
     // Task for Body center of mass to be flat
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.type    = BODY_ORI;
-    CoM_Orientation_Task.task_weight = 0.7;
+    CoM_Orientation_Task.task_weight = 0; // 0.7;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
-    CoM_Orientation_Task.Kp = 1000;
+    CoM_Orientation_Task.Kp = 10;//1000;
     CoM_Orientation_Task.Kd = 0;
 
     static Task JointPositionTask;
     JointPositionTask.type = JOINT_POS;
-    JointPositionTask.task_weight = 0.1;
+    JointPositionTask.task_weight = 0; //0.1;
     JointPositionTask.joint_target = VectorNd::Zero(12);
     JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
     JointPositionTask.Kp = 1000;
@@ -270,6 +270,7 @@ void PupperPlugin::updateController_(){
     VectorNd jointPos(12);
     std::copy(joint_positions_.data(), joint_positions_.data() + 12, jointPos.data());
     WBC_.updateJointTask("JOINT_ANGLES", jointPos);
+    //cout << "COM height to ground = " << body_COM_[2] << endl;
 }
 
 

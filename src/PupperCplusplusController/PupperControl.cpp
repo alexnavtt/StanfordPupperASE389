@@ -71,10 +71,11 @@ int main(int argc, char** argv){
     Pup.addTask("COM_orientation", &CoM_Orientation_Task);
     Pup.addTask("JointPos", &JointPositionTask);
 
-    VectorNd joint_positions  = VectorNd::Zero(12);
+    VectorNd joint_positions  =  VectorNd::Zero(12);
+    joint_positions << 0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7; // Init in squatted position
     VectorNd joint_velocities = VectorNd::Zero(12);
     Eigen::Quaterniond robot_quat = Eigen::Quaterniond::Identity();
-    std::array<bool,4> feet_in_contact = {true, true, true, true};
+    std::array<bool,4> feet_in_contact = {true, true, true, true}; // BL, BR, FL, FR
     Eigen::Vector3d body_position;
     body_position << 0, 0, 0.12;
     Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
@@ -91,51 +92,49 @@ int main(int argc, char** argv){
 
     //Test height calculation
     //////////////////////////////////////////////////////////////////////////////////////
+    // //Test height calculation
+    // //////////////////////////////////////////////////////////////////////////////////////
  
-    // Pupper rotated with front right leg and back right leg in contact
-    // From Gazebo: height = .0965
-    // Calculated:  h0: 0.100148
-    //              h1: 0.0945443
-    // Values read from gazebo
-    // joint_positions  = {-.113567,.75649,1.60267,.05627936,-.81907876,-1.805184605,-.116226,.780257,1.58085,.0454920574,-.87633305,-1.77936025};
-    // robot_quat.x() = 0.000888; 
-    // robot_quat.y() = -0.1009519;
-    // robot_quat.z() = -0.0096908;
-    // robot_quat.w() = 0.9948437;
-    joint_positions  << 0,0,0,.2,.2,.2,0,0,0,.2,.2,.2;
-    robot_quat.x() = 0; // Rotate about y -.7 radians (pick up left feet): 
-    robot_quat.y() = -0.3428978;
-    robot_quat.z() = 0;
-    robot_quat.w() = 0.9393727;
-    // robot_quat.normalize();
-    Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
+    // // Pupper rotated with front right leg and back right leg in contact
+    // // From Gazebo: height = .0965
+    // // Calculated:  h0: 0.100148
+    // //              h1: 0.0945443
+    // // Values read from gazebo
+    // // joint_positions  = {-.113567,.75649,1.60267,.05627936,-.81907876,-1.805184605,-.116226,.780257,1.58085,.0454920574,-.87633305,-1.77936025};
+    // // robot_quat.x() = 0.000888; 
+    // // robot_quat.y() = -0.1009519;
+    // // robot_quat.z() = -0.0096908;
+    // // robot_quat.w() = 0.9948437;
+    // joint_positions  << 0,0,0,.2,.2,.2,0,0,0,.2,.2,.2;
+    // robot_quat.x() = 0; // Rotate about y -.7 radians (pick up left feet): 
+    // robot_quat.y() = -0.3428978;
+    // robot_quat.z() = 0;
+    // robot_quat.w() = 0.9393727;
+    // // robot_quat.normalize();
+    // Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
     
-    const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
-    const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
-    RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
-    RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
-    // Retrieve Orientation of pupper base
-    Eigen::Matrix3d Rsb = robot_quat.toRotationMatrix();
-    cout << "Rsb: \n" << Rsb.format(f) << endl;
-    cout << "Rsb': \n" << Rsb.transpose().format(f) << endl;
-    // Calculate height in global (space) coordinates
-    //RigidBodyDynamics::Math::Vector3d nz_s(0,0,1);
-    // Eigen::Vector3d r0f = r0.cast <float> ();
-    // Eigen::Vector3d r1f = r1.cast <float> ();
-    cout << "Cast succesfully..." << endl;
-    cout << "r0 Front right contact point in base coord: \n" << r0.format(f) << endl;
-    cout << "r1 Back right contact point in base coord: \n" << r1.format(f) << endl;
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
+    // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
+    // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+    // // Retrieve Orientation of pupper base
+    // Eigen::Matrix3d Rsb = robot_quat.toRotationMatrix();
+    // cout << "Rsb: \n" << Rsb.format(f) << endl;
+    // cout << "Rsb': \n" << Rsb.transpose().format(f) << endl;
+ 
+    // cout << "r0 Front right contact point in base coord: \n" << r0.format(f) << endl;
+    // cout << "r1 Back right contact point in base coord: \n" << r1.format(f) << endl;
 
-    Eigen::Vector3d r0_s = Rsb * r0;
-    Eigen::Vector3d r1_s = Rsb * r1;
-    cout << "r0 in world frame: \n" << r0_s.format(f) << endl;
-    cout << "r1 in world frame: \n" << r1_s.format(f) << endl;
+    // Eigen::Vector3d r0_s = Rsb * r0;
+    // Eigen::Vector3d r1_s = Rsb * r1;
+    // cout << "r0 in world frame: \n" << r0_s.format(f) << endl;
+    // cout << "r1 in world frame: \n" << r1_s.format(f) << endl;
 
-    cout << "h0: " << -r0_s(2) << endl;
-    cout << "h1: " << -r1_s(2) << endl;
-    return 0;
+    // cout << "h0: " << -r0_s(2) << endl;
+    // cout << "h1: " << -r1_s(2) << endl;
+    // return 0;
 
-    // Other Tests
+    ///////////////////////  Other Tests ///////////////////////////////////
     // Contact Jacobian Test
     //                // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3,    BR1,BR2,BR3,      FL1,FL2,FL3,      FR1,FR2,FR3     Q4
     // Pup.joint_angles_ << 0,0,0,   .7071068,.7071068,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
