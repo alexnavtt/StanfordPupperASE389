@@ -195,20 +195,36 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
     // cout << "Back left hip control torque: " << tau(0) << endl;
-    // cout<< "Torques: " << endl;
-    // for (int i = 0; i < tau.size(); i++){
-    //     cout<< tau[i] << endl;  
-    // }
+    cout<< "Torques: " << endl;
+    for (int i = 0; i < tau.size(); i++){
+        cout<< tau[i] << endl;  
+    }
+
+    // Troubleshooting (confirmed correct)
+    //VectorNd sol = VectorNd::Zero(6);
+    // sol = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).head(6); 
+    // cout << "SOL: \n" << sol << endl;
+    // cout << "Jc': \n" << Jc_.transpose().topRows(6).format(f) << endl;
+    
 
     //---------------------------TEST OPTIMIZATION SOLUTION--------------------------//
     //-------------------------------------------------------------------------------//
-    // The accelerations we get from the forward dynamics should match watch the solver gives (assuming 4 legs in contact)
-    // Potential sources of error: Floating based dynamics constraint
-    //                             Torque calculation
+    // Reason for test: OSQP solution for qddot does not match simulation (i.e. z acceleration positive while pupper falling)
+    //                                                                     (    joint velocities not matching               )
+    // The accelerations we get from RBDL forward dynamics should match what the solver gives.
+    // They dont. 
     //                             
+    // However, there's an error somewhere in the use of RBDL's forward dynamics. When initialziing joint angles 
+    // to non-zero values (crouched position), RBDL gives incorrect joint velocities
+    // 
+
     VectorNd QDDOT = VectorNd::Zero(18);
-    VectorNd tau_gen = VectorNd::Zero(18);
+    VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
     tau_gen.tail(12) = tau;
+    
+    cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
+    cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
+    cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
     
     ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
     cout << "Qdotdot OSQP: -------------------------" << endl;
@@ -360,7 +376,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         
         MatrixNd j = getTaskJacobian_(i);
 
-        /////////////////Calculate j_dot/////////////////
+        //-----------------Calculate j_dot-----------------
         MatrixNd j_dot;
         double delta_t = (now() - t_prev); // seconds
         if (T->j_prev_updated == true){
@@ -374,7 +390,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         }
         T->j_prev = j;
         MatrixNd j_dot_q_dot = j_dot * joint_velocities_;
-        /////////////////////////////////////////////////
+        //--------------------------------------------------
 
         VectorNd x_ddot_desired = VectorNd::Zero(j.rows());
 
@@ -396,9 +412,13 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         // cout << "x_ddot_desired size: " << x_ddot_desired.size() << endl;
 
         cost_t_mat += 2 * T->task_weight * j.transpose() * j; // nq x nq
+
+        //----------------- WITH j_dot_q_dot ----------------
         cost_t_vec += 2 * T->task_weight * j.transpose() * (j_dot_q_dot + x_ddot_desired); // nq x 1 
-        // Without j_dot_q_dot:
-        //cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+
+        //----------------- WITHOUT j_dot_q_dot -------------
+        // cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+        //---------------------------------------------------
 
         //cout << "j_dot_q_dot_" << i << ": \n" << j_dot_q_dot << endl;
     }
@@ -451,6 +471,11 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     MatrixNd eq_mat_0(6,NUM_JOINTS+4);
     eq_mat_0 << massMat_.topRows(6), -Jc_.transpose().topRows(6);
     
+    // Debug: (confirmed correct)
+    // cout << "massMat: \n" << massMat_.topRows(6).format(f) << endl;
+    // cout << "Jc_'.topRows(6): \n" << (MatrixNd::Zero(4,18)-Jc_).transpose().topRows(6).format(f) << endl;
+    // cout << "combined: \n" << eq_mat_0.format(f) << endl;
+
     // Reaction force constraints of the form:
     // l <= Fr <= u      (l = u = 0 for feet not in contact)
     

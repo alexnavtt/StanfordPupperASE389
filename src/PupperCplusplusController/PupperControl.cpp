@@ -61,10 +61,11 @@ int main(int argc, char** argv){
     Pup.addTask("COM_orientation", &CoM_Orientation_Task);
     Pup.addTask("JointPos", &JointPositionTask);
 
-    VectorNd joint_positions  = VectorNd::Zero(12);
+    VectorNd joint_positions  =  VectorNd::Zero(12);
+    joint_positions << 0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7; // Init in squatted position
     VectorNd joint_velocities = VectorNd::Zero(12);
     Eigen::Quaterniond robot_quat = Eigen::Quaterniond::Identity();
-    std::array<bool,4> feet_in_contact = {true, true, true, true};
+    std::array<bool,4> feet_in_contact = {true, true, true, true}; // BL, BR, FL, FR
     Eigen::Vector3d body_position;
     body_position << 0, 0, 0.12;
     Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
