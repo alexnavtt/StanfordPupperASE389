@@ -186,11 +186,11 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
     VectorNd F_r    = optimal_solution.tail(4);
 
-    cout << "Solution: -----------------" << endl;
-    for (int i = 0; i < optimal_solution.size(); i++){
-        cout<< optimal_solution[i] << endl;
-    }
-    cout << " --------------------------" << endl;
+    // cout << "Solution: -----------------" << endl;
+    // for (int i = 0; i < optimal_solution.size(); i++){
+    //     cout<< optimal_solution[i] << endl;
+    // }
+    // cout << " --------------------------" << endl;
 
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
@@ -199,6 +199,28 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // for (int i = 0; i < tau.size(); i++){
     //     cout<< tau[i] << endl;  
     // }
+
+    //---------------------------TEST OPTIMIZATION SOLUTION--------------------------//
+    //-------------------------------------------------------------------------------//
+    // The accelerations we get from the forward dynamics should match watch the solver gives (assuming 4 legs in contact)
+    // Potential sources of error: Floating based dynamics constraint
+    //                             Torque calculation
+    //                             
+    VectorNd QDDOT = VectorNd::Zero(18);
+    VectorNd tau_gen = VectorNd::Zero(18);
+    tau_gen.tail(12) = tau;
+    
+    ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
+    cout << "Qdotdot OSQP: -------------------------" << endl;
+    cout << optimal_solution.head(18).transpose().format(f) << endl;
+    cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
+    cout << " --------------------------------------" << endl;
+    cout << "Reaction Forces OSQP: -----------------" << endl;
+    cout << optimal_solution.tail(4).transpose().format(f) << endl;
+    cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
+    cout << " --------------------------------------" << endl;
+    //-------------------------------------------------------------------------------//
+    //-------------------------------------------------------------------------------//
 
     array<float, 12> output;
     std::copy(tau.data(), tau.data() + tau.size(), output.data());
@@ -315,12 +337,12 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // P = [P_a,  0  ; 
     //       0 , P_b];
 
-    // TODO: Determine if we need to be careful with sparsity so that we can still update coefficients in solver. 
-    //          -OSQP update requires the sparsity to remain the same. 
-    //          -There may be zeros in the P matrix one solve that can be non-zero in the next solve. 
+    // TODO: Use update routines instead of FormQP every call
     //       
-    //       Determine how to neglect the non-contacting portions of the opt. problem. 
-    
+    //       Pass rf_desired somehow. Should this be a task?
+    //       
+    //       Set up tasks for foot locations. Can we know these in global coordinates? 
+
 
 
     // ---------------------------------------------------------------
@@ -395,19 +417,18 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // 2. Penalize error between desired and calculated:
     //    w*||rf_d-rf||^2
 
-    VectorNd rf_desired(4,1);
-    rf_desired << 4.5,4.5,4.5,4.5; 
-    
-    MatrixNd cost_rf_mat = MatrixNd::Identity(4,4);
-    VectorNd cost_rf_vec = VectorNd::Zero(4);
-
+    // TODO: Pass desired value and weights
+    VectorNd rf_desired(4); 
+    rf_desired << 6.5 * VectorNd::Ones(4); // Desired reaction force
     double lambda_rf = 0.1; // Reaction force penalty (minimize impacts)
     double w_rf = 1; // Reaction force tracking penalty (follow desired reaction force)
 
+    MatrixNd cost_rf_mat = MatrixNd::Identity(4,4);
+    VectorNd cost_rf_vec = VectorNd::Zero(4);
+
     cost_rf_mat *= lambda_rf;
     cost_rf_mat += MatrixNd::Identity(4,4) * 2 * w_rf;
-
-    cost_rf_vec += -2 * rf_desired;
+    cost_rf_vec += 2 * w_rf * -rf_desired;
 
     // Form P matrix and q vector
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
