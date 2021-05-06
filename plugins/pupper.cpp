@@ -264,7 +264,7 @@ void PupperPlugin::updateBody_(){
 
 // Tell the controller the current state of the robot
 void PupperPlugin::updateController_(){
-    WBC_.updateController(joint_positions_, joint_velocities_, body_COM_, body_quat_, {true, true, true, true});
+    WBC_.updateController(joint_positions_, joint_velocities_, body_COM_, body_quat_, feet_in_contact_);
     WBC_.updateBodyPosTask("COM_POSITION", body_COM_);
     WBC_.updateBodyOriTask("COM_ORIENTATION", body_quat_);
     VectorNd jointPos(12);
@@ -282,10 +282,14 @@ void PupperPlugin::updateController_(){
 void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
 
     static const array<string,4> collision_names = {
-        "pupper::front_left_lower_link:",
-        "pupper::front_right_lower_link",
+        // "pupper::front_left_lower_link:",
+        // "pupper::front_right_lower_link",
+        // "pupper::back_right_lower_link:",
+        // "pupper::back_left_lower_link::"
+        "pupper::back_left_lower_link::",
         "pupper::back_right_lower_link:",
-        "pupper::back_left_lower_link::"
+        "pupper::front_left_lower_link:",
+        "pupper::front_right_lower_link"
     };
 
     std::fill(feet_in_contact_.begin(), feet_in_contact_.end(), false);
@@ -296,12 +300,12 @@ void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
                     feet_in_contact_[i] = true;
     }
 
-    // Debug: print contacts in order (FL, FR, BR, BL)
-    // cout << "{";
-    // for (bool b : feet_in_contact_){
-    //     cout << b << ", ";
-    // }
-    // cout << "}" << endl;
+    //Debug: print contacts in order (FL, FR, BR, BL)
+    cout << "{";
+    for (bool b : feet_in_contact_){
+        cout << b << ", ";
+    }
+    cout << "}" << endl;
 
 }
 
