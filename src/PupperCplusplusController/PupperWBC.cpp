@@ -13,6 +13,8 @@ using std::endl;
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
+#define PRINT_CLEAN(M) cout << #M << ":" << endl; printClean(M);
+
 namespace {
     Eigen::IOFormat f(3);
 
@@ -30,6 +32,17 @@ namespace {
         auto now = std::chrono::system_clock::now().time_since_epoch().count();
         return now/(double)1e9; // system_clock::now is in nanoseconds
     }
+
+    inline void printClean(Eigen::MatrixXd &M){
+        for (int i = 0; i < M.rows(); i++){
+            for (int j = 0; j < M.cols(); j++){
+                if (abs(M(i,j)) < 1e-4) M(i,j) = 0;
+            }
+        }
+
+        cout << M << endl;
+    }
+
 }
 
 
@@ -186,11 +199,11 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
     VectorNd F_r    = optimal_solution.tail(4);
 
-    cout << "Solution: -----------------" << endl;
-    for (int i = 0; i < optimal_solution.size(); i++){
-        cout<< optimal_solution[i] << endl;
-    }
-    cout << " --------------------------" << endl;
+    // cout << "Solution: -----------------" << endl;
+    // for (int i = 0; i < optimal_solution.size(); i++){
+    //     cout<< optimal_solution[i] << endl;
+    // }
+    // cout << " --------------------------" << endl;
 
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
@@ -227,12 +240,16 @@ void PupperWBC::initConstraintSets_(){
 }
 
 // Retrieve body Jacobian by ID
-MatrixNd PupperWBC::getBodyJacobian_(string body_id) {
+MatrixNd PupperWBC::getBodyJacobian_(string body_id, const Eigen::Vector3d& offset) {
     // Create output
     MatrixNd J = MatrixNd::Zero(6, NUM_JOINTS);
 
     // Fill the Jacobian matrix
-    CalcBodySpatialJacobian(Pupper_, joint_angles_, Pupper_.GetBodyId(body_id.c_str()), J, true);
+    // cout << body_id << " " << endl;
+    // CalcBodySpatialJacobian(Pupper_, joint_angles_, Pupper_.GetBodyId(body_id.c_str()), J, true);
+    // PRINT_CLEAN(J);
+    CalcPointJacobian6D(Pupper_, joint_angles_, Pupper_.GetBodyId(body_id.c_str()), offset, J, true);
+    // PRINT_CLEAN(J);
     return J;
 }
 
@@ -245,7 +262,7 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
     // Body Position Task
     case BODY_POS:
     {
-        MatrixNd Jb = getBodyJacobian_(T->body_id);
+        MatrixNd Jb = getBodyJacobian_(T->body_id, T->offset);
 
         // Create selection matrix to zero out rows we don't care about
         MatrixNd U  = MatrixNd::Zero(3,3);
@@ -260,7 +277,7 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
     // Body Orientation Task
     case BODY_ORI:
     {
-        MatrixNd Jb = getBodyJacobian_(T->body_id);
+        MatrixNd Jb = getBodyJacobian_(T->body_id, T->offset);
 
         // In general we care about all 4 parts of a quaternion, so 
         // there's no selection matrix for this one
