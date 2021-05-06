@@ -301,7 +301,7 @@ void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
                     feet_in_contact_[i] = true;
     }
 
-    //Debug: print contacts in order (FL, FR, BR, BL)
+    //Debug: print contacts in order (BL, BR, FL, FR)
     cout << "{";
     for (bool b : feet_in_contact_){
         cout << b << ", ";
