@@ -64,7 +64,7 @@ int main(int argc, char** argv){
     VectorNd joint_positions  = VectorNd::Zero(12);
     VectorNd joint_velocities = VectorNd::Zero(12);
     Eigen::Quaterniond robot_quat = Eigen::Quaterniond::Identity();
-    std::array<bool,4> feet_in_contact = {true, false, false, true};
+    std::array<bool,4> feet_in_contact = {true, true, true, true};
     Eigen::Vector3d body_position;
     body_position << 0, 0, 0.12;
     Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);

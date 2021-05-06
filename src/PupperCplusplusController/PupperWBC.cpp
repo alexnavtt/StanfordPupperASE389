@@ -186,11 +186,11 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
     VectorNd F_r    = optimal_solution.tail(4);
 
-    // cout << "Solution: -----------------" << endl;
-    // for (int i = 0; i < optimal_solution.size(); i++){
-    //     cout<< optimal_solution[i] << endl;
-    // }
-    // cout << " --------------------------" << endl;
+    cout << "Solution: -----------------" << endl;
+    for (int i = 0; i < optimal_solution.size(); i++){
+        cout<< optimal_solution[i] << endl;
+    }
+    cout << " --------------------------" << endl;
 
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
@@ -301,6 +301,7 @@ void PupperWBC::updateContactJacobian_(){
             Jc_.row(i).setZero();
         }
     }
+    
     //cout << "Jc_': \n" << Jc_.transpose().format(f) << endl;
 }
 
@@ -337,14 +338,13 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         
         MatrixNd j = getTaskJacobian_(i);
 
-        // Calculate j_dot
+        /////////////////Calculate j_dot/////////////////
         MatrixNd j_dot;
         double delta_t = (now() - t_prev); // seconds
         if (T->j_prev_updated == true){
             j_dot = (j - T->j_prev)/delta_t;
-            cout << "j_prev: \n" << T->j_prev.format(f) << endl;
-            cout << "j_dot calculated" << endl;
-            cout << "delta_t: " << delta_t << endl;
+            // cout << "j_dot calculated" << endl;
+            // cout << "delta_t: " << delta_t << endl;
         }
         else{
             j_dot = MatrixNd::Zero(j.rows(),j.cols());
@@ -352,6 +352,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         }
         T->j_prev = j;
         MatrixNd j_dot_q_dot = j_dot * joint_velocities_;
+        /////////////////////////////////////////////////
 
         VectorNd x_ddot_desired = VectorNd::Zero(j.rows());
 
@@ -389,16 +390,33 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     }
 
     // Form reaction force cost matrix and vector
+    // 1. Penalize large reaction forces with form: 
+    //    lambda*||rf||^2
+    // 2. Penalize error between desired and calculated:
+    //    w*||rf_d-rf||^2
+
+    VectorNd rf_desired(4,1);
+    rf_desired << 4.5,4.5,4.5,4.5; 
+    
     MatrixNd cost_rf_mat = MatrixNd::Identity(4,4);
     VectorNd cost_rf_vec = VectorNd::Zero(4);
-    float lambda_rf = 0.1; // Reaction force penalty
+
+    double lambda_rf = 0.1; // Reaction force penalty (minimize impacts)
+    double w_rf = 1; // Reaction force tracking penalty (follow desired reaction force)
+
     cost_rf_mat *= lambda_rf;
-    
+    cost_rf_mat += MatrixNd::Identity(4,4) * 2 * w_rf;
+
+    cost_rf_vec += -2 * rf_desired;
+
     // Form P matrix and q vector
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
     P.bottomRightCorner(4,4)               = cost_rf_mat;
     q.head(NUM_JOINTS) = cost_t_vec;
-
+    q.tail(4) = cost_rf_vec;
+    
+    assert(P.rows() == cost_t_mat.rows() + cost_rf_mat.rows());
+    assert(q.rows() == cost_t_vec.rows() + cost_rf_vec.rows());
 
     // -----------------------------------------------------------------
     // ------------------------- CONSTRAINTS ---------------------------
@@ -435,12 +453,12 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     l.bottomRows(4) = ineq_vec_l0;
     u.bottomRows(4) = ineq_vec_u0;
 
-    cout<< "P Matrix: \n" << P.format(f) << endl << endl;
-    cout<< "q Matrix: \n" << q.format(f) << endl << endl;
+    // cout<< "P Matrix: \n" << P.format(f) << endl << endl;
+    // cout<< "q Matrix: \n" << q.format(f) << endl << endl;
 
-    cout<< "A Matrix: \n" << A.format(f) << endl << endl;
-    cout<< "l vector: \n" << l.format(f) << endl << endl;
-    cout<< "u vector: \n" << u.format(f) << endl << endl;
+    // cout<< "A Matrix: \n" << A.format(f) << endl << endl;
+    // cout<< "l vector: \n" << l.format(f) << endl << endl;
+    // cout<< "u vector: \n" << u.format(f) << endl << endl;
 }
 
 
