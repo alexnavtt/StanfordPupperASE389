@@ -4,24 +4,6 @@
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <robot name="pupper">
-  <material name="red">
-    <color rgba="1 0 0 1"/>
-  </material>
-  <material name="yellow">
-    <color rgba="1 1 0 1"/>
-  </material>
-  <material name="blue">
-    <color rgba="0 0 1 1"/>
-  </material>
-  <material name="green">
-    <color rgba="0 1 0 1"/>
-  </material>
-  <material name="blueGreen">
-    <color rgba="0 1 1 1"/>
-  </material>
-  <material name="pink">
-    <color rgba="1 0 1 1"/>
-  </material>
   <!-- Connect the plugin -->
   <gazebo>
     <plugin filename="libpupper_plugin.so" name="pupper_plugin"/>
@@ -36,16 +18,6 @@
       <mass value="0.0246155987687"/>
       <inertia ixx="0.000161445031637" ixy="0.0" ixz="0.0" iyy="1.7324369412e-05" iyz="0.0" izz="0.000178741870837"/>
     </inertial>
-    <visual name="bottom_PCB_visual">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/PCB_Board_Shifted.dae" scale="0.0254 0.0254 0.0254"/>
-      </geometry>
-    </visual>
-    <collision name="bottom_PCB_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/PCB_Board_Shifted.dae" scale="0.0254 0.0254 0.0254"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Create Front bulkhead -->
   <link name="front_bulkhead">
@@ -53,23 +25,12 @@
       <mass value="0.010506396"/>
       <inertia ixx="1.022692356e-05" ixy="0.0" ixz="0.0" iyy="2.7748515648e-05" iyz="0.0" izz="3.1221326112e-05"/>
     </inertial>
-    <visual>
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part1_frontbulkhead.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part1_frontbulkhead_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Join Front Bulkhead with Base -->
   <joint name="front_bulkhead_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="front_bulkhead"/>
-    <origin rpy="1.5707963268 0 0" xyz="0.002 0.114 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
   </joint>
   <!-- Create Middle Bulkhead -->
   <link name="middle_bulkhead_front">
@@ -77,23 +38,12 @@
       <mass value="0.012366396"/>
       <inertia ixx="8.554681632e-06" ixy="0.0" ixz="0.0" iyy="1.897506528e-05" iyz="0.0" izz="2.7393755616e-05"/>
     </inertial>
-    <visual name="middle_bulkhead_front_visual">
-      <material name="blue"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part2_middlebulkhead1.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="middle_bulkhead_front_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part2_middlebulkhead1_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Join Middle Bulkhead to Base -->
   <joint name="middle_bulkhead_to_base_1" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="middle_bulkhead_front"/>
-    <origin rpy="1.5707963268 0 0" xyz="0.002 0.114 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
   </joint>
   <!-- Create 2nd Middle Bulkhead -->
   <link name="middle_bulkhead_rear">
@@ -101,23 +51,12 @@
       <mass value="0.012373464"/>
       <inertia ixx="8.15128632e-06" ixy="0.0" ixz="0.0" iyy="1.5096884928e-05" iyz="0.0" izz="2.3080296576e-05"/>
     </inertial>
-    <visual name="middle_bulkhead_rear_visual">
-      <material name="blue"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part3_middlebulkhead2.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="middle_bulkhead_rear_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part3_middlebulkhead2_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Join 2nd Bulkhead to Base -->
   <joint name="middle_bulkhead_to_base_2" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="middle_bulkhead_rear"/>
-    <origin rpy="1.5707963268 0 0" xyz="0.003 0.114 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
   </joint>
   <!-- Create back right shroud -->
   <link name="back_right_shroud">
@@ -125,23 +64,12 @@
       <mass value="0.0058404"/>
       <inertia ixx="1.1398658832e-05" ixy="0.0" ixz="0.0" iyy="7.916366832e-06" iyz="0.0" izz="3.977793396e-06"/>
     </inertial>
-    <visual name="back_right_shroud_visual">
-      <material name="yellow"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part4_rightshroud.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_shroud_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part4_rightshroud_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect back right shroud to body -->
   <joint name="right_shroud_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_right_shroud"/>
-    <origin rpy="1.5707963268 3.14159265359 0" xyz="0.003 0.113 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
   </joint>
   <!-- Create back left shroud -->
   <link name="back_left_shroud">
@@ -149,24 +77,12 @@
       <mass value="0.0058404"/>
       <inertia ixx="1.1398638744e-05" ixy="0.0" ixz="0.0" iyy="7.916371296e-06" iyz="0.0" izz="3.97777368e-06"/>
     </inertial>
-    <visual name="back_left_shroud_visual">
-      <material name="yellow"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part5_leftshroud.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_shroud_collision">
-      <material name="green"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part5_leftshroud_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Join back left shroud to body -->
   <joint name="back_left_shroud_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_left_shroud"/>
-    <origin rpy="1.5707963268 3.14159265359 0" xyz="0.003 0.113 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
   </joint>
   <!-- Create rear bulkhead -->
   <link name="rear_bulkhead">
@@ -174,23 +90,12 @@
       <mass value="0.012549792"/>
       <inertia ixx="8.688962472e-06" ixy="0.0" ixz="0.0" iyy="1.9400512752e-05" iyz="-6.655824e-09" izz="2.7950330112e-05"/>
     </inertial>
-    <visual>
-      <material name="blue"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part6_rearbulkhead.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/part6_rearbulkhead_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Join rear bulkhead to body -->
   <joint name="rear_bulk_head_to_body" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="rear_bulkhead"/>
-    <origin rpy="1.5707963268 0 0" xyz="0.003 0.113 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
   </joint>
   <!-- Create a bulk mass for the battery -->
   <link name="battery">
@@ -198,18 +103,12 @@
       <mass value="0.228"/>
       <inertia ixx="6.796775e-05" ixy="0" ixz="0" iyy="0.00013779275" iyz="0" izz="0.000116375"/>
     </inertial>
-    <visual name="battery_visual">
-      <material name="pink"/>
-      <geometry>
-        <box size="0.07 0.035 0.0485"/>
-      </geometry>
-    </visual>
   </link>
   <!-- Connect battery to body -->
   <joint name="battery_to_body" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="battery"/>
-    <origin xyz="0.002 0.03 0.02425"/>
+    <origin rpy="0 0 1.5707963268" xyz="-0.015 -0.004 0.02425"/>
   </joint>
   <!-- Create top plate -->
   <link name="top_PCB">
@@ -217,73 +116,30 @@
       <mass value="0.0246155987687"/>
       <inertia ixx="0.000161445031637" ixy="0.0" ixz="0.0" iyy="1.7324369412e-05" iyz="0.0" izz="0.000178741870837"/>
     </inertial>
-    <visual name="top_PCB_visual">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/PCB_Board_Shifted.dae" scale="0.0254 0.0254 0.0254"/>
-      </geometry>
-    </visual>
-    <collision name="top_PCB_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Body/PCB_Board_Shifted.dae" scale="0.0254 0.0254 0.0254"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Joint top plate to body -->
   <joint name="top_PCB_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="top_PCB"/>
-    <origin rpy="0 0 0" xyz="0 0 0.088"/>
+    <origin rpy="0 0 1.5707963268" xyz="0 -0.0075 0.088"/>
   </joint>
   <link name="front_left_hub">
     <inertial>
       <mass value="0.002639712"/>
       <inertia ixx="5.41895748e-07" ixy="0.0" ixz="1.66169424e-07" iyy="5.47751772e-07" iyz="0.0" izz="4.29932304e-07"/>
     </inertial>
-    <visual name="front_left_hub_visual">
-      <material name="blue"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_hub_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub_siplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="front_left_upper_link">
     <inertial>
       <mass value="0.005135088"/>
       <inertia ixx="5.2268046e-06" ixy="5.830542e-08" ixz="0.0" iyy="3.56244684e-07" iyz="0.0" izz="4.920666084e-06"/>
     </inertial>
-    <visual name="front_left_upper_link_visual">
-      <material name="yellow"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_upper_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="front_left_cover">
     <inertial>
       <mass value="0.002386008"/>
       <inertia ixx="1.588040844e-06" ixy="6.3907368e-08" ixz="2.604e-13" iyy="3.68898264e-07" iyz="-8.928e-12" izz="1.42387278e-06"/>
     </inertial>
-    <visual name="front_left_cover_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_cover_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect the covering to the upper link -->
   <joint name="front_left_shroud_to_leg" type="fixed">
@@ -296,17 +152,6 @@
       <mass value="0.00489924"/>
       <inertia ixx="6.752526888e-06" ixy="-8.8765524e-08" ixz="7.420284e-09" iyy="1.62788688e-07" iyz="2.50211292e-07" izz="6.810224088e-06"/>
     </inertial>
-    <visual>
-      <material name="blueGreen"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_lower_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Create the foot pad -->
   <link name="front_left_foot">
@@ -314,17 +159,6 @@
       <mass value="0.01"/>
       <inertia ixx="3.61e-07" ixy="0" ixz="0" iyy="3.61e-07" iyz="0" izz="3.61e-07"/>
     </inertial>
-    <visual name="front_left_foot_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere.stl" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_foot_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere_simplified.dae" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect foot pad to lower link -->
   <joint name="front_left_foot_joint" type="fixed">
@@ -338,25 +172,12 @@
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="front_left_hip_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_hip_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="front_left_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="front_left_hip"/>
-    <origin rpy="-1.5707963268 0 0" xyz="0.05 -0.105 0.044"/>
+    <origin rpy="-1.5707963268 0 1.5707963268" xyz="0.104 0.0425 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="front_left_hip_joint" type="revolute">
@@ -364,42 +185,15 @@
     <child link="front_left_hub"/>
     <origin rpy="0 1.5707963268 0" xyz="0 0 0.036"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="-1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="front_left_hip_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="front_left_hub">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="front_left_shoulder">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="front_left_shoulder_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_shoulder_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="front_left_shoulder_fixed_joint" type="fixed">
@@ -413,42 +207,15 @@
     <child link="front_left_upper_link"/>
     <origin rpy="0 -1.5707963268 0" xyz="0 0 0.022"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="front_left_shoulder_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="front_left_upper_link">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="front_left_elbow">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="front_left_elbow_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="front_left_elbow_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="front_left_elbow_fixed_joint" type="fixed">
@@ -462,73 +229,26 @@
     <child link="front_left_lower_link"/>
     <origin rpy="3.14159265359 3.14159265359 0" xyz="0 0 -0.032"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="0 0 -1"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="front_left_elbow_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="front_left_lower_link">
-    <self_collide>true</self_collide>
-  </gazebo>
   <link name="back_left_hub">
     <inertial>
       <mass value="0.002639712"/>
       <inertia ixx="5.41895748e-07" ixy="0.0" ixz="1.66169424e-07" iyy="5.47751772e-07" iyz="0.0" izz="4.29932304e-07"/>
     </inertial>
-    <visual name="back_left_hub_visual">
-      <material name="blue"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_hub_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub_siplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="back_left_upper_link">
     <inertial>
       <mass value="0.005135088"/>
       <inertia ixx="5.2268046e-06" ixy="5.830542e-08" ixz="0.0" iyy="3.56244684e-07" iyz="0.0" izz="4.920666084e-06"/>
     </inertial>
-    <visual name="back_left_upper_link_visual">
-      <material name="yellow"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_upper_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="back_left_cover">
     <inertial>
       <mass value="0.002386008"/>
       <inertia ixx="1.588040844e-06" ixy="6.3907368e-08" ixz="2.604e-13" iyy="3.68898264e-07" iyz="-8.928e-12" izz="1.42387278e-06"/>
     </inertial>
-    <visual name="back_left_cover_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_cover_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect the covering to the upper link -->
   <joint name="back_left_shroud_to_leg" type="fixed">
@@ -541,17 +261,6 @@
       <mass value="0.00489924"/>
       <inertia ixx="6.752526888e-06" ixy="-8.8765524e-08" ixz="7.420284e-09" iyy="1.62788688e-07" iyz="2.50211292e-07" izz="6.810224088e-06"/>
     </inertial>
-    <visual>
-      <material name="blueGreen"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_lower_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Create the foot pad -->
   <link name="back_left_foot">
@@ -559,17 +268,6 @@
       <mass value="0.01"/>
       <inertia ixx="3.61e-07" ixy="0" ixz="0" iyy="3.61e-07" iyz="0" izz="3.61e-07"/>
     </inertial>
-    <visual name="back_left_foot_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere.stl" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_foot_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere_simplified.dae" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect foot pad to lower link -->
   <joint name="back_left_foot_joint" type="fixed">
@@ -583,25 +281,12 @@
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="back_left_hip_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_hip_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="back_left_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_left_hip"/>
-    <origin rpy="-1.5707963268 0 0" xyz="0.05 0.095 0.044"/>
+    <origin rpy="-1.5707963268 0 1.5707963268" xyz="-0.097 0.0425 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="back_left_hip_joint" type="revolute">
@@ -609,42 +294,15 @@
     <child link="back_left_hub"/>
     <origin rpy="0 1.5707963268 0" xyz="0 0 0.036"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="-1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="back_left_hip_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="back_left_hub">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="back_left_shoulder">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="back_left_shoulder_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_shoulder_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="back_left_shoulder_fixed_joint" type="fixed">
@@ -658,42 +316,15 @@
     <child link="back_left_upper_link"/>
     <origin rpy="0 -1.5707963268 0" xyz="0 0 0.022"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="back_left_shoulder_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="back_left_upper_link">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="back_left_elbow">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="back_left_elbow_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="back_left_elbow_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="back_left_elbow_fixed_joint" type="fixed">
@@ -707,73 +338,26 @@
     <child link="back_left_lower_link"/>
     <origin rpy="3.14159265359 3.14159265359 0" xyz="0 0 -0.032"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="0 0 -1"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="back_left_elbow_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="back_left_lower_link">
-    <self_collide>true</self_collide>
-  </gazebo>
   <link name="front_right_hub">
     <inertial>
       <mass value="0.002639712"/>
       <inertia ixx="5.41895748e-07" ixy="0.0" ixz="-1.66169424e-07" iyy="5.47751772e-07" iyz="0.0" izz="4.29932304e-07"/>
     </inertial>
-    <visual name="front_right_hub_visual">
-      <material name="blue"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub_mirrored.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_hub_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub_mirrored_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="front_right_upper_link">
     <inertial>
       <mass value="0.005135088"/>
       <inertia ixx="5.2268046e-06" ixy="5.830542e-08" ixz="0.0" iyy="3.56244684e-07" iyz="0.0" izz="4.920666084e-06"/>
     </inertial>
-    <visual name="front_right_upper_link_visual">
-      <material name="yellow"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_upper_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="front_right_cover">
     <inertial>
       <mass value="0.002386008"/>
       <inertia ixx="1.588040844e-06" ixy="6.3907368e-08" ixz="2.604e-13" iyy="3.68898264e-07" iyz="-8.928e-12" izz="1.42387278e-06"/>
     </inertial>
-    <visual name="front_right_cover_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_cover_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect the covering to the upper link -->
   <joint name="front_right_shroud_to_leg" type="fixed">
@@ -786,17 +370,6 @@
       <mass value="0.00489924"/>
       <inertia ixx="6.752526888e-06" ixy="-8.8765524e-08" ixz="-7.420284e-09" iyy="1.62788688e-07" iyz="-2.50211292e-07" izz="6.810224088e-06"/>
     </inertial>
-    <visual>
-      <material name="blueGreen"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink_mirrored.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_lower_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink_mirrored_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Create the foot pad -->
   <link name="front_right_foot">
@@ -804,17 +377,6 @@
       <mass value="0.01"/>
       <inertia ixx="3.61e-07" ixy="0" ixz="0" iyy="3.61e-07" iyz="0" izz="3.61e-07"/>
     </inertial>
-    <visual name="front_right_foot_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere.stl" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_foot_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere_simplified.dae" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect foot pad to lower link -->
   <joint name="front_right_foot_joint" type="fixed">
@@ -828,25 +390,12 @@
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="front_right_hip_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_hip_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="front_right_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="front_right_hip"/>
-    <origin rpy="-1.5707963268 0 0" xyz="-0.045 -0.105 0.044"/>
+    <origin rpy="-1.5707963268 0 1.5707963268" xyz="0.104 -0.0505 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="front_right_hip_joint" type="revolute">
@@ -854,42 +403,15 @@
     <child link="front_right_hub"/>
     <origin rpy="0 1.5707963268 0" xyz="0 0 0.036"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="-1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="front_right_hip_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="front_right_hub">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="front_right_shoulder">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="front_right_shoulder_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_shoulder_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="front_right_shoulder_fixed_joint" type="fixed">
@@ -903,42 +425,15 @@
     <child link="front_right_upper_link"/>
     <origin rpy="0 1.5707963268 0" xyz="0 0 -0.02"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="front_right_shoulder_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="front_right_upper_link">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="front_right_elbow">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="front_right_elbow_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="front_right_elbow_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="front_right_elbow_fixed_joint" type="fixed">
@@ -952,73 +447,26 @@
     <child link="front_right_lower_link"/>
     <origin rpy="3.14159265359 0 0" xyz="0 0 -0.032"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="0 0 1"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="front_right_elbow_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="front_right_lower_link">
-    <self_collide>true</self_collide>
-  </gazebo>
   <link name="back_right_hub">
     <inertial>
       <mass value="0.002639712"/>
       <inertia ixx="5.41895748e-07" ixy="0.0" ixz="-1.66169424e-07" iyy="5.47751772e-07" iyz="0.0" izz="4.29932304e-07"/>
     </inertial>
-    <visual name="back_right_hub_visual">
-      <material name="blue"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub_mirrored.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_hub_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part1_hub_mirrored_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="back_right_upper_link">
     <inertial>
       <mass value="0.005135088"/>
       <inertia ixx="5.2268046e-06" ixy="5.830542e-08" ixz="0.0" iyy="3.56244684e-07" iyz="0.0" izz="4.920666084e-06"/>
     </inertial>
-    <visual name="back_right_upper_link_visual">
-      <material name="yellow"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_upper_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part2_upperlink_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <link name="back_right_cover">
     <inertial>
       <mass value="0.002386008"/>
       <inertia ixx="1.588040844e-06" ixy="6.3907368e-08" ixz="2.604e-13" iyy="3.68898264e-07" iyz="-8.928e-12" izz="1.42387278e-06"/>
     </inertial>
-    <visual name="back_right_cover_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_cover_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part3_shroud_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect the covering to the upper link -->
   <joint name="back_right_shroud_to_leg" type="fixed">
@@ -1031,17 +479,6 @@
       <mass value="0.00489924"/>
       <inertia ixx="6.752526888e-06" ixy="-8.8765524e-08" ixz="-7.420284e-09" iyy="1.62788688e-07" iyz="-2.50211292e-07" izz="6.810224088e-06"/>
     </inertial>
-    <visual>
-      <material name="blueGreen"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink_mirrored.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_lower_link_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/part4_lowerlink_mirrored_simplified.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Create the foot pad -->
   <link name="back_right_foot">
@@ -1049,17 +486,6 @@
       <mass value="0.01"/>
       <inertia ixx="3.61e-07" ixy="0" ixz="0" iyy="3.61e-07" iyz="0" izz="3.61e-07"/>
     </inertial>
-    <visual name="back_right_foot_visual">
-      <material name="red"/>
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere.stl" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_foot_collision">
-      <geometry>
-        <mesh filename="package://ase389/pupper_description/Pupper_STL/Leg/hemisphere_simplified.dae" scale="0.00026 0.00026 0.00026"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Connect foot pad to lower link -->
   <joint name="back_right_foot_joint" type="fixed">
@@ -1073,25 +499,12 @@
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="back_right_hip_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_hip_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="back_right_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_right_hip"/>
-    <origin rpy="-1.5707963268 0 0" xyz="-0.045 0.095 0.044"/>
+    <origin rpy="-1.5707963268 0 1.5707963268" xyz="-0.097 -0.0505 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="back_right_hip_joint" type="revolute">
@@ -1099,42 +512,15 @@
     <child link="back_right_hub"/>
     <origin rpy="0 1.5707963268 0" xyz="0 0 0.036"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="-1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="back_right_hip_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="back_right_hub">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="back_right_shoulder">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="back_right_shoulder_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_shoulder_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="back_right_shoulder_fixed_joint" type="fixed">
@@ -1148,42 +534,15 @@
     <child link="back_right_upper_link"/>
     <origin rpy="0 1.5707963268 0" xyz="0 0 -0.02"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="1 0 0"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="back_right_shoulder_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="back_right_upper_link">
-    <self_collide>true</self_collide>
-  </gazebo>
   <!-- Create the motor -->
   <link name="back_right_elbow">
     <inertial>
       <mass value="0.12"/>
       <inertia ixx="7.2e-6" ixy="0" ixz="0" iyy="1.11e-5" iyz="0" izz="1.11e-5"/>
     </inertial>
-    <visual name="back_right_elbow_visual">
-      <material name="motorColor">
-        <color rgba="0 1 0 1"/>
-      </material>
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </visual>
-    <collision name="back_right_elbow_collision">
-      <geometry>
-        <cylinder length="0.03" radius="0.012"/>
-      </geometry>
-    </collision>
   </link>
   <!-- Rigidly attach to motor to it's parent -->
   <joint name="back_right_elbow_fixed_joint" type="fixed">
@@ -1197,22 +556,8 @@
     <child link="back_right_lower_link"/>
     <origin rpy="3.14159265359 0 0" xyz="0 0 -0.032"/>
     <limit effort="1e6" lower="-1e10" upper="1e10" velocity="1e6"/>
-    <dynamics damping="0.3" friction="0.3"/>
+    <dynamics damping="0.2" friction="0.3"/>
     <axis xyz="0 0 1"/>
   </joint>
-  <!-- implicitSpringDamper: prevent crashing when damping is set -->
-  <!-- provideFeedback     : allows the joint to publish torque data -->
-  <gazebo reference="back_right_elbow_joint">
-    <physics>
-      <ode>
-        <max_force>50</max_force>
-      </ode>
-    </physics>
-    <provideFeedback>true</provideFeedback>
-    <implicitSpringDamper>true</implicitSpringDamper>
-  </gazebo>
-  <gazebo reference="back_right_lower_link">
-    <self_collide>true</self_collide>
-  </gazebo>
 </robot>
 

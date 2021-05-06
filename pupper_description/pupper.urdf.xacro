@@ -67,13 +67,13 @@
         <xacro:if value = "${full_urdf}">
         <visual name = "bottom_PCB_visual">
             <geometry>
-                <mesh filename = "${VisualPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
+                <mesh filename = "${VisualPath}/Body/PCB_Board.stl" scale = "${meshScale_in}"/>
             </geometry>
         </visual>
 
         <collision name = "bottom_PCB_collision">
             <geometry>
-                <mesh filename = "${CollisionPath}/Body/PCB_Board_Shifted.dae" scale = "${meshScale_in}"/>
+                <mesh filename = "${CollisionPath}/Body/PCB_Board.stl" scale = "${meshScale_in}"/>
             </geometry>
         </collision>
         </xacro:if>
@@ -106,7 +106,7 @@
     <joint name = "front_bulkhead_to_base" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "front_bulkhead"/>
-        <origin xyz = "0.002 0.114 0.044" rpy = "${PI/2} 0 0"/>
+        <origin xyz = "-0.114 -0.004 0.044" rpy = "${PI/2} 0 ${PI/2}"/>
     </joint>
 
     <!-- Create Middle Bulkhead -->
@@ -136,7 +136,7 @@
     <joint name = "middle_bulkhead_to_base_1" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "middle_bulkhead_front"/>
-        <origin xyz = "0.002 0.114 0.044" rpy = "${PI/2} 0 0"/>
+        <origin xyz = "-0.114 -0.004 0.044" rpy = "${PI/2} 0 ${PI/2}"/>
     </joint>
 
     <!-- Create 2nd Middle Bulkhead -->
@@ -166,7 +166,7 @@
     <joint name = "middle_bulkhead_to_base_2" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "middle_bulkhead_rear"/>
-        <origin xyz = "0.003 0.114 0.044" rpy = "${PI/2} 0 0"/>
+        <origin xyz = "-0.114 -0.004 0.044" rpy = "${PI/2} 0 ${PI/2}"/>
     </joint>
 
     <!-- Create back right shroud -->
@@ -196,7 +196,7 @@
     <joint name = "right_shroud_to_base" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "back_right_shroud"/>
-        <origin xyz  = "0.003 0.113 0.044" rpy = "${PI/2} ${PI} 0"/>
+        <origin xyz  = "-0.114 -0.004 0.044" rpy = "${PI/2} 0 ${PI/2}"/>
     </joint>
 
     <!-- Create back left shroud -->
@@ -227,7 +227,7 @@
     <joint name = "back_left_shroud_to_base" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "back_left_shroud"/>
-        <origin xyz  = "0.003 0.113 0.044" rpy = "${PI/2} ${PI} 0"/>
+        <origin xyz = "-0.114 -0.004 0.044" rpy = "${PI/2} 0 ${PI/2}"/>
     </joint>
 
     <!-- Create rear bulkhead -->
@@ -257,7 +257,7 @@
     <joint name = "rear_bulk_head_to_body" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "rear_bulkhead"/>
-        <origin xyz = "0.003 0.113 0.044" rpy = "${PI/2} 0 0"/>
+        <origin xyz = "-0.114 -0.004 0.044" rpy = "${PI/2} 0 ${PI/2}"/>
     </joint>
 
     <!-- Create a bulk mass for the battery -->
@@ -288,7 +288,7 @@
     <joint name = "battery_to_body" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "battery"/>
-        <origin xyz = "0.002 0.03 ${batt_z/2}"/>
+        <origin xyz = "-0.015 -0.004 ${batt_z/2}" rpy = "0 0 ${PI/2}"/>
     </joint>
 
     <!-- Create top plate -->
@@ -317,23 +317,23 @@
     <joint name = "top_PCB_to_base" type = "fixed">
         <parent link = "bottom_PCB"/>
         <child  link = "top_PCB"/>
-        <origin xyz  = "0 0 0.088" rpy = "0 0 0"/>
+        <origin xyz  = "0 -0.0075 0.088" rpy = "0 0 ${PI/2}"/>
     </joint>
 
     <xacro:leftLeg name = "front" parent = "bottom_PCB">
-        <origin xyz = "0.05 -0.105 0.044" rpy = "${-PI/2} 0 0"/>
+        <origin xyz = "0.104 0.0425 0.041" rpy = "${-PI/2} 0 ${PI/2}"/>
     </xacro:leftLeg>
 
     <xacro:leftLeg name = "back" parent = "bottom_PCB">
-        <origin xyz = "0.05 0.095 0.044" rpy = "${-PI/2} 0 0"/>
+        <origin xyz = "-0.097 0.0425 0.041" rpy = "${-PI/2} 0 ${PI/2}"/>
     </xacro:leftLeg>
 
     <xacro:rightLeg name = "front" parent = "bottom_PCB">
-        <origin xyz = "-0.045 -0.105 0.044" rpy = "${-PI/2} 0 0"/>
+        <origin xyz = "0.104 -0.0505 0.041" rpy = "${-PI/2} 0 ${PI/2}"/>
     </xacro:rightLeg>
 
     <xacro:rightLeg name = "back" parent = "bottom_PCB">
-        <origin xyz = "-0.045 0.095 0.044" rpy = "${-PI/2} 0 0"/>
+        <origin xyz = "-0.097 -0.0505 0.041" rpy = "${-PI/2} 0 ${PI/2}"/>
     </xacro:rightLeg>
 
 </robot>
