@@ -321,19 +321,24 @@
     </joint>
 
     <xacro:leftLeg name = "front" parent = "bottom_PCB">
-        <origin xyz = "0.091 0.045 0.041" rpy = "${3*PI/2} 0 ${PI/2}"/>
+        <!-- <origin xyz = "0.091 0.045 0.041" rpy = "0 0 0"/> -->
+        <origin xyz = "0.091 0.045 0.041" rpy = "0 ${PI/2} 0"/>
+        <origin xyz = "0.054 0.045 0.041" rpy = "${-PI/2} 0 0"/>
     </xacro:leftLeg>
 
     <xacro:leftLeg name = "back" parent = "bottom_PCB">
-        <origin xyz = "-0.11 0.045 0.041" rpy = "${3*PI/2} 0 ${PI/2}"/>
+        <origin xyz = "-0.110 0.045 0.041" rpy = "0 ${PI/2} 0"/>
+        <origin xyz = "-0.147 0.045 0.041" rpy = "${-PI/2} 0 0"/>
     </xacro:leftLeg>
 
     <xacro:rightLeg name = "front" parent = "bottom_PCB">
-        <origin xyz = "0.091 -0.045 0.041" rpy = "${3*PI/2} 0 ${PI/2}"/>
+        <origin xyz = "0.091 -0.045 0.041" rpy = "0 ${PI/2} 0"/>
+        <origin xyz = "0.054 -0.045 0.041" rpy = "${-PI/2} 0 0"/>
     </xacro:rightLeg>
 
     <xacro:rightLeg name = "back" parent = "bottom_PCB">
-        <origin xyz = "-0.11 -0.045 0.041" rpy = "${3*PI/2} 0 ${PI/2}"/>
+        <origin xyz = "-0.110 -0.045 0.041" rpy = "${3*PI/2} 0 ${PI/2}"/>
+        <origin xyz = "-0.147 -0.045 0.041" rpy = "${-PI/2} 0 0"/>
     </xacro:rightLeg>
 
 </robot>

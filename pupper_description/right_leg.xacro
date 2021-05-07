@@ -3,7 +3,7 @@
 <robot name = "right_leg_macro" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- Macro for the creation of a leg -->
-    <xacro:macro name = "rightLeg" params = "name parent *origin">
+    <xacro:macro name = "rightLeg" params = "name parent *origin *origin2">
 
         <!-- Create hub that connects to the motor -->
         <xacro:property name = "hubName" value = "${name}_right_hub"/>
@@ -140,7 +140,8 @@
         <!-- Connect leg to parent with a motor -->
         <xacro:motor name = "${name}_right_hip" axis = "-1 0 0" fixed_parent = "${parent}" revolute_child = "${hubName}">
             <xacro:insert_block name = "origin"/>
-            <origin xyz = "0 0 0.036" rpy = "0 ${PI/2} 0"/>
+            <xacro:insert_block name = "origin2"/>
+            <!-- <origin xyz = "0 0 0.036" rpy = "0 ${PI/2} 0"/> -->
         </xacro:motor>
 
         <!-- Join the Hub and the Upper Link with a motor -->
@@ -152,7 +153,9 @@
         <!-- Connect Upper Link and Lower Link with a motor -->
         <xacro:motor name = "${name}_right_elbow" axis = "0 0 1" fixed_parent = "${upperName}" revolute_child = "${lowerName}">
             <origin xyz = "0.023 0.082 0" rpy = "0 ${PI/2} 0"/>
-            <origin xyz = "0 0 -0.032" rpy = "${PI} 0 0"/> 
+            <origin xyz = "-0.006 0.08 0" rpy = "0 ${PI/2} ${PI}"/> 
+            <!-- <origin xyz = "0 0 -0.032" rpy = "${PI} 0 0"/>  -->
+            
         </xacro:motor>
 
     </xacro:macro>
