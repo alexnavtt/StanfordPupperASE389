@@ -108,6 +108,9 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
     CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_, false);
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
 
+    cout << "mass matrix: " << endl;
+    PRINT_CLEAN(massMat_);
+    cout << "b + g: \n" << b_g_.transpose().format(f) << endl;
 }
 
 // Add a task to the IHWBC controller

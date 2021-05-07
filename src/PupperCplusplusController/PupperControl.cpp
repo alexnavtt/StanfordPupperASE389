@@ -208,5 +208,17 @@ int main(int argc, char** argv){
     // Pup.updateController(joint_positions, joint_velocities, body_position, Fullrot, feet_in_contact);
     // cout << Pup.Jc_.transpose().format(f) << endl;
 
+    // Print body name and joint index
+    double total_mass = 0;
+    for(int i = 0; i < Pup.Pupper_.mBodies.size(); i++){
+        cout << "Body " << Pup.Pupper_.GetBodyName(i) << " Mass: "<< Pup.Pupper_.mBodies[i].mMass << endl;
+        total_mass += Pup.Pupper_.mBodies[i].mMass;
+    }
+    cout << "Total mass: " << total_mass << endl;
+
+    for(int i = 0; i < Pup.Pupper_.mBodies.size(); i++){
+        cout << "Body " << Pup.Pupper_.GetBodyName(i) << " Intertia: "<< Pup.Pupper_.mBodies[i].mInertia << endl;
+    }
+
     return 0;
 }
