@@ -16,6 +16,7 @@ enum TaskType{
 struct Task{    
     // Which body this task is for (use JOINT for a joint position task)
     std::string body_id;
+    Eigen::Vector3d offset = Eigen::Vector3d::Zero();
 
     // What type of task is this (body_pos, body_ori, or joint_pos)
     TaskType type;

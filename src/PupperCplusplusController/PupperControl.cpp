@@ -48,6 +48,7 @@ int main(int argc, char** argv){
     CoM_Orientation_Task.Kp = 500;
     CoM_Orientation_Task.Kd = 0;
 
+    // Task for joints to avoid limits
     Task JointPositionTask;
     JointPositionTask.type = JOINT_POS;
     JointPositionTask.task_weight = 0.1;
@@ -55,6 +56,15 @@ int main(int argc, char** argv){
     JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
     JointPositionTask.Kp = 1000;
     JointPositionTask.Kd = 0;
+
+    // Foot contact tasks
+    Task FrontLeftContactTask;
+    FrontLeftContactTask.type = BODY_POS;
+    FrontLeftContactTask.task_weight = 0.1;
+    FrontLeftContactTask.active_targets = {true, true, true};
+    // FrontLeftContactTask.pos_target << -0.07, 
+    FrontLeftContactTask.Kp = 100;
+    FrontLeftContactTask.Kd = 0;
 
     // Add the tasks with priority 0 and 1
     Pup.addTask("COM_elevation", &CoM_Position_Task);
@@ -74,6 +84,20 @@ int main(int argc, char** argv){
     // // //Test height calculation
     // // //////////////////////////////////////////////////////////////////////////////////////
     // IF BASE IS ALWAYS ALIGNED WITH WORLD, WE SHOULDN'T HAVE TO USE ROTATION MATRIX. Just use z values for foot location.
+    auto front_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), Eigen::Vector3d::Zero(), true);
+    auto front_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), Eigen::Vector3d::Zero(), true);
+    auto back_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_left_lower_link"), Eigen::Vector3d::Zero(), true);
+    auto back_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), Eigen::Vector3d::Zero(), true);
+    cout << "front_left_pos: \n" << front_left_pos << endl;
+    cout << "front_right_pos: \n" << front_right_pos << endl;
+    cout << "back_left_pos: \n" << back_left_pos << endl;
+    cout << "back_right_pos: \n" << back_right_pos << endl;
+
+    //Test height calculation
+    //////////////////////////////////////////////////////////////////////////////////////
+    // //Test height calculation
+    // //////////////////////////////////////////////////////////////////////////////////////
+ 
     // // Pupper rotated with front right leg and back right leg in contact
     // // From Gazebo: height = .0965
     // // Calculated:  h0: 0.100148

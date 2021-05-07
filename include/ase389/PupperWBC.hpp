@@ -55,7 +55,7 @@ public:
     RigidBodyDynamics::ConstraintSet pup_constraints_;
 
     // Retrieve the body COM Jacobian
-    Matrix getBodyJacobian_(std::string body_id);
+    Matrix getBodyJacobian_(std::string body_id, const Eigen::Vector3d &offset = Eigen::Vector3d::Zero());
 
     // Retrieve the task Jacobian for specific task
     Matrix getTaskJacobian_(std::string task_name);

@@ -301,12 +301,12 @@ void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
                     feet_in_contact_[i] = true;
     }
 
-    //Debug: print contacts in order (BL, BR, FL, FR)
-    cout << "{";
-    for (bool b : feet_in_contact_){
-        cout << b << ", ";
-    }
-    cout << "}" << endl;
+    //Debug: print contacts in order (FL, FR, BR, BL)
+    // cout << "{";
+    // for (bool b : feet_in_contact_){
+    //     cout << b << ", ";
+    // }
+    // cout << "}" << endl;
 
 }
 
