@@ -105,9 +105,8 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
     Jc_.setZero(); // Just to be safe; not clear if this is required 
     b_g_.setZero(); // Just to be safe; not clear if this is required 
     updateContactJacobian_();
-    CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_, false);
+    CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_);
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
-
 }
 
 // Add a task to the IHWBC controller
@@ -165,7 +164,7 @@ Task* PupperWBC::getTask(string name){
 // Load the model
 void PupperWBC::Load(std::string urdf_file_string){
     // Get the model information from the URDF
-    RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, false);
+    RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, true);
 
     // Summarize model characteristics
     printf("Loaded model with %d DOFs\n", Pupper_.dof_count);
