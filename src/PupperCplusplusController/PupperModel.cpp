@@ -368,3 +368,83 @@ std::shared_ptr<Model> createPupperModel(){
 
     return model;
 }
+
+
+
+// Old tests saved for posterity:
+// std::shared_ptr<Model> createPupperModel(){
+
+//     auto model = std::make_shared<Model>();
+
+//     // Z direction is up
+//     model->gravity = Vector3d(0, 0, -9.81);
+
+// //* -----------------------------TESTING---------------------------------*//
+// // Answering questions:
+// // 1. For fixed bodies, do the intertias have to be in the same frame or no?
+// //     a. Join two bodies with the same frame -> print mass matrix
+// //     b. Join two bodies with different frames -> print mass matrix
+// //     c. mass matrix different? Then inertia's DONT have to be in the same frame. (GOOD)
+// //        Answer: Yes, inertia's don't have to be in the same frame (the inertia of the child is described in the child's frame and can differ from the parent frame) 
+// // 2. COM described in parent or child??
+// //     a. Add body at 0,0,0 with COM at 0,0,0 -> print mass matrix
+// //     b. Add body at 1000,1000,1000 with COM at 0,0,0 -> print mass matrix
+// //     c. Mass matrix different? Then COM is described in child frame. (GOOD)
+// //        Answer: Yes, COM of added body is described in child frame.
+//  /* ------ BOTTOM PCB (inches) ------ */
+//     // TEST 1 /////////////////////////
+
+//     // Create the bottom PCB
+//     double pcb_mass = 0.0246155987687;
+//     Vector3d pcb_com = inch2meter * Vector3d(-0.134500, -0.000013, -0.000000);
+//     Matrix3d pcb_inertia;
+//     pcb_inertia << 10,       0,          0, 
+//                    0,        10,         0,
+//                    0,        0,         10;
+    
+//     // Joint between PCB and ROOT
+//     Joint floating_joint(JointTypeFloatingBase);
+
+//     // Add PCB to body
+//     Body bottom_PCB = Body(pcb_mass, pcb_com, pcb_inertia);
+//     uint bottom_PCB_id = model->AddBody(0, Xtrans(Vector3d(0, 0, 0)), floating_joint, bottom_PCB, "bottom_PCB");
+
+//     /* ------ TEST BODY 2 (mm) ------ */
+
+//     double front_bulkhead_mass = 28243.179688 * pow(mm2meter,3) * density;
+//     Vector3d front_bulkhead_com = mm2meter * Vector3d(0, 0, 0);
+//     Matrix3d front_bulkhead_inertia;
+//     front_bulkhead_inertia << 10,       0,          0, 
+//                               0,        0,          0,
+//                                0,        0,         0;
+
+//     // Fixed joint connecting TEST BODY 2 to PCB
+//     Joint fixed_joint_floating_bulkhead(JointTypeFixed);
+//     SpatialTransform front_bulkhead_T;
+//     front_bulkhead_T.E << 1, 0, 0, // 1.a  2.a,b
+//                           0, 1, 0,
+//                           0, 0, 1; 
+//     // front_bulkhead_T.E << 0,-1, 0, // 1.b
+//     //                       1, 0, 0,
+//     //                       0, 0, 1; 
+//     cout << "TestBody2 T.E = \n" << front_bulkhead_T.E <<endl;
+//     //front_bulkhead_T.r = Vector3d(0, 0, 0); // 1.a,b ,  2.a
+//     front_bulkhead_T.r = Vector3d(1000, 1000, 1000); // 2.b
+
+//     // Add TEST BODY 2 to body
+//     Body front_bulkhead = Body(front_bulkhead_mass, front_bulkhead_com, front_bulkhead_inertia);
+//     uint front_bulkhead_id = model->AddBody(bottom_PCB_id, front_bulkhead_T, fixed_joint_floating_bulkhead, front_bulkhead, "front_bulkhead");
+
+//     ///////////////////////////////////////////////////////////////
+//     cout << "\n---------- DYNAMICS TESTING ------------\n" << endl;
+//     VectorNd q(model->q_size); q.setZero();
+//     MatrixNd M(model->qdot_size, model->qdot_size); M.setZero();
+//     RigidBodyDynamics::CompositeRigidBodyAlgorithm(*model, q, M);
+//     cout << "\nMass Matrix: \n" << M << endl;
+
+
+// ////////////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////RESULTS////////////////////////////////////////////////////
+// //
+// ////////////////////////////////////////////////////////////////////////////////////////////////
