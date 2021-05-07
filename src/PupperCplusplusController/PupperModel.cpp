@@ -311,6 +311,34 @@ std::shared_ptr<Model> createPupperModel(){
     uint front_left_foot_id = model->AddBody(front_left_lower_link_id, left_foot_T, left_foot_joint, foot, "front_left_foot");
 
 
+
+
+
+
+
+
+
+    /* ------ FRONT RIGHT HUB ------ */
+    double right_hub_mass = 7095.798340 * pow(mm2meter,3) * density;
+    Vector3d right_hub_com = mm2meter * Vector3d(5.921877, 0.000081, 12.887457);
+    Matrix3d right_hub_inertia;
+    right_hub_inertia << 1456708.875000,  12.194215,      446692.343750,
+                        12.194215,       1472451.125000,  -4.978187,
+                       446692.343750,   -4.978187,        1155731.875000;
+    right_hub_inertia  = scaleInteria(right_hub_inertia);
+
+    /* ------ FRONT RIGHT LOWER LINK ------ */
+    double right_lower_link_mass = 13170.648438 * pow(mm2meter,3) * density;
+    Vector3d right_lower_link_com = mm2meter * Vector3d(-0.310779, -51.736179, 4.568526);
+    Matrix3d right_lower_link_inertia;
+    right_lower_link_inertia << 18151954.000000, -238616.937500, 19946.636719,
+                              -238616.937500,    437603.937500, 672611.562500,
+                              19946.636719,    672611.562500,  18307054.000000;
+    right_lower_link_inertia = scaleInteria(right_lower_link_inertia);
+
+
+
+
     // Test
     cout << "---------- MODEL CREATION TESTING ------------\n" << endl;
     cout << "Model has " << model->mJoints.size() << " joints\n";

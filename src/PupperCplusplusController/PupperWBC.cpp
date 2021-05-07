@@ -229,44 +229,47 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // cout << "Jc': \n" << Jc_.transpose().topRows(6).format(f) << endl;
     
 
-    //---------------------------TEST OPTIMIZATION SOLUTION--------------------------//
-    //-------------------------------------------------------------------------------//
-    // Reason for test: OSQP solution for qddot does not match simulation (i.e. z acceleration positive while pupper falling)
-    //                                                                     (    joint velocities not matching               )
-    // The accelerations we get from RBDL forward dynamics should match what the solver gives.
-    // They dont. 
-    //                             
-    // However, there's an error somewhere in the use of RBDL's forward dynamics. When initialziing joint angles 
-    // to non-zero values (crouched position), RBDL gives incorrect joint velocities
-    // 
+    // //---------------------------TEST OPTIMIZATION SOLUTION--------------------------//
+    // //-------------------------------------------------------------------------------//
+    // // Currently broken because RBDL's forward dynamics is returning nonsense. 
+    // // Reason for test: OSQP solution for qddot does not match simulation (i.e. z acceleration positive while pupper falling)
+    // //                                                                     (    joint velocities not matching               )
+    // // The accelerations we get from RBDL forward dynamics should match what the solver gives.
+    // // They dont. 
+    // //                             
+    // // However, there's an error somewhere in the use of RBDL's forward dynamics. When initialziing joint angles 
+    // // to non-zero values (crouched position), RBDL gives incorrect joint velocities
+    // // 
 
-    VectorNd QDDOT = VectorNd::Zero(18);
-    VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
-    tau_gen.tail(12) = tau;
+    // VectorNd QDDOT = VectorNd::Zero(18);
+    // VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
+    // tau_gen.tail(12) = tau;
     
-    // cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
-    // cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
-    // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
+    // // cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
+    // // cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
+    // // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
     
-    // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
-    cout << "Qdotdot OSQP: -------------------------" << endl;
-    cout << optimal_solution.head(18).transpose().format(f) << endl;
-    //cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
-    cout << " --------------------------------------" << endl;
-    cout << "Reaction Forces OSQP: -----------------" << endl;
-    cout << optimal_solution.tail(12).transpose().format(f) << endl;
-    //cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
-    //cout << " --------------------------------------" << endl;
+    // // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
+    // cout << "Qdotdot OSQP: -------------------------" << endl;
+    // cout << optimal_solution.head(18).transpose().format(f) << endl;
+    // //cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
+    // cout << " --------------------------------------" << endl;
+    // cout << "Reaction Forces OSQP: -----------------" << endl;
+    // cout << optimal_solution.tail(12).transpose().format(f) << endl;
+    // //cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
+    // //cout << " --------------------------------------" << endl;
 
-    // Check constraints:
-    cout << "lower bounds: " << lower_bounds.transpose() << endl;
-    cout << "A size: " << A.rows() << "x" << A.cols() << endl;
-    cout << "x size: " << optimal_solution.rows() << endl;
-    VectorNd Ax = A*optimal_solution;
-    cout << "A*x = " << Ax.transpose().format(f) << endl; 
+    // //-------------------------------------------------------------------------------//
+    // //-------------------------------------------------------------------------------//
+    // // Check constraints:
+    // cout << "lower bounds: " << lower_bounds.transpose() << endl;
+    // cout << "A size: " << A.rows() << "x" << A.cols() << endl;
+    // cout << "x size: " << optimal_solution.rows() << endl;
+    // VectorNd Ax = A*optimal_solution;
+    // cout << "A*x = " << Ax.transpose().format(f) << endl; 
 
-    //-------------------------------------------------------------------------------//
-    //-------------------------------------------------------------------------------//
+    // //-------------------------------------------------------------------------------//
+    // //-------------------------------------------------------------------------------//
 
     array<float, 12> output;
     std::copy(tau.data(), tau.data() + tau.size(), output.data());
@@ -615,7 +618,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
     if (settings) {
         osqp_set_default_settings(settings);
         settings->alpha = 1.0;       // Change alpha parameter
-        settings->verbose = true;   // Prevent OSQP from printing after solving
+        settings->verbose = false;   // Prevent OSQP from printing after solving
     }
 
     // Setup workspace
@@ -721,13 +724,13 @@ double PupperWBC::calcPupperHeight_(){
     cout << "Back right contact point in base coord: \n" << r_br.transpose().format(f) << endl;
     cout << "Front left contact point in base coord: \n" << r_fl.transpose().format(f) << endl;
     cout << "Front right contact point in base coord: \n" << r_fr.transpose().format(f) << endl;
-
+    cout << "robot joint angles: " << joint_angles_.format(f) << endl;
     cout << "robot_orientation: " << endl << robot_orientation_ << endl;
     cout << "Rsb: \n" << Rsb.format(f) << endl;
-    cout << "bl rotated: \n" << s_bl.format(f) << endl;
-    cout << "br rotated: \n" << s_br.format(f) << endl;
-    cout << "fl rotated: \n" << s_fl.format(f) << endl;
-    cout << "fr rotated: \n" << s_fr.format(f) << endl;
+    cout << "bl rotated: \n" << s_bl.transpose().format(f) << endl;
+    cout << "br rotated: \n" << s_br.transpose().format(f) << endl;
+    cout << "fl rotated: \n" << s_fl.transpose().format(f) << endl;
+    cout << "fr rotated: \n" << s_fr.transpose().format(f) << endl;
 
     cout << "height assuming base frame is not aligned with world (this should be wrong): " << s_height << endl;
     cout << "height (this should be right): " << height << endl;
