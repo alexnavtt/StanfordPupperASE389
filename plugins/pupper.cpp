@@ -45,16 +45,16 @@ PupperPlugin::PupperPlugin(){
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.type    = BODY_ORI;
-    CoM_Orientation_Task.task_weight = 0; // 0.7;
+    CoM_Orientation_Task.task_weight = .7; // 0.7;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
     CoM_Orientation_Task.Kp = 10;//1000;
     CoM_Orientation_Task.Kd = 0;
 
     static Task JointPositionTask;
     JointPositionTask.type = JOINT_POS;
-    JointPositionTask.task_weight = 0; //0.1;
+    JointPositionTask.task_weight = .1; //0.1;
     JointPositionTask.joint_target = VectorNd::Zero(12);
-    JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
+    JointPositionTask.active_targets = {true, true, true, true, true, true, true, true, true, true, true, true}; // {true, false, false, true, false, false, true, false, false, true, false, false};
     JointPositionTask.Kp = 1000;
     JointPositionTask.Kd = 0;
 
@@ -264,7 +264,7 @@ void PupperPlugin::updateBody_(){
 
 // Tell the controller the current state of the robot
 void PupperPlugin::updateController_(){
-    WBC_.updateController(joint_positions_, joint_velocities_, body_COM_, body_quat_, feet_in_contact_);
+    WBC_.updateController(joint_positions_, joint_velocities_, body_COM_, body_quat_, {true,true,true,true});
     WBC_.updateBodyPosTask("COM_POSITION", body_COM_);
     WBC_.updateBodyOriTask("COM_ORIENTATION", body_quat_);
     VectorNd jointPos(12);

@@ -62,7 +62,7 @@ int main(int argc, char** argv){
     Pup.addTask("JointPos", &JointPositionTask);
 
     VectorNd joint_positions  =  VectorNd::Zero(12);
-    joint_positions << 0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7; // Init in squatted position
+    //joint_positions << 0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7; // Init in squatted position
     VectorNd joint_velocities = VectorNd::Zero(12);
     Eigen::Quaterniond robot_quat = Eigen::Quaterniond::Identity();
     std::array<bool,4> feet_in_contact = {true, true, true, true}; // BL, BR, FL, FR
@@ -71,38 +71,36 @@ int main(int argc, char** argv){
     Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
     Pup.calculateOutputTorque();
 
-    // //Test height calculation
-    // //////////////////////////////////////////////////////////////////////////////////////
- 
+    // // //Test height calculation
+    // // //////////////////////////////////////////////////////////////////////////////////////
+    // IF BASE IS ALWAYS ALIGNED WITH WORLD, WE SHOULDN'T HAVE TO USE ROTATION MATRIX. Just use z values for foot location.
     // // Pupper rotated with front right leg and back right leg in contact
     // // From Gazebo: height = .0965
     // // Calculated:  h0: 0.100148
     // //              h1: 0.0945443
     // // Values read from gazebo
-    // // joint_positions  = {-.113567,.75649,1.60267,.05627936,-.81907876,-1.805184605,-.116226,.780257,1.58085,.0454920574,-.87633305,-1.77936025};
-    // // robot_quat.x() = 0.000888; 
-    // // robot_quat.y() = -0.1009519;
-    // // robot_quat.z() = -0.0096908;
-    // // robot_quat.w() = 0.9948437;
-    // joint_positions  << 0,0,0,.2,.2,.2,0,0,0,.2,.2,.2;
-    // robot_quat.x() = 0; // Rotate about y -.7 radians (pick up left feet): 
-    // robot_quat.y() = -0.3428978;
-    // robot_quat.z() = 0;
-    // robot_quat.w() = 0.9393727;
-    // // robot_quat.normalize();
+    // joint_positions  << -.113567,.75649,1.60267,.05627936,-.81907876,-1.805184605,-.116226,.780257,1.58085,.0454920574,-.87633305,-1.77936025;
+    // robot_quat.x() = 0.000888; 
+    // robot_quat.y() = -0.1009519;
+    // robot_quat.z() = -0.0096908;
+    // robot_quat.w() = 0.9948437;
+
+    // cout << "PUPPER JOINTS: " << Pup.joint_angles_.transpose() << endl;
+
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095); 
+
     // Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
-    
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
     // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
     // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+
+    // cout << "r0 front right contact point in base coord: \n" << r0.format(f) << endl;
+    // cout << "r1 back right contact point in base coord: \n" << r1.format(f) << endl;
+
     // // Retrieve Orientation of pupper base
     // Eigen::Matrix3d Rsb = robot_quat.toRotationMatrix();
     // cout << "Rsb: \n" << Rsb.format(f) << endl;
     // cout << "Rsb': \n" << Rsb.transpose().format(f) << endl;
- 
-    // cout << "r0 Front right contact point in base coord: \n" << r0.format(f) << endl;
-    // cout << "r1 Back right contact point in base coord: \n" << r1.format(f) << endl;
 
     // Eigen::Vector3d r0_s = Rsb * r0;
     // Eigen::Vector3d r1_s = Rsb * r1;
@@ -111,7 +109,44 @@ int main(int argc, char** argv){
 
     // cout << "h0: " << -r0_s(2) << endl;
     // cout << "h1: " << -r1_s(2) << endl;
-    // return 0;
+
+    // ///////////// TEST where are the lower links relative to the base???  ////////////////
+    // cout << "PUPPER JOINTS: " << Pup.joint_angles_.transpose() << endl;
+
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d zero3d = RigidBodyDynamics::Math::Vector3d::Zero(3);
+    // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), zero3d, true);
+    // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), zero3d, true);
+    // RigidBodyDynamics::Math::Vector3d r2 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), zero3d, true);
+    // RigidBodyDynamics::Math::Vector3d r3 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_left_lower_link"), zero3d, true);
+    // cout << "r0 front right lower link origin in base coord: \n" << r0.format(f) << endl;
+    // cout << "r1 back right lower link origin in base coord: \n" << r1.format(f) << endl;
+    // cout << "r2 front left lower link origin in base coord: \n" << r2.format(f) << endl;
+    // cout << "r3 back left lower link origin in base coord: \n" << r3.format(f) << endl;
+
+    // ///////////// TEST PROVING THAT PUPPER BASE FRAME is fixed to world ////////////////
+    // // 1. first calculate body to base coordinates of the foot.
+    // // 2. translate pupper
+    // // 3. retrieve body to base coordinates again. 
+    // //    Results: the coordinates show the large translation. 
+    // cout << "PUPPER JOINTS: " << Pup.joint_angles_.transpose() << endl;
+
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095); 
+    // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
+    // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+    // cout << "r0 Front right contact point in base coord: \n" << r0.format(f) << endl;
+    // cout << "r1 Back right contact point in base coord: \n" << r1.format(f) << endl;
+
+    // // Translate
+    // // Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
+    // Pup.joint_angles_ << 10,10,10, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 1;
+    // RigidBodyDynamics::Math::Vector3d r0_after = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
+    // RigidBodyDynamics::Math::Vector3d r1_after = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+    // cout << "PUPPER JOINTS AFTER TRANSLATION: " << Pup.joint_angles_.transpose() << endl;
+    // cout << "r0 Front right contact point in base coord: \n" << r0_after.format(f) << endl;
+    // cout << "r1 Back right contact point in base coord: \n" << r0_after.format(f) << endl;
 
     ///////////////////////  Other Tests ///////////////////////////////////
     // Contact Jacobian Test
@@ -137,8 +172,17 @@ int main(int argc, char** argv){
     //     cout << "                           DOF: " << Pup.Pupper_.mJoints[i].mDoFCount << endl;
     // }
 
-    // Load constraint set
-    // Pup.initConstraintSets_();
-    //Pup.joint_angles_ << 0,0,0,   1,0,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
-    // Pup.getContactJacobian_();
+    // // TEST CONTACT JACOBIAN.
+    // // Rotate pupper around x 180 degrees (z -> -z and y -> -y)
+    // Eigen::Quaterniond Fullrot;
+    // Fullrot.x() = 1; // Rotate about y -.7 radians (pick up left feet): 
+    // Fullrot.y() = 0;
+    // Fullrot.z() = 0;
+    // Fullrot.w() = 0;
+
+    // cout << Pup.Jc_.transpose().format(f) << endl;
+    // Pup.updateController(joint_positions, joint_velocities, body_position, Fullrot, feet_in_contact);
+    // cout << Pup.Jc_.transpose().format(f) << endl;
+
+    return 0;
 }
