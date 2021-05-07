@@ -100,6 +100,10 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
     // Copy which feet are in contact
     feet_in_contact_ = feet_in_contact;
 
+    // Update robot height
+    // Note: contacts, joint angles, and orientation must be updated before this
+    robot_height_ = calcPupperHeight_();
+
     // Update the problem matrices
     massMat_.setZero(); // Required!
     Jc_.setZero(); // Just to be safe; not clear if this is required 
@@ -285,30 +289,27 @@ void PupperWBC::initConstraintSets_(){
     front_left_lower_link_id_ = Pupper_.GetBodyId("front_left_lower_link");
     front_right_lower_link_id_ = Pupper_.GetBodyId("front_right_lower_link");
 
-    const Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095);
-    const Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
-
     // Contact normal direction in global coordinates
     const Math::Vector3d world_x(1.0, 0.0, 0.0); 
     const Math::Vector3d world_y(0.0, 1.0, 0.0); 
     const Math::Vector3d world_z(0.0, 0.0, 1.0); 
 
     // Back left foot 
-    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left, world_x, "back_left_contact_x");
-    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left, world_y, "back_left_contact_y");
-    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left, world_z, "back_left_contact_z");
+    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left_, world_x, "back_left_contact_x");
+    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left_, world_y, "back_left_contact_y");
+    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left_, world_z, "back_left_contact_z");
     // Back right foot 
-    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right, world_x, "back_right_contact_x");
-    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right, world_y, "back_right_contact_y");
-    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right, world_z, "back_right_contact_z");
+    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right_, world_x, "back_right_contact_x");
+    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right_, world_y, "back_right_contact_y");
+    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right_, world_z, "back_right_contact_z");
     // Front left foot 
-    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left, world_x, "front_left_contact_x");
-    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left, world_y, "front_left_contact_y");
-    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left, world_z, "front_left_contact_z");
+    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left_, world_x, "front_left_contact_x");
+    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left_, world_y, "front_left_contact_y");
+    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left_, world_z, "front_left_contact_z");
     // Front right foot 
-    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_x, "front_right_contact_x");
-    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_y, "front_right_contact_y");
-    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_z, "front_right_contact_z");
+    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right_, world_x, "front_right_contact_x");
+    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right_, world_y, "front_right_contact_y");
+    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right_, world_z, "front_right_contact_z");
 
     pup_constraints_.Bind(Pupper_);
 }
@@ -665,4 +666,72 @@ void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vect
 
         P_p.push_back(P_x.size());
     }
+}
+
+double PupperWBC::calcPupperHeight_(){
+    // Calculates the height of the pupper using contacts, joint angles, and orientation 
+    // Note: feet_in_contact_, joint_angles_ and orientation should be updated before this. 
+    // The orientation is implicitly used in the CalcBodyToBaseCoordinates.
+
+    Vector3d r_bl = Vector3d::Zero(3);
+    Vector3d r_br = Vector3d::Zero(3);
+    Vector3d r_fl = Vector3d::Zero(3);
+    Vector3d r_fr = Vector3d::Zero(3);
+
+    double num_contacts = 0;
+    double sum_z = 0;
+    double height; // height from floor to COM base
+    if (feet_in_contact_[0]){
+        r_bl = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, Pupper_.GetBodyId("back_left_lower_link"), body_contact_point_left_, true);
+        num_contacts += 1;
+        sum_z += -r_bl(2);
+    }
+    if (feet_in_contact_[1]){
+        r_br = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right_, true);
+        num_contacts += 1;
+        sum_z += -r_br(2);
+    }
+    if (feet_in_contact_[2]){
+        r_fl = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, Pupper_.GetBodyId("front_left_lower_link"), body_contact_point_left_, true);
+        num_contacts += 1;
+        sum_z += -r_fl(2);
+    }
+    if (feet_in_contact_[3]){
+        r_fr = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right_, true);
+        num_contacts += 1;
+        sum_z += -r_fr(2);
+    }
+
+    height = sum_z/num_contacts;
+    
+    // Since the base frame is aligned with the prismatic floating joints (which are aligned with world frame), the z axis should be the height. 
+    // However, I'm keeping the code below just in case.
+    // Below, we rotate the vectors to the world frame and extract the z component. 
+    // Retrieve Orientation of pupper base
+    Eigen::Matrix3d Rsb = robot_orientation_.toMatrix(); // Rotation matrix from world to PCB orientation 
+
+    Eigen::Vector3d s_bl = Rsb * r_bl;
+    Eigen::Vector3d s_br = Rsb * r_br;
+    Eigen::Vector3d s_fl = Rsb * r_fl;
+    Eigen::Vector3d s_fr = Rsb * r_fr;
+
+    double s_height = -(s_bl(2) + s_br(2) + s_fl(2) + s_fr(2) ) / num_contacts;
+    cout << "------------height calculation ---------------" << endl;
+    cout << "Back left contact point in base coord: \n" << r_bl.transpose().format(f) << endl;
+    cout << "Back right contact point in base coord: \n" << r_br.transpose().format(f) << endl;
+    cout << "Front left contact point in base coord: \n" << r_fl.transpose().format(f) << endl;
+    cout << "Front right contact point in base coord: \n" << r_fr.transpose().format(f) << endl;
+
+    cout << "robot_orientation: " << endl << robot_orientation_ << endl;
+    cout << "Rsb: \n" << Rsb.format(f) << endl;
+    cout << "bl rotated: \n" << s_bl.format(f) << endl;
+    cout << "br rotated: \n" << s_br.format(f) << endl;
+    cout << "fl rotated: \n" << s_fl.format(f) << endl;
+    cout << "fr rotated: \n" << s_fr.format(f) << endl;
+
+    cout << "height assuming base frame is not aligned with world (this should be wrong): " << s_height << endl;
+    cout << "height (this should be right): " << height << endl;
+    cout << "---------------------------- ----------------" << endl;
+
+    return height;
 }

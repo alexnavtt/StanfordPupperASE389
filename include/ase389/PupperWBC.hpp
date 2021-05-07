@@ -70,7 +70,8 @@ public:
     // Store the robot state
     VectorNd joint_angles_;        // joint angles in radians
     VectorNd joint_velocities_;    // joint velocities in rad/s
-    VectorNd robot_position_;      // robot center of mass position in meters
+    VectorNd robot_position_;      // robot center of mass position in meters QUESTION: Is this actually the COM? 
+    double robot_height_;        // distance in m from floor to robot base (bottom PCB) in world coordinates
     VectorNd robot_velocity_;      // robot center of mass velocity in m/s
     Quat   robot_orientation_;   // robot orientation from IMU (Quaternion)
     Matrix Jc_;                  // contact Jacobian
@@ -91,6 +92,10 @@ public:
     std::vector<Task*> robot_tasks_;
     std::unordered_map<std::string, unsigned> task_indices_;
 
+    // Location of center of foot in lower link coordinates (center of hemisphere extended as a sphere)
+    const RigidBodyDynamics::Math::Vector3d body_contact_point_left_ =  RigidBodyDynamics::Math::Vector3d(0.0, -.11, 0.0095);
+    const RigidBodyDynamics::Math::Vector3d body_contact_point_right_ = RigidBodyDynamics::Math::Vector3d(0.0, -.11, -0.0095);
+
     // OSQP Solver
     std::unique_ptr<OSQPSettings> QP_settings_;
     std::unique_ptr<OSQPData> QP_data_;
@@ -98,6 +103,9 @@ public:
     void formQP(Matrix &P, VectorNd &q, Matrix &A, VectorNd &l, VectorNd &u);
     VectorNd solveQP(int n, int m, Matrix  &P, c_float *q, Matrix  &A, c_float *lb, c_float *ub);
 
+    // Calculate height from contacts
+    double calcPupperHeight_();
+    
     // Used for timing
     double tic;
     double toc;

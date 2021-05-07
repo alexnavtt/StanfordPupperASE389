@@ -171,12 +171,12 @@ int main(int argc, char** argv){
 
     // cout << "PUPPER JOINTS: " << Pup.joint_angles_.transpose() << endl;
 
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095); 
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left_(0.0, -.11, 0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right_(0.0, -.11, -0.0095); 
 
     // Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
-    // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
-    // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+    // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right_, true);
+    // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right_, true);
 
     // cout << "r0 front right contact point in base coord: \n" << r0.format(f) << endl;
     // cout << "r1 back right contact point in base coord: \n" << r1.format(f) << endl;
@@ -197,8 +197,8 @@ int main(int argc, char** argv){
     // ///////////// TEST where are the lower links relative to the base???  ////////////////
     // cout << "PUPPER JOINTS: " << Pup.joint_angles_.transpose() << endl;
 
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095); 
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left_(0.0, -.11, 0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right_(0.0, -.11, -0.0095); 
     // const RigidBodyDynamics::Math::Vector3d zero3d = RigidBodyDynamics::Math::Vector3d::Zero(3);
     // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), zero3d, true);
     // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), zero3d, true);
@@ -216,18 +216,18 @@ int main(int argc, char** argv){
     // //    Results: the coordinates show the large translation. 
     // cout << "PUPPER JOINTS: " << Pup.joint_angles_.transpose() << endl;
 
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.0, -.11, 0.0095); 
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095); 
-    // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
-    // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left_(0.0, -.11, 0.0095); 
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_right_(0.0, -.11, -0.0095); 
+    // RigidBodyDynamics::Math::Vector3d r0 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right_, true);
+    // RigidBodyDynamics::Math::Vector3d r1 = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right_, true);
     // cout << "r0 Front right contact point in base coord: \n" << r0.format(f) << endl;
     // cout << "r1 Back right contact point in base coord: \n" << r1.format(f) << endl;
 
     // // Translate
     // // Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
     // Pup.joint_angles_ << 10,10,10, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 1;
-    // RigidBodyDynamics::Math::Vector3d r0_after = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right, true);
-    // RigidBodyDynamics::Math::Vector3d r1_after = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right, true);
+    // RigidBodyDynamics::Math::Vector3d r0_after = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), body_contact_point_right_, true);
+    // RigidBodyDynamics::Math::Vector3d r1_after = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), body_contact_point_right_, true);
     // cout << "PUPPER JOINTS AFTER TRANSLATION: " << Pup.joint_angles_.transpose() << endl;
     // cout << "r0 Front right contact point in base coord: \n" << r0_after.format(f) << endl;
     // cout << "r1 Back right contact point in base coord: \n" << r0_after.format(f) << endl;
@@ -237,8 +237,8 @@ int main(int argc, char** argv){
     //                // X,Y,Z, Q1,Q2,Q3, BL1,BL2,BL3,    BR1,BR2,BR3,      FL1,FL2,FL3,      FR1,FR2,FR3     Q4
     // Pup.joint_angles_ << 0,0,0,   .7071068,.7071068,0,   0,0,0,           0,0,0,           0, 0,0,            0,0,0,      0; 
     // RigidBodyDynamics::Math::MatrixNd Jc = RigidBodyDynamics::Math::MatrixNd::Zero(3, Pup.Pupper_.qdot_size);
-    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left(0.02, 0.02, 0.02);
-    // RigidBodyDynamics::CalcPointJacobian(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId(body_name), body_contact_point_left, Jc);
+    // const RigidBodyDynamics::Math::Vector3d body_contact_point_left_(0.02, 0.02, 0.02);
+    // RigidBodyDynamics::CalcPointJacobian(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId(body_name), body_contact_point_left_, Jc);
     // cout << "JOINT ANGLES: \n" << Pup.joint_angles_.transpose().format(f) << endl;
 
     // Body Jacobian Test
@@ -268,17 +268,17 @@ int main(int argc, char** argv){
     // Pup.updateController(joint_positions, joint_velocities, body_position, Fullrot, feet_in_contact);
     // cout << Pup.Jc_.transpose().format(f) << endl;
 
-    // Print body name and joint index
-    double total_mass = 0;
-    for(int i = 0; i < Pup.Pupper_.mBodies.size(); i++){
-        cout << "Body " << Pup.Pupper_.GetBodyName(i) << " Mass: "<< Pup.Pupper_.mBodies[i].mMass << endl;
-        total_mass += Pup.Pupper_.mBodies[i].mMass;
-    }
-    cout << "Total mass: " << total_mass << endl;
+    /////////////////////////////// Print body name and joint index //////////////////////////////////
+    // double total_mass = 0;
+    // for(int i = 0; i < Pup.Pupper_.mBodies.size(); i++){
+    //     cout << "Body " << Pup.Pupper_.GetBodyName(i) << " Mass: "<< Pup.Pupper_.mBodies[i].mMass << endl;
+    //     total_mass += Pup.Pupper_.mBodies[i].mMass;
+    // }
+    // cout << "Total mass: " << total_mass << endl;
 
-    for(int i = 0; i < Pup.Pupper_.mBodies.size(); i++){
-        cout << "Body " << Pup.Pupper_.GetBodyName(i) << " Intertia: "<< Pup.Pupper_.mBodies[i].mInertia << endl;
-    }
+    // for(int i = 0; i < Pup.Pupper_.mBodies.size(); i++){
+    //     cout << "Body " << Pup.Pupper_.GetBodyName(i) << " Intertia: \n"<< Pup.Pupper_.mBodies[i].mInertia << endl;
+    // }
 
     return 0;
 }
