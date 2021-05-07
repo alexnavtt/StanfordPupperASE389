@@ -28,7 +28,7 @@ namespace {
 
     Matrix3d getRotation(double x, double y, double z){
         Quaternion q;
-        q.fromXYZAngles(Vector3d(x, y, z));
+        q = q.fromXYZAngles(Vector3d(x, y, z));
         return q.toMatrix();
     }
 
@@ -128,7 +128,7 @@ std::shared_ptr<Model> createPupperModel(){
     upper_link_inertia = scaleInteria(upper_link_inertia);
 
     // Revolute joint connecting upper link to hub
-    Joint front_left_shoulder_joint(JointTypeRevolute, Vector3d(0, 1, 0));
+    Joint front_left_shoulder_joint(JointTypeRevolute, Vector3d(1, 0, 0));
     SpatialTransform front_left_shoulder_T;
     front_left_shoulder_T.E = getRotation(0, -M_PI_2, 0);
     front_left_shoulder_T.r = Vector3d(0, 0, 0.022);
