@@ -107,6 +107,11 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
     updateContactJacobian_();
     CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_);
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
+
+    // cout << "mass matrix: " << endl;
+    // PRINT_CLEAN(massMat_);
+    // cout << "b + g: \n" << b_g_.transpose().format(f) << endl;
+
 }
 
 // Add a task to the IHWBC controller
@@ -409,12 +414,16 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
     // TODO: Use update routines instead of FormQP every call
     //       
-    //       Pass rf_desired somehow. Should this be a task?
+    //       Set weights in main function
     //       
     //       Set up tasks for foot locations. Can we know these in global coordinates? 
 
-
-
+    // Weights
+    double lambda_t = 0.01; // Penalizes high joint accelerations
+    VectorNd rf_desired = 4 * VectorNd::Ones(4);// Desired normal reaction force (only 4)
+    double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
+    double lambda_rf_xy = 1; // Tangential reaction force penalty (minimize slipping)
+    double w_rf = 0; // Normal reaction force tracking penalty (follow desired reaction force)
     // ---------------------------------------------------------------
     // ------------------------- OBJECTIVE ---------------------------
     // ---------------------------------------------------------------
@@ -468,10 +477,10 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         cost_t_mat += 2 * T->task_weight * j.transpose() * j; // nq x nq
 
         //----------------- WITH j_dot_q_dot ----------------
-        cost_t_vec += 2 * T->task_weight * j.transpose() * (j_dot_q_dot + x_ddot_desired); // nq x 1 
+        //cost_t_vec += 2 * T->task_weight * j.transpose() * (j_dot_q_dot + x_ddot_desired); // nq x 1 
 
         //----------------- WITHOUT j_dot_q_dot -------------
-        // cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
+        cost_t_vec += 2 * T->task_weight * j.transpose() * x_ddot_desired; // nq x 1
         //---------------------------------------------------
 
         //cout << "j_dot_q_dot_" << i << ": \n" << j_dot_q_dot << endl;
@@ -480,8 +489,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     t_prev = now();
 
     // Add a cost to penalize high joint accelerations
-    double lambda_t = 0.1;
-    for (int i = 0; i < NUM_JOINTS; i++){
+    for (int i = 6; i < NUM_JOINTS; i++){
         cost_t_mat(i,i) += lambda_t;
     }
 
@@ -490,13 +498,6 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     //    lambda*||rf||^2
     // 2. Penalize error between desired and calculated (only for normal reaction force):
     //    w*||rf_d-rf||^2
-
-    // TODO: Pass desired value and weights
-    VectorNd rf_desired(4); // Desired normal reaction force (only 4)
-    rf_desired << 4 * VectorNd::Ones(4); // Desired reaction force
-    double lambda_rf_z = 0.01; // Normal reaction force penalty (minimize impacts)
-    double lambda_rf_xy = 0.1; // Tangential reaction force penalty (minimize slipping)
-    double w_rf = 10; // Normal reaction force tracking penalty (follow desired reaction force)
 
     MatrixNd cost_rf_mat = MatrixNd::Identity(12,12);
     VectorNd cost_rf_vec = VectorNd::Zero(12);

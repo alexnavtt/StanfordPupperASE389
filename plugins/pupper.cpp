@@ -35,7 +35,7 @@ PupperPlugin::PupperPlugin(){
     static Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.type    = BODY_POS;
-    CoM_Position_Task.task_weight = 100; // 1
+    CoM_Position_Task.task_weight = 0; // 1
     CoM_Position_Task.active_targets = {true, true, true};    // only account for z-position
     CoM_Position_Task.pos_target << 0, 0, 0.10;
     CoM_Position_Task.Kp = 10;//1000;
@@ -45,7 +45,7 @@ PupperPlugin::PupperPlugin(){
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.type    = BODY_ORI;
-    CoM_Orientation_Task.task_weight = .7; // 0.7;
+    CoM_Orientation_Task.task_weight = 0; // 0.7;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
     CoM_Orientation_Task.Kp = 10;//1000;
     CoM_Orientation_Task.Kd = 0;
