@@ -52,5 +52,6 @@ include_directories(
 # Create an executable file and link its dependencies
 add_executable(PupperController 
   src/PupperCplusplusController/PupperControl.cpp
+  src/PupperCplusplusController/PupperModel.cpp
 )
 target_link_libraries(PupperController ${PROJECT_NAME})
