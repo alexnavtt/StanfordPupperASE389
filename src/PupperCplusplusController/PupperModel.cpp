@@ -187,7 +187,27 @@ std::shared_ptr<Model> createPupperModel(){
     uint right_shroud_id = model->AddBody(bottom_PCB_id, right_shroud_T, right_shroud_joint, right_shroud, "right_shroud");
 
 
-    /* ------ FRONT LEFT MOTOR (mm) ------ */
+    /* ------ BATTERY (m) ------ */
+    double batt_mass = 0.228;
+    Vector3d batt_com(0, 0, 0);
+    Matrix3d batt_inertia;
+    batt_inertia << 6.796775e-05, 0,             0,
+                    0,            0.00013779275, 0,
+                    0,            0,             0.000116375;
+    
+    // Fixed joint connecting battery to PCB
+    Joint battery_joint(JointTypeFixed);
+    SpatialTransform battery_T;
+    battery_T.E = getRotation(0, 0, M_PI_2);
+    battery_T.r = Vector3d(-0.028, 0.0, 0.02425);
+
+    // Connect the battery to the PCB
+    Body battery(batt_mass, batt_com, batt_inertia);
+    uint battery_id = model->AddBody(bottom_PCB_id, battery_T, battery_joint, battery, "battery");
+
+
+
+    /* ------ FRONT LEFT MOTOR (m) ------ */
     double motor_mass = 0.12;
     Vector3d motor_com = Vector3d(0, 0, 0);
     Matrix3d motor_inertia;
