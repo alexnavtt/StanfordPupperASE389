@@ -4,8 +4,6 @@
 #include <memory>
 #include "rbdl/rbdl.h"
 
-std::shared_ptr<RigidBodyDynamics::Model> createPupperModel(){
-    
-}
+std::shared_ptr<RigidBodyDynamics::Model> createPupperModel();
 
 #endif
