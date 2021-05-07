@@ -6,9 +6,10 @@
 
         <xacro:property name = "motorRad"    value = "0.012"/>
         <xacro:property name = "motorLength" value = "0.03"/>
+        <xacro:property name = "motorMass"   value = "0.120"/> <!-- kg --> 
 
         <!-- Create the motor -->
-        <link name = "${name}">
+        <link name = "${name}_motor">
             <inertial>
                 <mass value = "0.12"/>
                 <inertia ixx = "7.2e-6" iyy = "1.11e-5" izz = "1.11e-5" ixy = "0" ixz = "0" iyz = "0"/>
@@ -35,13 +36,14 @@
         <!-- Rigidly attach to motor to it's parent -->
         <joint name = "${name}_fixed_joint" type = "fixed">
             <parent link = "${fixed_parent}"/>
-            <child  link = "${name}"/>
+            <child  link = "${name}_motor"/>
             <xacro:insert_block name = "fixed_origin"/>
         </joint>
 
         <!-- Attach the child link through a revolute joint -->
         <joint name = "${name}_joint" type = "revolute">
-            <parent link = "${name}"/>
+            <parent link = "${fixed_parent}"/>
+            <!-- <parent link = "${name}_motor"/> -->
             <child  link = "${revolute_child}"/>
             <xacro:insert_block name = "revolute_origin"/>
             <limit upper = "1e10" lower = "-1e10" effort = "1e6" velocity = "1e6"/>
