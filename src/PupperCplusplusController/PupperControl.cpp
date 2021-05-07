@@ -5,6 +5,7 @@
 using std::array;
 using std::cout;
 using std::endl;
+using std::string;
 
 // Set floating precision to 3 sig figs
 static Eigen::IOFormat f(3);
@@ -61,8 +62,8 @@ int main(int argc, char** argv){
     Task FrontLeftContactTask;
     FrontLeftContactTask.type = BODY_POS;
     FrontLeftContactTask.task_weight = 0.1;
-    FrontLeftContactTask.active_targets = {true, true, true};
-    // FrontLeftContactTask.pos_target << -0.07, 
+    FrontLeftContactTask.active_targets = {false, false, true};
+    FrontLeftContactTask.pos_target << 0, 0, 0; 
     FrontLeftContactTask.Kp = 100;
     FrontLeftContactTask.Kd = 0;
 
@@ -73,22 +74,71 @@ int main(int argc, char** argv){
 
     VectorNd joint_positions  =  VectorNd::Zero(12);
     joint_positions << 0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7,  0, 0.7, 0.7; // Init in squatted position
-    VectorNd joint_velocities = VectorNd::Zero(12);
-    Eigen::Quaterniond robot_quat = Eigen::Quaterniond::Identity();
+    VectorNd joint_velocities          = VectorNd::Zero(12);
+    Eigen::Quaterniond robot_quat      = Eigen::Quaterniond::Identity();
+    Eigen::Vector3d body_position      = Eigen::Vector3d::Zero();
     std::array<bool,4> feet_in_contact = {true, true, true, true}; // BL, BR, FL, FR
-    Eigen::Vector3d body_position;
     body_position << 0, 0, 0.12;
     Pup.updateController(joint_positions, joint_velocities, body_position, robot_quat, feet_in_contact);
-    Pup.calculateOutputTorque();
 
-    auto front_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), Eigen::Vector3d::Zero(), true);
-    auto front_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), Eigen::Vector3d::Zero(), true);
-    auto back_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_left_lower_link"), Eigen::Vector3d::Zero(), true);
-    auto back_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), Eigen::Vector3d::Zero(), true);
-    cout << "front_left_pos: \n" << front_left_pos << endl;
-    cout << "front_right_pos: \n" << front_right_pos << endl;
-    cout << "back_left_pos: \n" << back_left_pos << endl;
-    cout << "back_right_pos: \n" << back_right_pos << endl;
+    // Testing positions
+    Pup.joint_angles_.setZero();
+    Pup.robot_orientation_.w() = 1;
+    Pup.robot_orientation_.x() = 0;
+    Pup.robot_orientation_.y() = 0;
+    Pup.robot_orientation_.z() = 0;
+    Pup.Pupper_.SetQuaternion(Pup.Pupper_.GetBodyId("bottom_PCB"), Pup.robot_orientation_, Pup.joint_angles_);
+
+    for (int i = 0; i < 4; i++){
+        cout << Pup.robot_orientation_[i];
+    }
+    cout << Pup.joint_angles_ << endl;
+    
+    // Make sure the model seems right
+    const char* body_name = "front_left_foot";
+    auto& model = Pup.Pupper_;
+    auto id = model.GetBodyId(body_name);
+    cout << model.GetBodyName(model.GetParentBodyId(id)) << endl;
+
+    // Ensure that the hip really is joint 12
+    printMatrix(Pup.getBodyJacobian_("front_left_hip"), "front_left_hip Jacobian");
+
+    printMatrix(Pup.getBodyJacobian_("front_left_upper_link"), "front_left_upper_link Jacobian");
+
+    printMatrix(Pup.getBodyJacobian_("front_left_lower_link"), "front_left_lower_link Jacobian");
+
+    unsigned int hip_id = model.GetBodyId("front_left_hip");
+
+    // Test at different hip angles
+    auto pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(model, Pup.joint_angles_, id,  VectorNd::Zero(3));
+    cout << "Pos: \n" << pos  << endl;
+    Pup.joint_angles_(12) = M_PI_4;
+    pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(model, Pup.joint_angles_, id,  VectorNd::Zero(3));
+    cout << "Pos:\n" << pos << endl;
+    Pup.joint_angles_(12) = -M_PI_4;
+    pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(model, Pup.joint_angles_, id,  VectorNd::Zero(3));
+    cout << "Pos:  \n" << pos   << endl;
+    Pup.joint_angles_(12) = M_PI;
+    pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(model, Pup.joint_angles_, id,  VectorNd::Zero(3));
+    cout << "Pos: \n" << pos  << endl;
+
+    cout << "The model has " << model.mJoints.size() << " joints" << endl;
+
+    Matrix BaseOri = RigidBodyDynamics::CalcBodyWorldOrientation(model, Pup.joint_angles_, model.GetBodyId("bottom_PCB"));
+    cout << "PCB Orientation: \n" << BaseOri << endl;
+
+    Matrix HipOri = RigidBodyDynamics::CalcBodyWorldOrientation(model, Pup.joint_angles_, model.GetBodyId("front_left_hip"));
+    cout << "Hip Orientation: \n" << HipOri << endl;
+
+    Matrix HubOri = RigidBodyDynamics::CalcBodyWorldOrientation(model, Pup.joint_angles_, model.GetBodyId("front_left_hub"));
+    cout << "Hub Orientation: \n" << HubOri << endl;
+
+    for (int i = 0; i < 15; i++){
+        RigidBodyDynamics::Math::SpatialTransform S = model.GetJointFrame(i);
+        cout << i << ":\n" << S << endl;
+    }
+    
+    // Pup.calculateOutputTorque();
 
     //Test height calculation
     //////////////////////////////////////////////////////////////////////////////////////
