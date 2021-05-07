@@ -66,7 +66,7 @@ PupperWBC::PupperWBC(){
     robot_orientation_.w() = 1;
 
     // Robot dynamics matrices
-    Jc_      = MatrixNd::Zero(4, NUM_JOINTS);
+    Jc_      = MatrixNd::Zero(12, NUM_JOINTS);
     massMat_ = MatrixNd::Zero(NUM_JOINTS,NUM_JOINTS);
     b_g_     = VectorNd::Zero(NUM_JOINTS);
 
@@ -86,7 +86,7 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
         joint_velocities_[i+6] = joint_velocities[i];
     }
 
-    // Record the body position vector
+    // Record the body position vector NOTE: this does not update RBDL's translation joints
     robot_position_ = body_position;
 
     // Record the body orientation quaternion
@@ -184,19 +184,20 @@ void PupperWBC::Load(std::string urdf_file_string){
 
 array<float, 12> PupperWBC::calculateOutputTorque(){
     // Objective function terms
-    MatrixNd P = MatrixNd::Zero(NUM_JOINTS + 4, NUM_JOINTS + 4);
-    VectorNd q = VectorNd::Zero(NUM_JOINTS + 4);
+    MatrixNd P = MatrixNd::Zero(NUM_JOINTS + 12, NUM_JOINTS + 12);
+    VectorNd q = VectorNd::Zero(NUM_JOINTS + 12);
     
     // Constraint terms
-    MatrixNd A = MatrixNd::Zero(             10, NUM_JOINTS + 4);
-    VectorNd lower_bounds = VectorNd::Zero(10);
-    VectorNd upper_bounds = VectorNd::Zero(10);
+    MatrixNd A = MatrixNd::Zero(             18, NUM_JOINTS + 12);
+    VectorNd lower_bounds = VectorNd::Zero(18);
+    VectorNd upper_bounds = VectorNd::Zero(18);
 
     // Solve for q_ddot and reaction forces
     formQP(P, q, A, lower_bounds, upper_bounds);
     VectorNd optimal_solution = solveQP(A.cols(), A.rows(), P, q.data(), A, lower_bounds.data(), upper_bounds.data());
+    
     VectorNd q_ddot = optimal_solution.head(NUM_JOINTS);
-    VectorNd F_r    = optimal_solution.tail(4);
+    VectorNd F_r    = optimal_solution.tail(12);
 
     // cout << "Solution: -----------------" << endl;
     // for (int i = 0; i < optimal_solution.size(); i++){
@@ -207,10 +208,10 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // Solve for the command torques
     VectorNd tau = (massMat_*q_ddot + b_g_ - Jc_.transpose()*F_r).tail(ROBOT_NUM_JOINTS);
     // cout << "Back left hip control torque: " << tau(0) << endl;
-    cout<< "Torques: " << endl;
-    for (int i = 0; i < tau.size(); i++){
-        cout<< tau[i] << endl;  
-    }
+    // cout<< "Torques: " << endl;
+    // for (int i = 0; i < tau.size(); i++){
+    //     cout<< tau[i] << endl;  
+    // }
 
     // Troubleshooting (confirmed correct)
     //VectorNd sol = VectorNd::Zero(6);
@@ -234,19 +235,27 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
     tau_gen.tail(12) = tau;
     
-    cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
-    cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
-    cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
+    // cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
+    // cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
+    // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
     
-    ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
+    // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
     cout << "Qdotdot OSQP: -------------------------" << endl;
     cout << optimal_solution.head(18).transpose().format(f) << endl;
-    cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
+    //cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
     cout << " --------------------------------------" << endl;
     cout << "Reaction Forces OSQP: -----------------" << endl;
-    cout << optimal_solution.tail(4).transpose().format(f) << endl;
-    cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
-    cout << " --------------------------------------" << endl;
+    cout << optimal_solution.tail(12).transpose().format(f) << endl;
+    //cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
+    //cout << " --------------------------------------" << endl;
+
+    // Check constraints:
+    cout << "lower bounds: " << lower_bounds.transpose() << endl;
+    cout << "A size: " << A.rows() << "x" << A.cols() << endl;
+    cout << "x size: " << optimal_solution.rows() << endl;
+    VectorNd Ax = A*optimal_solution;
+    cout << "A*x = " << Ax.transpose().format(f) << endl; 
+
     //-------------------------------------------------------------------------------//
     //-------------------------------------------------------------------------------//
 
@@ -257,6 +266,15 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
 
 void PupperWBC::initConstraintSets_(){
     // Perform initialization of RBDL contact constraints
+    // Order is as follows (Rows of the contact Jacobian):
+    // Back left foot
+    //      X,Y,Z constraints (3 rows)
+    // Back right foot
+    //      X,Y,Z constraints (3 rows)
+    // Front left foot
+    //      X,Y,Z constraints (3 rows)
+    // Front right foot 
+    //      X,Y,Z constraints (3 rows)
     back_left_lower_link_id_ = Pupper_.GetBodyId("back_left_lower_link");
     back_right_lower_link_id_ = Pupper_.GetBodyId("back_right_lower_link");
     front_left_lower_link_id_ = Pupper_.GetBodyId("front_left_lower_link");
@@ -266,12 +284,26 @@ void PupperWBC::initConstraintSets_(){
     const Math::Vector3d body_contact_point_right(0.0, -.11, -0.0095);
 
     // Contact normal direction in global coordinates
-    const Math::Vector3d world_normal(0.0, 0.0, 1.0); 
-    
-    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left, world_normal, "back_left_contact");
-    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right, world_normal, "back_right_contact");
-    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left, world_normal, "front_left_contact");
-    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_normal, "front_right_contact");
+    const Math::Vector3d world_x(1.0, 0.0, 0.0); 
+    const Math::Vector3d world_y(0.0, 1.0, 0.0); 
+    const Math::Vector3d world_z(0.0, 0.0, 1.0); 
+
+    // Back left foot 
+    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left, world_x, "back_left_contact_x");
+    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left, world_y, "back_left_contact_y");
+    pup_constraints_.AddContactConstraint(back_left_lower_link_id_, body_contact_point_left, world_z, "back_left_contact_z");
+    // Back right foot 
+    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right, world_x, "back_right_contact_x");
+    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right, world_y, "back_right_contact_y");
+    pup_constraints_.AddContactConstraint(back_right_lower_link_id_, body_contact_point_right, world_z, "back_right_contact_z");
+    // Front left foot 
+    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left, world_x, "front_left_contact_x");
+    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left, world_y, "front_left_contact_y");
+    pup_constraints_.AddContactConstraint(front_left_lower_link_id_, body_contact_point_left, world_z, "front_left_contact_z");
+    // Front right foot 
+    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_x, "front_right_contact_x");
+    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_y, "front_right_contact_y");
+    pup_constraints_.AddContactConstraint(front_right_lower_link_id_, body_contact_point_right, world_z, "front_right_contact_z");
 
     pup_constraints_.Bind(Pupper_);
 }
@@ -351,8 +383,10 @@ void PupperWBC::updateContactJacobian_(){
     CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, true);
     for (int i=0; i<4; i++){
         if (!feet_in_contact_[i]){
-            //cout << "Foot " << i << " is floating." << endl;
-            Jc_.row(i).setZero();
+            cout << "Foot " << i << " is floating." << endl;
+            Jc_.row(i*3).setZero();
+            Jc_.row(i*3 + 1).setZero();
+            Jc_.row(i*3 + 2).setZero();
         }
     }
     
@@ -364,10 +398,14 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // min 1/2(x'Px) + q'x
     // st l <= Ax <= u
 
-    // x is a concatenated vector of qdotdot and Fr 
+    // x is a concatenated vector of qdotdot (18x1) and Fr (12x1) 
     // P is a sparse block matrix 
-    // P = [P_a,  0  ; 
-    //       0 , P_b];
+    // P = [P_a,  0  ;       Sizes: [ 18x18  ,(18x12)  ;
+    //       0 , P_b];               (12x18) , 12x12 ]
+    //
+    // A is sparse block matrix
+    // A = [ M  , -Jc'  ;   Sizes: [  6x18  ,  6x12]
+    //       0  , Fr_c ];            (12x18), 12x12]
 
     // TODO: Use update routines instead of FormQP every call
     //       
@@ -450,27 +488,39 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // Form reaction force cost matrix and vector
     // 1. Penalize large reaction forces with form: 
     //    lambda*||rf||^2
-    // 2. Penalize error between desired and calculated:
+    // 2. Penalize error between desired and calculated (only for normal reaction force):
     //    w*||rf_d-rf||^2
 
     // TODO: Pass desired value and weights
-    VectorNd rf_desired(4); 
-    rf_desired << 6.5 * VectorNd::Ones(4); // Desired reaction force
-    double lambda_rf = 0.1; // Reaction force penalty (minimize impacts)
-    double w_rf = 1; // Reaction force tracking penalty (follow desired reaction force)
+    VectorNd rf_desired(4); // Desired normal reaction force (only 4)
+    rf_desired << 4 * VectorNd::Ones(4); // Desired reaction force
+    double lambda_rf_z = 0.01; // Normal reaction force penalty (minimize impacts)
+    double lambda_rf_xy = 0.1; // Tangential reaction force penalty (minimize slipping)
+    double w_rf = 10; // Normal reaction force tracking penalty (follow desired reaction force)
 
-    MatrixNd cost_rf_mat = MatrixNd::Identity(4,4);
-    VectorNd cost_rf_vec = VectorNd::Zero(4);
+    MatrixNd cost_rf_mat = MatrixNd::Identity(12,12);
+    VectorNd cost_rf_vec = VectorNd::Zero(12);
 
-    cost_rf_mat *= lambda_rf;
-    cost_rf_mat += MatrixNd::Identity(4,4) * 2 * w_rf;
-    cost_rf_vec += 2 * w_rf * -rf_desired;
+    // NOTE: my creation of cost_rf_mat is fragile. The order below is important.
+    // Tangential reaction forces
+    cost_rf_mat *= lambda_rf_xy; // First 
+
+    // Normal reaction forces (penalize large values and tracking error)
+    cost_rf_mat(2,2) = lambda_rf_z +  w_rf; // Second
+    cost_rf_mat(5,5) = lambda_rf_z +  w_rf;
+    cost_rf_mat(8,8) = lambda_rf_z +  w_rf;
+    cost_rf_mat(11,11) = lambda_rf_z +  w_rf;
+
+    cost_rf_vec(2) =  w_rf * -rf_desired(0); // Since rf_desired is 4x1 vector of just the desired normal rf
+    cost_rf_vec(5) =  w_rf * -rf_desired(1);
+    cost_rf_vec(8) =  w_rf * -rf_desired(2);
+    cost_rf_vec(11) = w_rf * -rf_desired(3);
 
     // Form P matrix and q vector
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
-    P.bottomRightCorner(4,4)               = cost_rf_mat;
+    P.bottomRightCorner(12,12)               = cost_rf_mat;
     q.head(NUM_JOINTS) = cost_t_vec;
-    q.tail(4) = cost_rf_vec;
+    q.tail(12) = cost_rf_vec;
     
     assert(P.rows() == cost_t_mat.rows() + cost_rf_mat.rows());
     assert(q.rows() == cost_t_vec.rows() + cost_rf_vec.rows());
@@ -484,9 +534,10 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
     // Incorporate the non-linear effects in the dynamics equation
     VectorNd eq_vec_0 = -b_g_.head(6);
-    MatrixNd eq_mat_0(6,NUM_JOINTS+4);
+    MatrixNd eq_mat_0(6,NUM_JOINTS+12);
+
     eq_mat_0 << massMat_.topRows(6), -Jc_.transpose().topRows(6);
-    
+
     // Debug: (confirmed correct)
     // cout << "massMat: \n" << massMat_.topRows(6).format(f) << endl;
     // cout << "Jc_'.topRows(6): \n" << (MatrixNd::Zero(4,18)-Jc_).transpose().topRows(6).format(f) << endl;
@@ -495,25 +546,28 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // Reaction force constraints of the form:
     // l <= Fr <= u      (l = u = 0 for feet not in contact)
     
-    MatrixNd ineq_mat_0(4,NUM_JOINTS+4);
-    VectorNd ineq_vec_l0 = VectorNd::Zero(4);
-    VectorNd ineq_vec_u0 = (double)100.0 * VectorNd::Ones(4);
+    MatrixNd ineq_mat_0(12,NUM_JOINTS+12);
+    VectorNd ineq_vec_l0 = VectorNd::Zero(12);
+    VectorNd ineq_vec_u0 = (double)100.0 * VectorNd::Ones(12); // Max reaction force 
 
     for (int i=0; i<4; i++){
         if (!feet_in_contact_[i]){
-            ineq_vec_u0[i] = 0; // force Fr = 0 for floating feet
+            ineq_vec_u0.segment(i*3,3) = VectorNd::Zero(3); // force Fr = 0 for floating feet
         }
     }
 
-    ineq_mat_0 << MatrixNd::Zero(4,NUM_JOINTS) , MatrixNd::Identity(4,4);
-    
+    ineq_mat_0 << MatrixNd::Zero(12,NUM_JOINTS) , MatrixNd::Identity(12,12);
+
     A.topRows(6) = eq_mat_0;
-    A.bottomRows(4) = ineq_mat_0;
+    A.bottomRows(12) = ineq_mat_0;
 
     l.topRows(6) = eq_vec_0; // For equality constraints, set lower and upper equal
     u.topRows(6) = eq_vec_0;
-    l.bottomRows(4) = ineq_vec_l0;
-    u.bottomRows(4) = ineq_vec_u0;
+    l.bottomRows(12) = ineq_vec_l0;
+    u.bottomRows(12) = ineq_vec_u0;
+
+    // cout << "P size: " << P.rows() << "x" << P.cols() << endl;
+    // cout << "A size: " << A.rows() << "x" << A.cols() << endl;
 
     // cout<< "P Matrix: \n" << P.format(f) << endl << endl;
     // cout<< "q Matrix: \n" << q.format(f) << endl << endl;
@@ -521,6 +575,10 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // cout<< "A Matrix: \n" << A.format(f) << endl << endl;
     // cout<< "l vector: \n" << l.format(f) << endl << endl;
     // cout<< "u vector: \n" << u.format(f) << endl << endl;
+
+    // cout<< "A matrix bottom right: \n" << A.bottomRightCorner(12,12).format(f) << endl << endl;
+    // cout<< "l vector bottom 12: \n" << l.tail(12).format(f) << endl << endl;
+    // cout<< "u vector bottom 12: \n" << u.tail(12).format(f) << endl << endl;
 }
 
 
@@ -555,7 +613,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
     if (settings) {
         osqp_set_default_settings(settings);
         settings->alpha = 1.0;       // Change alpha parameter
-        settings->verbose = false;   // Prevent OSQP from printing after solving
+        settings->verbose = true;   // Prevent OSQP from printing after solving
     }
 
     // Setup workspace
@@ -571,7 +629,7 @@ VectorNd PupperWBC::solveQP(int n, int m, MatrixNd &P, c_float  *q, MatrixNd &A,
     }
 
     // Return solution
-    VectorNd q_ddot(NUM_JOINTS + 4);
+    VectorNd q_ddot(NUM_JOINTS + 12);
     std::copy(work->solution->x, work->solution->x + q_ddot.size(), q_ddot.data());
 
     return q_ddot;
