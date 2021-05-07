@@ -30,13 +30,14 @@ static void printMatrix(Eigen::MatrixXd A, std::string title = ""){
 int main(int argc, char** argv){
 
     auto new_model = createPupperModel();
-    // return 0;
+    return 0;
 
     PupperWBC Pup;
     Pup.Load(pupper_urdf_string);
 
     double total_mass;
     for (int i = 0; i < Pup.Pupper_.I.size(); i++){
+        cout << "Mass of " << Pup.Pupper_.GetBodyName(i) << " is: " << Pup.Pupper_.I[i].m << " kg\n";
         total_mass += Pup.Pupper_.I[i].m;
     }
     cout << "Total mass is " << total_mass << endl;
@@ -45,8 +46,8 @@ int main(int argc, char** argv){
     cout << "Mass of bottom_PCB: " << Pup.Pupper_.mBodies[pcbid].mMass << endl;
     cout << "Mass of bottom PCB in inertia: " << Pup.Pupper_.I[pcbid].m << endl;
 
-    cout << "Mass of bottom_PCB: " << new_model->mBodies[pcbid].mMass << endl;
-    cout << "Mass of bottom PCB in inertia: " << new_model->I[pcbid].m << endl;
+    // cout << "Mass of bottom_PCB: " << new_model->mBodies[pcbid].mMass << endl;
+    // cout << "Mass of bottom PCB in inertia: " << new_model->I[pcbid].m << endl;
     return 0;
 
     // Task for Body center of mass to be 10cm high
@@ -122,9 +123,7 @@ int main(int argc, char** argv){
 
     // Ensure that the hip really is joint 12
     printMatrix(Pup.getBodyJacobian_("front_left_hip"), "front_left_hip Jacobian");
-
     printMatrix(Pup.getBodyJacobian_("front_left_upper_link"), "front_left_upper_link Jacobian");
-
     printMatrix(Pup.getBodyJacobian_("front_left_lower_link"), "front_left_lower_link Jacobian");
 
     unsigned int hip_id = model.GetBodyId("front_left_hip");
