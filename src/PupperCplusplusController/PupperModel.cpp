@@ -118,7 +118,9 @@ std::shared_ptr<Model> createPupperModel(){
     Body left_hub = Body(left_hub_mass, left_hub_com, left_hub_inertia);
     uint front_left_hub_id = model->AddBody(bottom_PCB_id, front_left_hub_T, front_left_hub_joint, left_hub, "front_left_hub");             
 
-    /* ------ FRONT LEFT UPPER LINK ------ */
+    /* ------ FRONT LEFT UPPER LINK ------ */ // From meshlab
+    // Meshlab : Filters -> Quality Measure and Computation -> Compute Geometric Properties
+    // Make sure to scale everything with the functions defined up at the top of this file
     double upper_link_mass = 13804.297852 * pow(mm2meter,3) * density;
     Vector3d upper_link_com = mm2meter * Vector3d(4.592267, 43.607891, 0.000017);
     Matrix3d upper_link_inertia;
@@ -128,10 +130,10 @@ std::shared_ptr<Model> createPupperModel(){
     upper_link_inertia = scaleInteria(upper_link_inertia);
 
     // Revolute joint connecting upper link to hub
-    Joint front_left_shoulder_joint(JointTypeRevolute, Vector3d(1, 0, 0));
+    Joint front_left_shoulder_joint(JointTypeRevolute, Vector3d(1, 0, 0)); // URDF shoulder joint axis
     SpatialTransform front_left_shoulder_T;
-    front_left_shoulder_T.E = getRotation(0, -M_PI_2, 0);
-    front_left_shoulder_T.r = Vector3d(0, 0, 0.022);
+    front_left_shoulder_T.E = getRotation(0, -M_PI_2, 0);   // URDF: shoulder joint origin rpy
+    front_left_shoulder_T.r = Vector3d(0, 0, 0.022);        // URDF: shoulder joint origin xyz
 
     // Add upper link to hub with revolute joint
     Body front_left_upper_link = Body(upper_link_mass, upper_link_com, upper_link_inertia);
