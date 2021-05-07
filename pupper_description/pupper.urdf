@@ -30,7 +30,7 @@
   <joint name="front_bulkhead_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="front_bulkhead"/>
-    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.128 0.00 0.044"/>
   </joint>
   <!-- Create Middle Bulkhead -->
   <link name="middle_bulkhead_front">
@@ -43,7 +43,7 @@
   <joint name="middle_bulkhead_to_base_1" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="middle_bulkhead_front"/>
-    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.128 0.00 0.044"/>
   </joint>
   <!-- Create 2nd Middle Bulkhead -->
   <link name="middle_bulkhead_rear">
@@ -56,7 +56,7 @@
   <joint name="middle_bulkhead_to_base_2" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="middle_bulkhead_rear"/>
-    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.128 0.00 0.044"/>
   </joint>
   <!-- Create back right shroud -->
   <link name="back_right_shroud">
@@ -69,7 +69,7 @@
   <joint name="right_shroud_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_right_shroud"/>
-    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.128 0.00 0.044"/>
   </joint>
   <!-- Create back left shroud -->
   <link name="back_left_shroud">
@@ -82,7 +82,7 @@
   <joint name="back_left_shroud_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_left_shroud"/>
-    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.128 0.00 0.044"/>
   </joint>
   <!-- Create rear bulkhead -->
   <link name="rear_bulkhead">
@@ -95,7 +95,7 @@
   <joint name="rear_bulk_head_to_body" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="rear_bulkhead"/>
-    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.114 -0.004 0.044"/>
+    <origin rpy="1.5707963268 0 1.5707963268" xyz="-0.128 0.00 0.044"/>
   </joint>
   <!-- Create a bulk mass for the battery -->
   <link name="battery">
@@ -108,7 +108,7 @@
   <joint name="battery_to_body" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="battery"/>
-    <origin rpy="0 0 1.5707963268" xyz="-0.015 -0.004 0.02425"/>
+    <origin rpy="0 0 1.5707963268" xyz="-0.028 0.00 0.02425"/>
   </joint>
   <!-- Create top plate -->
   <link name="top_PCB">
@@ -121,7 +121,7 @@
   <joint name="top_PCB_to_base" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="top_PCB"/>
-    <origin rpy="0 0 1.5707963268" xyz="0 -0.0075 0.088"/>
+    <origin rpy="0 0 0" xyz="0.00 0.00 0.087"/>
   </joint>
   <link name="front_left_hub">
     <inertial>
@@ -177,7 +177,7 @@
   <joint name="front_left_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="front_left_hip"/>
-    <origin rpy="-1.5707963268 0 1.5707963268" xyz="0.104 0.0425 0.041"/>
+    <origin rpy="4.71238898039 0 1.5707963268" xyz="0.091 0.045 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="front_left_hip_joint" type="revolute">
@@ -286,7 +286,7 @@
   <joint name="back_left_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_left_hip"/>
-    <origin rpy="-1.5707963268 0 1.5707963268" xyz="-0.097 0.0425 0.041"/>
+    <origin rpy="4.71238898039 0 1.5707963268" xyz="-0.11 0.045 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="back_left_hip_joint" type="revolute">
@@ -395,7 +395,7 @@
   <joint name="front_right_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="front_right_hip"/>
-    <origin rpy="-1.5707963268 0 1.5707963268" xyz="0.104 -0.0505 0.041"/>
+    <origin rpy="4.71238898039 0 1.5707963268" xyz="0.091 -0.045 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="front_right_hip_joint" type="revolute">
@@ -504,7 +504,7 @@
   <joint name="back_right_hip_fixed_joint" type="fixed">
     <parent link="bottom_PCB"/>
     <child link="back_right_hip"/>
-    <origin rpy="-1.5707963268 0 1.5707963268" xyz="-0.097 -0.0505 0.041"/>
+    <origin rpy="4.71238898039 0 1.5707963268" xyz="-0.11 -0.045 0.041"/>
   </joint>
   <!-- Attach the child link through a revolute joint -->
   <joint name="back_right_hip_joint" type="revolute">
