@@ -65,7 +65,7 @@ public:
     void initConstraintSets_();
 
     // Retrieve the contact Jacobian for the active contacts
-    void updateContactJacobian_();
+    void updateContactJacobian_(bool update_kinematics = true);
 
     // Store the robot state
     VectorNd joint_angles_;        // joint angles in radians

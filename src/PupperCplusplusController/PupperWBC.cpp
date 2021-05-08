@@ -245,28 +245,28 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
     tau_gen.tail(12) = tau;
     
-    // cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
-    // cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
-    // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
+    cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
+    cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
+    cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
     
-    // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
+    ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
     cout << "Qdotdot OSQP: -------------------------" << endl;
     cout << optimal_solution.head(18).transpose().format(f) << endl;
-    //cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
+    cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
     cout << " --------------------------------------" << endl;
     cout << "Reaction Forces OSQP: -----------------" << endl;
     cout << optimal_solution.tail(12).transpose().format(f) << endl;
-    //cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
-    //cout << " --------------------------------------" << endl;
+    cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
+    cout << " --------------------------------------" << endl;
 
     // //-------------------------------------------------------------------------------//
     // //-------------------------------------------------------------------------------//
-    // // Check constraints:
-    // cout << "lower bounds: " << lower_bounds.transpose() << endl;
-    // cout << "A size: " << A.rows() << "x" << A.cols() << endl;
-    // cout << "x size: " << optimal_solution.rows() << endl;
-    // VectorNd Ax = A*optimal_solution;
-    // cout << "A*x = " << Ax.transpose().format(f) << endl; 
+    // Check constraints:
+    cout << "lower bounds: " << lower_bounds.transpose() << endl;
+    cout << "A size: " << A.rows() << "x" << A.cols() << endl;
+    cout << "x size: " << optimal_solution.rows() << endl;
+    VectorNd Ax_minus_l = (A*optimal_solution)-lower_bounds;
+    cout << "A*x - l= " << Ax_minus_l.transpose().format(f) << endl; 
 
     // //-------------------------------------------------------------------------------//
     // //-------------------------------------------------------------------------------//
@@ -278,6 +278,7 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
 
 void PupperWBC::initConstraintSets_(){
     // Perform initialization of RBDL contact constraints
+    // Contacts are defined in the global frame
     // Order is as follows (Rows of the contact Jacobian):
     // Back left foot
     //      X,Y,Z constraints (3 rows)
@@ -388,8 +389,12 @@ MatrixNd PupperWBC::getTaskJacobian_(std::string task_name){
     return getTaskJacobian_(index);
 }
 
-void PupperWBC::updateContactJacobian_(){
-    CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, true);
+void PupperWBC::updateContactJacobian_(bool update_kinematics){
+    // Gives the velocity of the feet in the global frame.
+    // update_kinematics defaults to true.
+    // Note: Update_kinematics must be true if an RBDL function has not been called previously and the joint angles have changed.
+
+    CalcConstraintsJacobian(Pupper_, joint_angles_, pup_constraints_, Jc_, update_kinematics);
     for (int i=0; i<4; i++){
         if (!feet_in_contact_[i]){
             cout << "Foot " << i << " is floating." << endl;
@@ -414,7 +419,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     //
     // A is sparse block matrix
     // A = [ M  , -Jc'  ;   Sizes: [  6x18  ,  6x12]
-    //       0  , Fr_c ];            (12x18), 12x12]
+    //       0  , C_fr ];            (12x18), 12x12]
 
     // TODO: Use update routines instead of FormQP every call
     //       
@@ -423,11 +428,13 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     //       Set up tasks for foot locations. Can we know these in global coordinates? 
 
     // Weights
-    double lambda_t = 0.01; // Penalizes high joint accelerations
+    double lambda_t = 0.0001; // Penalizes high joint accelerations
     VectorNd rf_desired = 4 * VectorNd::Ones(4);// Desired normal reaction force (only 4)
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
-    double lambda_rf_xy = 1; // Tangential reaction force penalty (minimize slipping)
+    double lambda_rf_xy = 100; // Tangential reaction force penalty (minimize slipping)
     double w_rf = 0; // Normal reaction force tracking penalty (follow desired reaction force)
+    double mu = 1; // Coefficient of friction 
+
     // ---------------------------------------------------------------
     // ------------------------- OBJECTIVE ---------------------------
     // ---------------------------------------------------------------
@@ -499,19 +506,30 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
     // Form reaction force cost matrix and vector
     // 1. Penalize large reaction forces with form: 
-    //    lambda*||rf||^2
-    // 2. Penalize error between desired and calculated (only for normal reaction force):
+    //    lambda_rf_z*||rf_z||^2
+    // 2. Penalize error between desired and calculated (only for normal reaction force for now):
     //    w*||rf_d-rf||^2
 
     MatrixNd cost_rf_mat = MatrixNd::Identity(12,12);
     VectorNd cost_rf_vec = VectorNd::Zero(12);
 
+
+    MatrixNd cost_rf_mat2 = MatrixNd::Zero(12,12);
+    VectorNd diag_terms = VectorNd::Zero(12); 
+    // These elements go into the diagonal of the cost matrix
+    diag_terms << lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf, 
+                  lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf,
+                  lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf,
+                  lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf;
+
+    cost_rf_mat2 = diag_terms.asDiagonal();
+
     // NOTE: my creation of cost_rf_mat is fragile. The order below is important.
     // Tangential reaction forces
-    cost_rf_mat *= lambda_rf_xy; // First 
+    cost_rf_mat *= lambda_rf_xy; // Must come first 
 
     // Normal reaction forces (penalize large values and tracking error)
-    cost_rf_mat(2,2) = lambda_rf_z +  w_rf; // Second
+    cost_rf_mat(2,2) = lambda_rf_z +  w_rf; // Must come second
     cost_rf_mat(5,5) = lambda_rf_z +  w_rf;
     cost_rf_mat(8,8) = lambda_rf_z +  w_rf;
     cost_rf_mat(11,11) = lambda_rf_z +  w_rf;
@@ -520,6 +538,9 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     cost_rf_vec(5) =  w_rf * -rf_desired(1);
     cost_rf_vec(8) =  w_rf * -rf_desired(2);
     cost_rf_vec(11) = w_rf * -rf_desired(3);
+
+    cout << "cost_rf_mat : \n " << cost_rf_mat.format(f) << endl;
+    cout << "cost_rf_mat2 : \n " << cost_rf_mat2.format(f) << endl;
 
     // Form P matrix and q vector
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
@@ -543,14 +564,19 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
     eq_mat_0 << massMat_.topRows(6), -Jc_.transpose().topRows(6);
 
-    // Debug: (confirmed correct)
+    // Debug: 
     // cout << "massMat: \n" << massMat_.topRows(6).format(f) << endl;
     // cout << "Jc_'.topRows(6): \n" << (MatrixNd::Zero(4,18)-Jc_).transpose().topRows(6).format(f) << endl;
     // cout << "combined: \n" << eq_mat_0.format(f) << endl;
 
     // Reaction force constraints of the form:
-    // l <= Fr <= u      (l = u = 0 for feet not in contact)
-    
+    // l <= Fr <= u      (l = u = 0 for feet commanded not in contact)
+    // 
+    // For normal reaction forces:
+    // 0 <= Fr_z <= Fr_max
+    //
+    // For tangent reaction forces:
+    // 
     MatrixNd ineq_mat_0(12,NUM_JOINTS+12);
     VectorNd ineq_vec_l0 = VectorNd::Zero(12);
     VectorNd ineq_vec_u0 = (double)100.0 * VectorNd::Ones(12); // Max reaction force 
