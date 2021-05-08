@@ -270,16 +270,17 @@ int main(int argc, char** argv){
     // }
 
     // // TEST CONTACT JACOBIAN.
-    // // Rotate pupper around x 180 degrees (z -> -z and y -> -y)
-    // Eigen::Quaterniond Fullrot;
-    // Fullrot.x() = 1; // Rotate about y -.7 radians (pick up left feet): 
-    // Fullrot.y() = 0;
-    // Fullrot.z() = 0;
-    // Fullrot.w() = 0;
-
-    // cout << Pup.Jc_.transpose().format(f) << endl;
-    // Pup.updateController(joint_positions, joint_velocities, body_position, Fullrot, feet_in_contact);
-    // cout << Pup.Jc_.transpose().format(f) << endl;
+    // Pup.joint_angles_ = VectorNd::Zero(19);
+    // Pup.joint_angles_(18) = 1; // Rotate pupper around x 180 degrees (z -> -z and y -> -y)
+    // cout << "Joint angles for test: " << Pup.joint_angles_.transpose() << endl;
+    // cout << "CONTACT JACOBIAN IN NEUTRAL CONFIG: " << endl;
+    // cout << Pup.Jc_.topRows(3).format(f) << endl;
+    // Pup.joint_angles_(18) = 0; // Rotate pupper around x 180 degrees (z -> -z and y -> -y)
+    // Pup.joint_angles_(3) = 1; // Rotate pupper around x 180 degrees (z -> -z and y -> -y)
+    // Pup.updateContactJacobian_();
+    // cout << "Joint angles after flip: " << Pup.joint_angles_.transpose() << endl;
+    // cout << "CONTACT JACOBIAN AFTER FLIP: " << endl;
+    // cout << Pup.Jc_.topRows(3).format(f) << endl;
 
     /////////////////////////////// Print body name and joint index //////////////////////////////////
     // double total_mass = 0;

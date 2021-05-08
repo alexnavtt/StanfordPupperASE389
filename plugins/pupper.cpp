@@ -33,32 +33,31 @@ PupperPlugin::PupperPlugin(){
     // Load the pupper dynamic model controller
     WBC_.Load(pupper_urdf_string);
 
-    // Task for Body center of mass to be 10cm high
+    // Task for Body center of mass to be 10cm high // range .02
     static Task CoM_Position_Task;
     CoM_Position_Task.type    = BODY_POS;
     CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.task_weight = 1; // 1
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
     CoM_Position_Task.pos_target << 0, 0, 0.10;
-    CoM_Position_Task.Kp = 1000;//1000;
+    CoM_Position_Task.Kp = 200;//1000;
     CoM_Position_Task.Kd = 0;
 
-    // Task for Body center of mass to be flat
+    // Task for Body center of mass to be flat // .001
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.type    = BODY_ORI;
     CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.task_weight = 5; // 0.7;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
-    CoM_Orientation_Task.Kp = 1000;//1000;
+    CoM_Orientation_Task.Kp = 200;//1000;
     CoM_Orientation_Task.Kd = 0;
 
-    // Keep the hip joints level
-    static Task JointPositionTask;
+    static Task JointPositionTask; // .01
     JointPositionTask.type = JOINT_POS;
-    JointPositionTask.task_weight = 1; //0.1;
+    JointPositionTask.task_weight = 5; //0.1;
     JointPositionTask.joint_target = VectorNd::Zero(12);
     JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
-    JointPositionTask.Kp = 1000;
+    JointPositionTask.Kp = 200;
     JointPositionTask.Kd = 0;
 
     // Keep the front left foot in place
