@@ -197,9 +197,9 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd q = VectorNd::Zero(NUM_JOINTS + 12);
     
     // Constraint terms
-    MatrixNd A = MatrixNd::Zero(             18, NUM_JOINTS + 12);
-    VectorNd lower_bounds = VectorNd::Zero(18);
-    VectorNd upper_bounds = VectorNd::Zero(18);
+    MatrixNd A = MatrixNd::Zero(             26, NUM_JOINTS + 12); // 6 for floating, 16 for cone, 4 for normal reaction
+    VectorNd lower_bounds = VectorNd::Zero(26);
+    VectorNd upper_bounds = VectorNd::Zero(26);
 
     // Solve for q_ddot and reaction forces
     formQP(P, q, A, lower_bounds, upper_bounds);
@@ -241,32 +241,41 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // to non-zero values (crouched position), RBDL gives incorrect joint velocities
     // 
 
-    VectorNd QDDOT = VectorNd::Zero(18);
-    VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
-    tau_gen.tail(12) = tau;
+
+    VectorNd Fr = optimal_solution.tail(12); // reaction forces
+    // VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
+    // tau_gen.tail(12) = tau;
     
-    cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
-    cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
-    cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
-    
-    ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
-    cout << "Qdotdot OSQP: -------------------------" << endl;
-    cout << optimal_solution.head(18).transpose().format(f) << endl;
-    cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
-    cout << " --------------------------------------" << endl;
-    cout << "Reaction Forces OSQP: -----------------" << endl;
-    cout << optimal_solution.tail(12).transpose().format(f) << endl;
-    cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
-    cout << " --------------------------------------" << endl;
+    // cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
+    // cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
+    // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
+
+    // VectorNd QDDOT = VectorNd::Zero(18);
+    // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
+    // cout << "Qdotdot OSQP: -------------------------" << endl;
+    // cout << optimal_solution.head(18).transpose().format(f) << endl;
+    // cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
+    // cout << " --------------------------------------" << endl;
+    // cout << "Reaction Forces OSQP: -----------------" << endl;
+    // cout << Fr.transpose().format(f) << endl;
+    // cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
+    // cout << " --------------------------------------" << endl;
 
     // //-------------------------------------------------------------------------------//
     // //-------------------------------------------------------------------------------//
     // Check constraints:
-    cout << "lower bounds: " << lower_bounds.transpose() << endl;
-    cout << "A size: " << A.rows() << "x" << A.cols() << endl;
-    cout << "x size: " << optimal_solution.rows() << endl;
-    VectorNd Ax_minus_l = (A*optimal_solution)-lower_bounds;
-    cout << "A*x - l= " << Ax_minus_l.transpose().format(f) << endl; 
+    double mu = 1; 
+
+    VectorNd Ax = (A*optimal_solution);
+    // First leg x
+    cout << "Cone Constraint Test --------------------------------" << endl;
+    cout << "Fr_x_1: " << abs(Fr(0)) << " <= " << mu*Fr(2) << endl;
+    cout << "Fr_y_1: " << abs(Fr(1)) << " <= " << mu*Fr(2) << endl;
+
+    cout << "----------------------------------------------------" << endl;
+    //cout << "A size: " << A.rows() << "x" << A.cols() << endl;
+    //cout << "x size: " << optimal_solution.rows() << endl;
+    //cout << "A*x = " << Ax.transpose().format(f) << endl; 
 
     // //-------------------------------------------------------------------------------//
     // //-------------------------------------------------------------------------------//
@@ -419,7 +428,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     //
     // A is sparse block matrix
     // A = [ M  , -Jc'  ;   Sizes: [  6x18  ,  6x12]
-    //       0  , C_fr ];            (12x18), 12x12]
+    //       0  , A_fr ];            (20x18), 20x12]
 
     // TODO: Use update routines instead of FormQP every call
     //       
@@ -427,13 +436,14 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     //       
     //       Set up tasks for foot locations. Can we know these in global coordinates? 
 
-    // Weights
+    // Parameters
     double lambda_t = 0.0001; // Penalizes high joint accelerations
     VectorNd rf_desired = 9.0 * VectorNd::Ones(12);// Desired reaction forces 
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
     double lambda_rf_xy = 100; // Tangential reaction force penalty (minimize slipping)
     double w_rf = 0; // Normal reaction force tracking penalty (follow desired reaction force)
     double mu = 1; // Coefficient of friction 
+    double rf_z_max = 100; // Max normal reaction force
 
     // ---------------------------------------------------------------
     // ------------------------- OBJECTIVE ---------------------------
@@ -538,6 +548,8 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     
     assert(P.rows() == cost_t_mat.rows() + cost_rf_mat.rows());
     assert(q.rows() == cost_t_vec.rows() + cost_rf_vec.rows());
+    assert(P.topRightCorner(18,12) == MatrixNd::Zero(18,12));
+    assert(P.bottomLeftCorner(12,18) == MatrixNd::Zero(12,18));
 
     // -----------------------------------------------------------------
     // ------------------------- CONSTRAINTS ---------------------------
@@ -552,38 +564,126 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
     eq_mat_0 << massMat_.topRows(6), -Jc_.transpose().topRows(6);
 
-    // Debug: 
-    // cout << "massMat: \n" << massMat_.topRows(6).format(f) << endl;
-    // cout << "Jc_'.topRows(6): \n" << (MatrixNd::Zero(4,18)-Jc_).transpose().topRows(6).format(f) << endl;
-    // cout << "combined: \n" << eq_mat_0.format(f) << endl;
+    // Reaction force constraints:
 
-    // Reaction force constraints of the form:
-    // l <= Fr <= u      (l = u = 0 for feet commanded not in contact)
-    // 
+    // For lateral reaction forces (Contact wrench cone constraint):
+    // -Fr_z*mu <= Fr_x <= Fr_z*mu   which is equivalent to    -inf <= Fr_x - Fr_z*mu < 0  AND  0 <= Fr_x + Fr_z*mu <= inf
+    // -Fr_z*mu <= Fr_y <= Fr_z*mu   which is equivalent to                      (same as above)
+
     // For normal reaction forces:
-    // 0 <= Fr_z <= Fr_max
-    //
-    // For tangent reaction forces:
-    // 
-    MatrixNd ineq_mat_0(12,NUM_JOINTS+12);
-    VectorNd ineq_vec_l0 = VectorNd::Zero(12);
-    VectorNd ineq_vec_u0 = (double)100.0 * VectorNd::Ones(12); // Max reaction force 
+    // 0 <= Fr_z <= rf_z_max     (l = u = 0 for feet commanded to swing)
 
+    MatrixNd ineq_mat_0(20,NUM_JOINTS+12); // Block matrix to store inequality matrix 20x30
+    MatrixNd A_fr = MatrixNd::Zero(20,12); // Inequality matrix for reaction forces (3 for Fr_z, 12 for Fr_x/Fr_z)
+    VectorNd ineq_vec_l0 = VectorNd::Zero(20); // Min reaction force (zero for normal reaction forces)
+    VectorNd ineq_vec_u0 = VectorNd::Zero(20); // Max reaction force 
+
+    // Matrix for reaction force constraints. // Indexing ({x,y}, constraint_j, leg_k)
+    // Leg 1 
+    A_fr(0,0) = 1; // x_1_1
+    A_fr(0,2) = -mu;
+    A_fr(1,0) = 1; // x_2_1
+    A_fr(1,2) = mu;
+    A_fr(2,1) = 1; // y_1_1
+    A_fr(2,2) = -mu;
+    A_fr(3,1) = 1; // y_2_1
+    A_fr(3,2) = mu;
+
+    // Leg 2
+    A_fr(4,3) = 1;  // x_1_2
+    A_fr(4,5) = -mu;
+    A_fr(5,3) = 1;  // x_2_2
+    A_fr(5,5) = mu;
+    A_fr(6,4) = 1;  // y_1_2
+    A_fr(6,5) = -mu;
+    A_fr(7,4) = 1;  // y_2_2
+    A_fr(7,5) = mu;
+
+    // Leg 3
+    A_fr(8,6) = 1;  // x_1_3
+    A_fr(8,8) = -mu;
+    A_fr(9,6) = 1;  // x_2_3
+    A_fr(9,8) = mu;
+    A_fr(10,7) = 1;  // y_1_3
+    A_fr(10,8) = -mu;
+    A_fr(11,7) = 1;  // y_2_3
+    A_fr(11,8) = mu;
+
+    // Leg 4
+    A_fr(12,9) = 1;  // x_1_4
+    A_fr(12,11) = -mu;
+    A_fr(13,9) = 1;  // x_2_4
+    A_fr(13,11) = mu;
+    A_fr(14,10) = 1;  // y_1_4
+    A_fr(14,11) = -mu;
+    A_fr(15,10) = 1;  // y_2_4
+    A_fr(15,11) = mu;
+    
+    // Constraints on Fr_z
+    A_fr(16,2) = 1;
+    A_fr(17,5) = 1;
+    A_fr(18,8) = 1;
+    A_fr(19,11) = 1;
+
+    // Min for cone constraints
+    ineq_vec_l0(0) = -OSQP_INFTY;
+    ineq_vec_l0(1) = 0;
+    ineq_vec_l0(2) = -OSQP_INFTY;
+    ineq_vec_l0(3) = 0;
+    ineq_vec_l0(4) = -OSQP_INFTY;
+    ineq_vec_l0(5) = 0;
+    ineq_vec_l0(6) = -OSQP_INFTY;
+    ineq_vec_l0(7) = 0;
+    ineq_vec_l0(8) = -OSQP_INFTY;
+    ineq_vec_l0(9) = 0;
+    ineq_vec_l0(10) = -OSQP_INFTY;
+    ineq_vec_l0(11) = 0;
+    ineq_vec_l0(12) = -OSQP_INFTY;
+    ineq_vec_l0(13) = 0;
+    ineq_vec_l0(14) = -OSQP_INFTY;
+    ineq_vec_l0(15) = 0;
+
+    // Max for cone constraints
+    ineq_vec_u0(0)  = 0;
+    ineq_vec_u0(1)  = OSQP_INFTY;
+    ineq_vec_u0(2)  = 0;
+    ineq_vec_u0(3)  = OSQP_INFTY;
+    ineq_vec_u0(4)  = 0;
+    ineq_vec_u0(5)  = OSQP_INFTY;
+    ineq_vec_u0(6)  = 0;
+    ineq_vec_u0(7)  = OSQP_INFTY;
+    ineq_vec_u0(8)  = 0;
+    ineq_vec_u0(9)  = OSQP_INFTY;
+    ineq_vec_u0(10) = 0;
+    ineq_vec_u0(11) = OSQP_INFTY;
+    ineq_vec_u0(12) = 0;
+    ineq_vec_u0(13) = OSQP_INFTY;
+    ineq_vec_u0(14) = 0;
+    ineq_vec_u0(15) = OSQP_INFTY;
+
+    // Max normal reaction force
+    ineq_vec_u0(16) = rf_z_max;
+    ineq_vec_u0(17) = rf_z_max;
+    ineq_vec_u0(18) = rf_z_max;
+    ineq_vec_u0(19) = rf_z_max;
+
+    // THIS IS CURRENTLY NOT CORRECT
+    // force Fr = 0 in x,y and z for swinging feet
     for (int i=0; i<4; i++){
         if (!feet_in_contact_[i]){
-            ineq_vec_u0.segment(i*3,3) = VectorNd::Zero(3); // force Fr = 0 for floating feet
+            //ineq_vec_u0.segment(i*3,3) = VectorNd::Zero(3); 
         }
     }
 
-    ineq_mat_0 << MatrixNd::Zero(12,NUM_JOINTS) , MatrixNd::Identity(12,12);
+    ineq_mat_0 << MatrixNd::Zero(20,NUM_JOINTS) , A_fr;
 
     A.topRows(6) = eq_mat_0;
-    A.bottomRows(12) = ineq_mat_0;
+    A.bottomRows(20) = ineq_mat_0;
 
     l.topRows(6) = eq_vec_0; // For equality constraints, set lower and upper equal
     u.topRows(6) = eq_vec_0;
-    l.bottomRows(12) = ineq_vec_l0;
-    u.bottomRows(12) = ineq_vec_u0;
+    l.bottomRows(20) = ineq_vec_l0;
+    u.bottomRows(20) = ineq_vec_u0;
 
     // cout << "P size: " << P.rows() << "x" << P.cols() << endl;
     // cout << "A size: " << A.rows() << "x" << A.cols() << endl;
@@ -598,6 +698,10 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // cout<< "A matrix bottom right: \n" << A.bottomRightCorner(12,12).format(f) << endl << endl;
     // cout<< "l vector bottom 12: \n" << l.tail(12).format(f) << endl << endl;
     // cout<< "u vector bottom 12: \n" << u.tail(12).format(f) << endl << endl;
+
+    // cout << "massMat: \n" << massMat_.topRows(6).format(f) << endl;
+    // cout << "Jc_'.topRows(6): \n" << (MatrixNd::Zero(4,18)-Jc_).transpose().topRows(6).format(f) << endl;
+    // cout << "combined: \n" << eq_mat_0.format(f) << endl;
 }
 
 
