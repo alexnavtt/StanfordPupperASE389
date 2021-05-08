@@ -42,6 +42,9 @@ public:
     void updateBodyPosTask(std::string name, Eigen::Vector3d state);
     void updateBodyOriTask(std::string name, Eigen::Quaternion<double> state);
 
+    // Get the position of a point on a body relative to the root body
+    VectorNd getRelativeBodyLocation(std::string body_name, VectorNd offset = VectorNd::Zero(3));
+
     // Load the Pupper model from a URDF
     void Load(std::string filename);
 

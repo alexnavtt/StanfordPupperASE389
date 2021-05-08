@@ -109,7 +109,7 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
     Jc_.setZero(); // Just to be safe; not clear if this is required 
     b_g_.setZero(); // Just to be safe; not clear if this is required 
     updateContactJacobian_();
-    CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_);
+    CompositeRigidBodyAlgorithm(Pupper_, joint_angles_, massMat_, false);
     NonlinearEffects(Pupper_, joint_angles_, joint_velocities_, b_g_);
 
     // cout << "mass matrix: " << endl;
@@ -149,18 +149,21 @@ void PupperWBC::addTask(string name, Task* T){
 
 // Update the measured state of the task focus
 void PupperWBC::updateJointTask(std::string name, VectorNd state){
+    if (not task_indices_.count(name)) return;
     Task* T = getTask(name);
     assert(T->type == JOINT_POS);
     T->joint_measured = state;
 }
 
 void PupperWBC::updateBodyPosTask(std::string name, Eigen::Vector3d state){
+    if (not task_indices_.count(name)) return;
     Task* T = getTask(name);
     assert(T->type == BODY_POS);
     T->pos_measured = state;
 }
 
 void PupperWBC::updateBodyOriTask(std::string name, Eigen::Quaternion<double> state){
+    if (not task_indices_.count(name)) return;
     Task* T = getTask(name);
     assert(T->type == BODY_ORI);
     T->quat_measured = state;
@@ -168,6 +171,11 @@ void PupperWBC::updateBodyOriTask(std::string name, Eigen::Quaternion<double> st
 
 Task* PupperWBC::getTask(string name){
     return robot_tasks_[task_indices_[name]];
+}
+
+VectorNd PupperWBC::getRelativeBodyLocation(std::string body_name, VectorNd offset){
+    int id = Pupper_.GetBodyId(body_name.c_str());
+    return CalcBodyToBaseCoordinates(Pupper_, joint_angles_, id, offset, false);
 }
 
 // Load the model
@@ -250,12 +258,12 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
     
     // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
-    cout << "Qdotdot OSQP: -------------------------" << endl;
-    cout << optimal_solution.head(18).transpose().format(f) << endl;
+    // cout << "Qdotdot OSQP: -------------------------" << endl;
+    // cout << optimal_solution.head(18).transpose().format(f) << endl;
     //cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
-    cout << " --------------------------------------" << endl;
-    cout << "Reaction Forces OSQP: -----------------" << endl;
-    cout << optimal_solution.tail(12).transpose().format(f) << endl;
+    // cout << " --------------------------------------" << endl;
+    // cout << "Reaction Forces OSQP: -----------------" << endl;
+    // cout << optimal_solution.tail(12).transpose().format(f) << endl;
     //cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
     //cout << " --------------------------------------" << endl;
 
@@ -444,19 +452,19 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         MatrixNd j = getTaskJacobian_(i);
 
         //-----------------Calculate j_dot-----------------
-        MatrixNd j_dot;
-        double delta_t = (now() - t_prev); // seconds
-        if (T->j_prev_updated == true){
-            j_dot = (j - T->j_prev)/delta_t;
-            // cout << "j_dot calculated" << endl;
-            // cout << "delta_t: " << delta_t << endl;
-        }
-        else{
-            j_dot = MatrixNd::Zero(j.rows(),j.cols());
-            T->j_prev_updated = true;
-        }
-        T->j_prev = j;
-        MatrixNd j_dot_q_dot = j_dot * joint_velocities_;
+        // MatrixNd j_dot;
+        // double delta_t = (now() - t_prev); // seconds
+        // if (T->j_prev_updated == true){
+        //     j_dot = (j - T->j_prev)/delta_t;
+        //     // cout << "j_dot calculated" << endl;
+        //     // cout << "delta_t: " << delta_t << endl;
+        // }
+        // else{
+        //     j_dot = MatrixNd::Zero(j.rows(),j.cols());
+        //     T->j_prev_updated = true;
+        // }
+        // T->j_prev = j;
+        // MatrixNd j_dot_q_dot = j_dot * joint_velocities_;
         //--------------------------------------------------
 
         VectorNd x_ddot_desired = VectorNd::Zero(j.rows());
@@ -719,22 +727,22 @@ double PupperWBC::calcPupperHeight_(){
     Eigen::Vector3d s_fr = Rsb * r_fr;
 
     double s_height = -(s_bl(2) + s_br(2) + s_fl(2) + s_fr(2) ) / num_contacts;
-    cout << "------------height calculation ---------------" << endl;
-    cout << "Back left contact point in base coord: \n" << r_bl.transpose().format(f) << endl;
-    cout << "Back right contact point in base coord: \n" << r_br.transpose().format(f) << endl;
-    cout << "Front left contact point in base coord: \n" << r_fl.transpose().format(f) << endl;
-    cout << "Front right contact point in base coord: \n" << r_fr.transpose().format(f) << endl;
-    cout << "robot joint angles: " << joint_angles_.format(f) << endl;
-    cout << "robot_orientation: " << endl << robot_orientation_ << endl;
-    cout << "Rsb: \n" << Rsb.format(f) << endl;
-    cout << "bl rotated: \n" << s_bl.transpose().format(f) << endl;
-    cout << "br rotated: \n" << s_br.transpose().format(f) << endl;
-    cout << "fl rotated: \n" << s_fl.transpose().format(f) << endl;
-    cout << "fr rotated: \n" << s_fr.transpose().format(f) << endl;
+    // cout << "------------height calculation ---------------" << endl;
+    // cout << "Back left contact point in base coord: \n" << r_bl.transpose().format(f) << endl;
+    // cout << "Back right contact point in base coord: \n" << r_br.transpose().format(f) << endl;
+    // cout << "Front left contact point in base coord: \n" << r_fl.transpose().format(f) << endl;
+    // cout << "Front right contact point in base coord: \n" << r_fr.transpose().format(f) << endl;
+    // cout << "robot joint angles: " << joint_angles_.format(f) << endl;
+    // cout << "robot_orientation: " << endl << robot_orientation_ << endl;
+    // cout << "Rsb: \n" << Rsb.format(f) << endl;
+    // cout << "bl rotated: \n" << s_bl.transpose().format(f) << endl;
+    // cout << "br rotated: \n" << s_br.transpose().format(f) << endl;
+    // cout << "fl rotated: \n" << s_fl.transpose().format(f) << endl;
+    // cout << "fr rotated: \n" << s_fr.transpose().format(f) << endl;
 
-    cout << "height assuming base frame is not aligned with world (this should be wrong): " << s_height << endl;
-    cout << "height (this should be right): " << height << endl;
-    cout << "---------------------------- ----------------" << endl;
+    // cout << "height assuming base frame is not aligned with world (this should be wrong): " << s_height << endl;
+    // cout << "height (this should be right): " << height << endl;
+    // cout << "---------------------------- ----------------" << endl;
 
     return height;
 }
