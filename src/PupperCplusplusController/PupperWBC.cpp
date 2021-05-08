@@ -413,7 +413,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // st l <= Ax <= u
 
     // x is a concatenated vector of qdotdot (18x1) and Fr (12x1) 
-    // P is a sparse block matrix 
+    // P is a sparse block matrix, P_b is a diagonal matrix
     // P = [P_a,  0  ;       Sizes: [ 18x18  ,(18x12)  ;
     //       0 , P_b];               (12x18) , 12x12 ]
     //
@@ -429,7 +429,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
     // Weights
     double lambda_t = 0.0001; // Penalizes high joint accelerations
-    VectorNd rf_desired = 4 * VectorNd::Ones(4);// Desired normal reaction force (only 4)
+    VectorNd rf_desired = 9.0 * VectorNd::Ones(12);// Desired reaction forces 
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
     double lambda_rf_xy = 100; // Tangential reaction force penalty (minimize slipping)
     double w_rf = 0; // Normal reaction force tracking penalty (follow desired reaction force)
@@ -510,41 +510,29 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // 2. Penalize error between desired and calculated (only for normal reaction force for now):
     //    w*||rf_d-rf||^2
 
-    MatrixNd cost_rf_mat = MatrixNd::Identity(12,12);
+    //MatrixNd cost_rf_mat = MatrixNd::Identity(12,12);
     VectorNd cost_rf_vec = VectorNd::Zero(12);
-
-
-    MatrixNd cost_rf_mat2 = MatrixNd::Zero(12,12);
+    MatrixNd cost_rf_mat = MatrixNd::Zero(12,12);
     VectorNd diag_terms = VectorNd::Zero(12); 
+
+    // Penalize large lateral and normal reaction forces (lambda_rf), and penalize tracking error (w_rf)
     // These elements go into the diagonal of the cost matrix
-    diag_terms << lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf, 
-                  lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf,
-                  lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf,
-                  lambda_rf_xy, lambda_rf_xy, lambda_rf_z +  w_rf;
+    diag_terms << lambda_rf_xy + w_rf, lambda_rf_xy + w_rf, lambda_rf_z +  w_rf, 
+                  lambda_rf_xy + w_rf, lambda_rf_xy + w_rf, lambda_rf_z +  w_rf,
+                  lambda_rf_xy + w_rf, lambda_rf_xy + w_rf, lambda_rf_z +  w_rf,
+                  lambda_rf_xy + w_rf, lambda_rf_xy + w_rf, lambda_rf_z +  w_rf;
 
-    cost_rf_mat2 = diag_terms.asDiagonal();
+    cost_rf_mat = diag_terms.asDiagonal();
 
-    // NOTE: my creation of cost_rf_mat is fragile. The order below is important.
-    // Tangential reaction forces
-    cost_rf_mat *= lambda_rf_xy; // Must come first 
+    // Penalizes tracking error
+    cost_rf_vec =  w_rf * -rf_desired; // rf_desired is 12x1 vector
 
-    // Normal reaction forces (penalize large values and tracking error)
-    cost_rf_mat(2,2) = lambda_rf_z +  w_rf; // Must come second
-    cost_rf_mat(5,5) = lambda_rf_z +  w_rf;
-    cost_rf_mat(8,8) = lambda_rf_z +  w_rf;
-    cost_rf_mat(11,11) = lambda_rf_z +  w_rf;
-
-    cost_rf_vec(2) =  w_rf * -rf_desired(0); // Since rf_desired is 4x1 vector of just the desired normal rf
-    cost_rf_vec(5) =  w_rf * -rf_desired(1);
-    cost_rf_vec(8) =  w_rf * -rf_desired(2);
-    cost_rf_vec(11) = w_rf * -rf_desired(3);
-
-    cout << "cost_rf_mat : \n " << cost_rf_mat.format(f) << endl;
-    cout << "cost_rf_mat2 : \n " << cost_rf_mat2.format(f) << endl;
-
+    // cout << "assert statement to cause failure here" << endl;
+    // assert(0);
+    
     // Form P matrix and q vector
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
-    P.bottomRightCorner(12,12)               = cost_rf_mat;
+    P.bottomRightCorner(12,12)             = cost_rf_mat;
     q.head(NUM_JOINTS) = cost_t_vec;
     q.tail(12) = cost_rf_vec;
     
