@@ -173,17 +173,17 @@ Task* PupperWBC::getTask(string name){
 // Load the model
 void PupperWBC::Load(std::string urdf_file_string){
     // Get the model information from the URDF
-    RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, true);
+    // RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, true);
 
-    // Summarize model characteristics
-    printf("Loaded model with %d DOFs\n", Pupper_.dof_count);
-    printf("*\tQ Count:   \t%d\n", Pupper_.q_size);
-    printf("*\tQdot Count:\t%d\n", Pupper_.qdot_size);
-    printf("*\tBody Count:\t%zd\n", Pupper_.mBodies.size());
-    printf("*\tJoint Count:\t%zd\n", Pupper_.mJoints.size());
-    printf("*\tBody Names:\n");
-    for (int i = 0; i < Pupper_.mBodies.size(); i++)
-        cout<< "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
+    // // Summarize model characteristics
+    // printf("Loaded model with %d DOFs\n", Pupper_.dof_count);
+    // printf("*\tQ Count:   \t%d\n", Pupper_.q_size);
+    // printf("*\tQdot Count:\t%d\n", Pupper_.qdot_size);
+    // printf("*\tBody Count:\t%zd\n", Pupper_.mBodies.size());
+    // printf("*\tJoint Count:\t%zd\n", Pupper_.mJoints.size());
+    // printf("*\tBody Names:\n");
+    // for (int i = 0; i < Pupper_.mBodies.size(); i++)
+    //     cout<< "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
     // Set the robot state
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
@@ -229,35 +229,35 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // cout << "Jc': \n" << Jc_.transpose().topRows(6).format(f) << endl;
     
 
-    // //---------------------------TEST OPTIMIZATION SOLUTION--------------------------//
-    // //-------------------------------------------------------------------------------//
-    // // Currently broken because RBDL's forward dynamics is returning nonsense. 
-    // // Reason for test: OSQP solution for qddot does not match simulation (i.e. z acceleration positive while pupper falling)
-    // //                                                                     (    joint velocities not matching               )
-    // // The accelerations we get from RBDL forward dynamics should match what the solver gives.
-    // // They dont. 
-    // //                             
-    // // However, there's an error somewhere in the use of RBDL's forward dynamics. When initialziing joint angles 
-    // // to non-zero values (crouched position), RBDL gives incorrect joint velocities
-    // // 
+    //---------------------------TEST OPTIMIZATION SOLUTION--------------------------//
+    //-------------------------------------------------------------------------------//
+    // Currently broken because RBDL's forward dynamics is returning nonsense. 
+    // Reason for test: OSQP solution for qddot does not match simulation (i.e. z acceleration positive while pupper falling)
+    //                                                                     (    joint velocities not matching               )
+    // The accelerations we get from RBDL forward dynamics should match what the solver gives.
+    // They dont. 
+    //                             
+    // However, there's an error somewhere in the use of RBDL's forward dynamics. When initialziing joint angles 
+    // to non-zero values (crouched position), RBDL gives incorrect joint velocities
+    // 
 
-    // VectorNd QDDOT = VectorNd::Zero(18);
-    // VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
-    // tau_gen.tail(12) = tau;
+    VectorNd QDDOT = VectorNd::Zero(18);
+    VectorNd tau_gen = VectorNd::Zero(18); // generalized torques
+    tau_gen.tail(12) = tau;
     
-    // // cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
-    // // cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
-    // // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
+    // cout << "Joint angles for test: " << joint_angles_.transpose().format(f) << endl;
+    // cout << "Joint velocities for test: " << joint_velocities_.transpose().format(f) << endl;
+    // cout << "torques for test: " << tau_gen.transpose().format(f) << endl;
     
-    // // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
-    // cout << "Qdotdot OSQP: -------------------------" << endl;
-    // cout << optimal_solution.head(18).transpose().format(f) << endl;
-    // //cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
-    // cout << " --------------------------------------" << endl;
-    // cout << "Reaction Forces OSQP: -----------------" << endl;
-    // cout << optimal_solution.tail(12).transpose().format(f) << endl;
-    // //cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
-    // //cout << " --------------------------------------" << endl;
+    // ForwardDynamicsConstraintsDirect(Pupper_,joint_angles_,joint_velocities_,tau_gen,pup_constraints_,QDDOT);
+    cout << "Qdotdot OSQP: -------------------------" << endl;
+    cout << optimal_solution.head(18).transpose().format(f) << endl;
+    //cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
+    cout << " --------------------------------------" << endl;
+    cout << "Reaction Forces OSQP: -----------------" << endl;
+    cout << optimal_solution.tail(12).transpose().format(f) << endl;
+    //cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
+    //cout << " --------------------------------------" << endl;
 
     // //-------------------------------------------------------------------------------//
     // //-------------------------------------------------------------------------------//

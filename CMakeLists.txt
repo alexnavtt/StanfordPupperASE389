@@ -35,6 +35,7 @@ catkin_package(
 
 # Create a library for our class to be accesible to other packages
 add_library(ase389 
+  src/PupperCplusplusController/PupperModel.cpp
   src/PupperCplusplusController/PupperWBC.cpp
 )
 
@@ -52,6 +53,5 @@ include_directories(
 # Create an executable file and link its dependencies
 add_executable(PupperController 
   src/PupperCplusplusController/PupperControl.cpp
-  src/PupperCplusplusController/PupperModel.cpp
 )
 target_link_libraries(PupperController ${PROJECT_NAME})

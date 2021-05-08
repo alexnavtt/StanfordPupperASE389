@@ -1,4 +1,5 @@
 #include "pupper.hpp"
+#include "ase389/PupperModel.h"
 #include "ase389/PupperUrdfString.hpp"
 
 #include <iostream>
@@ -28,6 +29,7 @@ PupperPlugin::PupperPlugin(){
     // Initialize the COM quaternion as identity
     body_quat_ = Eigen::Quaterniond::Identity();
 
+    WBC_.Pupper_ = *createPupperModel();
     // Load the pupper dynamic model controller
     WBC_.Load(pupper_urdf_string);
 
@@ -35,7 +37,7 @@ PupperPlugin::PupperPlugin(){
     static Task CoM_Position_Task;
     CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.type    = BODY_POS;
-    CoM_Position_Task.task_weight = 0; // 1
+    CoM_Position_Task.task_weight = 10; // 1
     CoM_Position_Task.active_targets = {true, true, true};    // only account for z-position
     CoM_Position_Task.pos_target << 0, 0, 0.10;
     CoM_Position_Task.Kp = 10;//1000;
@@ -45,17 +47,17 @@ PupperPlugin::PupperPlugin(){
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.type    = BODY_ORI;
-    CoM_Orientation_Task.task_weight = 0; // 0.7;
+    CoM_Orientation_Task.task_weight = 25; // 0.7;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
     CoM_Orientation_Task.Kp = 10;//1000;
     CoM_Orientation_Task.Kd = 0;
 
     static Task JointPositionTask;
     JointPositionTask.type = JOINT_POS;
-    JointPositionTask.task_weight = .1; //0.1;
+    JointPositionTask.task_weight = 0; //0.1;
     JointPositionTask.joint_target = VectorNd::Zero(12);
     JointPositionTask.active_targets = {true, true, true, true, true, true, true, true, true, true, true, true}; // {true, false, false, true, false, false, true, false, false, true, false, false};
-    JointPositionTask.Kp = 1000;
+    JointPositionTask.Kp = 10;
     JointPositionTask.Kd = 0;
 
     WBC_.addTask("COM_POSITION", &CoM_Position_Task);
@@ -145,8 +147,8 @@ void PupperPlugin::onUpdate(){
     common::Time now = common::Time::GetWallTime();
     double dTime = now.Double();
 
-    WBC_.getTask("COM_POSITION")->pos_target.z() = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz
-    // cout << WBC_.getTask("COM_POSITION")->pos_target.z();
+    //WBC_.getTask("COM_POSITION")->pos_target.z() = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz
+    //cout << WBC_.getTask("COM_POSITION")->pos_target.z();
 
     // First two seconds
     if (now - start_time < common::Time(2, 0)){
@@ -270,7 +272,7 @@ void PupperPlugin::updateController_(){
     VectorNd jointPos(12);
     std::copy(joint_positions_.data(), joint_positions_.data() + 12, jointPos.data());
     WBC_.updateJointTask("JOINT_ANGLES", jointPos);
-    //cout << "COM height to ground = " << body_COM_[2] << endl;
+    cout << "COM height to ground = " << body_COM_[2] << endl;
 }
 
 

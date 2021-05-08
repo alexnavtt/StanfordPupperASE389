@@ -30,9 +30,9 @@ static void printMatrix(Eigen::MatrixXd A, std::string title = ""){
 int main(int argc, char** argv){
 
     auto new_model = createPupperModel();
-    return 0;
 
     PupperWBC Pup;
+    Pup.Pupper_ = *new_model;
     Pup.Load(pupper_urdf_string);
 
     double total_mass;
@@ -48,7 +48,6 @@ int main(int argc, char** argv){
 
     // cout << "Mass of bottom_PCB: " << new_model->mBodies[pcbid].mMass << endl;
     // cout << "Mass of bottom PCB in inertia: " << new_model->I[pcbid].m << endl;
-    return 0;
 
     // Task for Body center of mass to be 10cm high
     Task CoM_Position_Task;
@@ -122,11 +121,10 @@ int main(int argc, char** argv){
     cout << model.GetBodyName(model.GetParentBodyId(id)) << endl;
 
     // Ensure that the hip really is joint 12
-    printMatrix(Pup.getBodyJacobian_("front_left_hip"), "front_left_hip Jacobian");
-    printMatrix(Pup.getBodyJacobian_("front_left_upper_link"), "front_left_upper_link Jacobian");
-    printMatrix(Pup.getBodyJacobian_("front_left_lower_link"), "front_left_lower_link Jacobian");
+    // printMatrix(Pup.getBodyJacobian_("front_left_upper_link"), "front_left_upper_link Jacobian");
+    // printMatrix(Pup.getBodyJacobian_("front_left_lower_link"), "front_left_lower_link Jacobian");
 
-    unsigned int hip_id = model.GetBodyId("front_left_hip");
+    unsigned int hip_id = model.GetBodyId("front_left_hub");
 
     // Test at different hip angles
     auto pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(model, Pup.joint_angles_, id,  VectorNd::Zero(3));
@@ -146,9 +144,6 @@ int main(int argc, char** argv){
     Matrix BaseOri = RigidBodyDynamics::CalcBodyWorldOrientation(model, Pup.joint_angles_, model.GetBodyId("bottom_PCB"));
     cout << "PCB Orientation: \n" << BaseOri << endl;
 
-    Matrix HipOri = RigidBodyDynamics::CalcBodyWorldOrientation(model, Pup.joint_angles_, model.GetBodyId("front_left_hip"));
-    cout << "Hip Orientation: \n" << HipOri << endl;
-
     Matrix HubOri = RigidBodyDynamics::CalcBodyWorldOrientation(model, Pup.joint_angles_, model.GetBodyId("front_left_hub"));
     cout << "Hub Orientation: \n" << HubOri << endl;
 
@@ -162,14 +157,14 @@ int main(int argc, char** argv){
     // // //Test height calculation
     // // //////////////////////////////////////////////////////////////////////////////////////
     // IF BASE IS ALWAYS ALIGNED WITH WORLD, WE SHOULDN'T HAVE TO USE ROTATION MATRIX. Just use z values for foot location.
-    auto front_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), Eigen::Vector3d::Zero(), true);
-    auto front_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), Eigen::Vector3d::Zero(), true);
-    auto back_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_left_lower_link"), Eigen::Vector3d::Zero(), true);
-    auto back_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), Eigen::Vector3d::Zero(), true);
-    cout << "front_left_pos: \n" << front_left_pos << endl;
-    cout << "front_right_pos: \n" << front_right_pos << endl;
-    cout << "back_left_pos: \n" << back_left_pos << endl;
-    cout << "back_right_pos: \n" << back_right_pos << endl;
+    // auto front_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_left_lower_link"), Eigen::Vector3d::Zero(), true);
+    // auto front_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("front_right_lower_link"), Eigen::Vector3d::Zero(), true);
+    // auto back_left_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_left_lower_link"), Eigen::Vector3d::Zero(), true);
+    // auto back_right_pos = RigidBodyDynamics::CalcBodyToBaseCoordinates(Pup.Pupper_, Pup.joint_angles_, Pup.Pupper_.GetBodyId("back_right_lower_link"), Eigen::Vector3d::Zero(), true);
+    // cout << "front_left_pos: \n" << front_left_pos << endl;
+    // cout << "front_right_pos: \n" << front_right_pos << endl;
+    // cout << "back_left_pos: \n" << back_left_pos << endl;
+    // cout << "back_right_pos: \n" << back_right_pos << endl;
 
     //Test height calculation
     //////////////////////////////////////////////////////////////////////////////////////
