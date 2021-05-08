@@ -37,10 +37,6 @@ namespace {
 }
 
 
-// TODO:    1. Leg shrouds
-//          2. Back left leg
-//          3. Back right leg
-//          4. Front right leg motors
 std::shared_ptr<Model> createPupperModel(){
 
     auto model = std::make_shared<Model>();
@@ -246,6 +242,7 @@ std::shared_ptr<Model> createPupperModel(){
     Body right_hub(right_hub_mass, right_hub_com, right_hub_inertia);
 
     /* ------  UPPER LINK (mm) ------ */ 
+
     double upper_link_mass = 13804.297852 * pow(mm2meter,3) * density;
     Vector3d upper_link_com = mm2meter * Vector3d(4.592267, 43.607891, 0.000017);
     Matrix3d upper_link_inertia;
@@ -354,6 +351,7 @@ std::shared_ptr<Model> createPupperModel(){
     back_left_foot_T.E = getRotation(0, 0, 0);
     back_left_foot_T.r = Vector3d(0, -0.11, 0.009);
     model->AddBody(back_left_lower_link_id, back_left_foot_T, FIXED, foot, "back_left_foot");
+
 
 
     /* ---------- BACK RIGHT LEG ---------- */
@@ -535,7 +533,6 @@ std::shared_ptr<Model> createPupperModel(){
     cout << "\n---------- KINEMATICS TESTING ------------\n" << endl;
     VectorNd q(model->q_size); q.setZero();
     Vector3d zero_offset(0, 0, 0);
-    q(10) = M_PI_2;
 
     for (int i = 2; i < model->mBodies.size(); i++){
         MatrixNd J(6, model->qdot_size); J.setZero();
@@ -546,7 +543,7 @@ std::shared_ptr<Model> createPupperModel(){
         cout << "\nJacobian for " << model->GetBodyName(i) << ": \n" << J << endl;
     }
 
-    std::vector<const char*> points_to_test = {"front_right_hub", "front_right_upper_link", "front_right_lower_link", "front_right_foot"};
+    std::vector<const char*> points_to_test = {"front_left_foot", "front_right_foot", "back_left_foot", "back_right_foot"};
     for (auto body : points_to_test){
         auto pos = CalcBodyToBaseCoordinates(*model, q, model->GetBodyId(body), zero_offset);
         cout << "Location of " << body << " in base coordinates: (" << pos[0] << ", " << pos[1] << ", "  << pos[2] << ")\n";
