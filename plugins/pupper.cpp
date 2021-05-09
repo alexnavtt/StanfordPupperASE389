@@ -201,8 +201,13 @@ void PupperPlugin::onUpdate(){
     common::Time now = common::Time::GetWallTime();
     double dTime = now.Double();
 
-    WBC_.getTask("COM_POSITION")->pos_target.z() = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz
-    //cout << WBC_.getTask("COM_POSITION")->pos_target.z();
+    // Oscillate COM height task
+    // float target_height = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz (2 sec)
+    // WBC_.getTask("COM_POSITION")->pos_target.z() = target_height; 
+
+    // Oscillate forward/backward tile
+    float target_pitch = M_PI/12 * sin(0.5 * dTime); // 0.5 HZ (2 sec)
+    WBC_.getTask("COM_ORIENTATION")->quat_target = Eigen::AngleAxisd(target_pitch, Eigen::Vector3d::UnitX());
 
     // First two seconds
     if (now - start_time < common::Time(2, 0)){
