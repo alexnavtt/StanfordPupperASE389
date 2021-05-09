@@ -175,25 +175,34 @@ Task* PupperWBC::getTask(string name){
 
 VectorNd PupperWBC::getRelativeBodyLocation(std::string body_name, VectorNd offset){
     int id = Pupper_.GetBodyId(body_name.c_str());
-    return CalcBodyToBaseCoordinates(Pupper_, joint_angles_, id, offset, false);
+    VectorNd pos = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, id, offset, false);
+    cout << "Position of " << body_name << " is: " << endl << pos << endl;
+    return pos;
 }
 
 // Load the model
 void PupperWBC::Load(std::string urdf_file_string){
     // Get the model information from the URDF
-    // RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, true);
+    RigidBodyDynamics::Addons::URDFReadFromString(urdf_file_string.c_str(), &Pupper_, true, true);
 
-    // // Summarize model characteristics
-    // printf("Loaded model with %d DOFs\n", Pupper_.dof_count);
-    // printf("*\tQ Count:   \t%d\n", Pupper_.q_size);
-    // printf("*\tQdot Count:\t%d\n", Pupper_.qdot_size);
-    // printf("*\tBody Count:\t%zd\n", Pupper_.mBodies.size());
-    // printf("*\tJoint Count:\t%zd\n", Pupper_.mJoints.size());
-    // printf("*\tBody Names:\n");
-    // for (int i = 0; i < Pupper_.mBodies.size(); i++)
-    //     cout<< "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
+    // Summarize model characteristics
+    printf("Loaded model with %d DOFs\n", Pupper_.dof_count);
+    printf("*\tQ Count:   \t%d\n", Pupper_.q_size);
+    printf("*\tQdot Count:\t%d\n", Pupper_.qdot_size);
+    printf("*\tBody Count:\t%zd\n", Pupper_.mBodies.size());
+    printf("*\tJoint Count:\t%zd\n", Pupper_.mJoints.size());
+    printf("*\tBody Names:\n");
+    for (int i = 0; i < Pupper_.mBodies.size(); i++)
+        cout<< "*\t|----" << i << "\t=> " << Pupper_.GetBodyName(i) << endl;
 
     // Set the robot state
+    Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
+    initConstraintSets_();
+}
+
+void PupperWBC::Load(Model& m){
+    Pupper_ = m;
+
     Pupper_.SetQuaternion(Pupper_.GetBodyId("bottom_PCB"), robot_orientation_, joint_angles_);
     initConstraintSets_();
 }

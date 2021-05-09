@@ -47,6 +47,7 @@ public:
 
     // Load the Pupper model from a URDF
     void Load(std::string filename);
+    void Load(RigidBodyDynamics::Model& model);
 
     // Get the torque command fulfilling the current tasks
     std::array<float, 12> calculateOutputTorque();
