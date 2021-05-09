@@ -65,7 +65,7 @@
         </gazebo>
 
         <gazebo reference = "${revolute_child}">
-            <self_collide>true</self_collide>
+            <self_collide>false</self_collide>
         </gazebo>
         </xacro:if>
 
