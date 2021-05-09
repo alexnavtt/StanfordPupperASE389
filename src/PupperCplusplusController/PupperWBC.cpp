@@ -176,7 +176,6 @@ Task* PupperWBC::getTask(string name){
 VectorNd PupperWBC::getRelativeBodyLocation(std::string body_name, VectorNd offset){
     int id = Pupper_.GetBodyId(body_name.c_str());
     VectorNd pos = CalcBodyToBaseCoordinates(Pupper_, joint_angles_, id, offset, false);
-    cout << "Position of " << body_name << " is: " << endl << pos << endl;
     return pos;
 }
 
@@ -285,11 +284,11 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
 
     VectorNd Ax = (A*optimal_solution);
     // First leg x
-    cout << "Cone Constraint Test --------------------------------" << endl;
-    cout << "Fr_x_1: " << abs(Fr(0)) << " <= " << mu*Fr(2) << endl;
-    cout << "Fr_y_1: " << abs(Fr(1)) << " <= " << mu*Fr(2) << endl;
+    // cout << "Cone Constraint Test --------------------------------" << endl;
+    // cout << "Fr_x_1: " << abs(Fr(0)) << " <= " << mu*Fr(2) << endl;
+    // cout << "Fr_y_1: " << abs(Fr(1)) << " <= " << mu*Fr(2) << endl;
 
-    cout << "----------------------------------------------------" << endl;
+    // cout << "----------------------------------------------------" << endl;
     //cout << "A size: " << A.rows() << "x" << A.cols() << endl;
     //cout << "x size: " << optimal_solution.rows() << endl;
     //cout << "A*x = " << Ax.transpose().format(f) << endl; 
