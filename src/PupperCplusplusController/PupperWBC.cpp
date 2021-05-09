@@ -256,8 +256,8 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // cout << optimal_solution.head(18).transpose().format(f) << endl;
     // cout << "Qdotdot RBDL: \n" << QDDOT.transpose().format(f) << endl;
     // cout << " --------------------------------------" << endl;
-    // cout << "Reaction Forces OSQP: -----------------" << endl;
-    // cout << Fr.transpose().format(f) << endl;
+    cout << "Reaction Forces OSQP: -----------------" << endl;
+    cout << Fr.transpose().format(f) << endl;
     // cout << "Reaction forces RBDL: \n " << pup_constraints_.force.transpose().format(f) << endl;
     // cout << " --------------------------------------" << endl;
 
@@ -265,7 +265,7 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // //-------------------------------------------------------------------------------//
     // Check constraints:
     double mu = 1; 
-
+    
     VectorNd Ax = (A*optimal_solution);
     // First leg x
     cout << "Cone Constraint Test --------------------------------" << endl;
@@ -275,7 +275,8 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     cout << "----------------------------------------------------" << endl;
     //cout << "A size: " << A.rows() << "x" << A.cols() << endl;
     //cout << "x size: " << optimal_solution.rows() << endl;
-    //cout << "A*x = " << Ax.transpose().format(f) << endl; 
+    // cout << "Lower Bounds for F_r: \n" << upper_bounds.tail(20).transpose().format(f)<<endl;
+    // cout << "A*x for F_r = " << Ax.tail(20).transpose().format(f) << endl; 
 
     // //-------------------------------------------------------------------------------//
     // //-------------------------------------------------------------------------------//
@@ -434,14 +435,15 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     //       
     //       Set weights in main function
     //       
-    //       Set up tasks for foot locations. Can we know these in global coordinates? 
+    //       Set up tasks for foot locations
 
     // Parameters
     double lambda_t = 0.0001; // Penalizes high joint accelerations
-    VectorNd rf_desired = 9.0 * VectorNd::Ones(12);// Desired reaction forces 
+    VectorNd rf_desired = VectorNd::Zero(12);// Desired reaction forces
+    rf_desired << 0,0,9, 0,0,9, 0,0,9, 0,0,9;
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
-    double lambda_rf_xy = 100; // Tangential reaction force penalty (minimize slipping)
-    double w_rf = 0; // Normal reaction force tracking penalty (follow desired reaction force)
+    double lambda_rf_xy = 0; // Tangential reaction force penalty (minimize slipping)
+    double w_rf = 100; // Reaction force tracking penalty (follow desired reaction force)
     double mu = 1; // Coefficient of friction 
     double rf_z_max = 100; // Max normal reaction force
 
@@ -536,9 +538,6 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
     // Penalizes tracking error
     cost_rf_vec =  w_rf * -rf_desired; // rf_desired is 12x1 vector
-
-    // cout << "assert statement to cause failure here" << endl;
-    // assert(0);
     
     // Form P matrix and q vector
     P.topLeftCorner(NUM_JOINTS,NUM_JOINTS) = cost_t_mat;
@@ -667,13 +666,6 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     ineq_vec_u0(18) = rf_z_max;
     ineq_vec_u0(19) = rf_z_max;
 
-    // THIS IS CURRENTLY NOT CORRECT
-    // force Fr = 0 in x,y and z for swinging feet
-    for (int i=0; i<4; i++){
-        if (!feet_in_contact_[i]){
-            //ineq_vec_u0.segment(i*3,3) = VectorNd::Zero(3); 
-        }
-    }
 
     ineq_mat_0 << MatrixNd::Zero(20,NUM_JOINTS) , A_fr;
 
@@ -684,6 +676,14 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     u.topRows(6) = eq_vec_0;
     l.bottomRows(20) = ineq_vec_l0;
     u.bottomRows(20) = ineq_vec_u0;
+
+    // THIS IS CURRENTLY NOT CORRECT
+    // force Fr = 0 in x,y and z for swinging feet
+    for (int i=0; i<4; i++){
+        if (!feet_in_contact_[i]){
+            //ineq_vec_u0.segment(i*3,3) = VectorNd::Zero(3); 
+        }
+    }
 
     // cout << "P size: " << P.rows() << "x" << P.cols() << endl;
     // cout << "A size: " << A.rows() << "x" << A.cols() << endl;
