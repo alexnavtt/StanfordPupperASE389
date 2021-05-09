@@ -29,40 +29,94 @@ PupperPlugin::PupperPlugin(){
     // Initialize the COM quaternion as identity
     body_quat_ = Eigen::Quaterniond::Identity();
 
-    WBC_.Pupper_ = *createPupperModel();
     // Load the pupper dynamic model controller
-    WBC_.Load(pupper_urdf_string);
+    WBC_.Load(*createPupperModel());
 
     // Task for Body center of mass to be 10cm high // range .02
     static Task CoM_Position_Task;
-    CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.type    = BODY_POS;
+    CoM_Position_Task.body_id = "bottom_PCB";
     CoM_Position_Task.task_weight = 1; // 1
-    CoM_Position_Task.active_targets = {true, true, true};    // only account for z-position
+    CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
     CoM_Position_Task.pos_target << 0, 0, 0.10;
     CoM_Position_Task.Kp = 200;//1000;
     CoM_Position_Task.Kd = 0;
 
     // Task for Body center of mass to be flat // .001
     static Task CoM_Orientation_Task;
-    CoM_Orientation_Task.body_id = "bottom_PCB";
     CoM_Orientation_Task.type    = BODY_ORI;
-    CoM_Orientation_Task.task_weight = 25; // 0.7;
+    CoM_Orientation_Task.body_id = "bottom_PCB";
+    CoM_Orientation_Task.task_weight = 10; // 0.7;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
-    CoM_Orientation_Task.Kp = 200;//1000;
+    CoM_Orientation_Task.Kp = 1000;//1000;
     CoM_Orientation_Task.Kd = 0;
 
     static Task JointPositionTask; // .01
     JointPositionTask.type = JOINT_POS;
-    JointPositionTask.task_weight = 5; //0.1;
+    JointPositionTask.task_weight = 1; //0.1;
     JointPositionTask.joint_target = VectorNd::Zero(12);
+    // for (int i = 0; i < 4; i++){
+    //     JointPositionTask.joint_target[i*3 + 0] = 0;
+    //     JointPositionTask.joint_target[i*3 + 1] = M_PI_4;
+    //     JointPositionTask.joint_target[i*3 + 2] = M_PI_2;
+    // }
     JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
+    // JointPositionTask.active_targets.resize(12, true);
     JointPositionTask.Kp = 200;
     JointPositionTask.Kd = 0;
+
+    float foot_pos_Kp = 100;
+    float foot_pos_w  = 1;
+
+    // Keep the front left foot in place
+    static Task FLFootTask;
+    FLFootTask.type = BODY_POS;
+    FLFootTask.body_id = "front_left_foot";
+    FLFootTask.task_weight = foot_pos_w;
+    FLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
+    FLFootTask.pos_target << 0.08, 0.075, -0.1;
+    FLFootTask.Kp = foot_pos_Kp;
+    FLFootTask.Kd = 0;
+
+    // Keep the front right foot in place
+    static Task FRFootTask;
+    FRFootTask.type = BODY_POS;
+    FRFootTask.body_id = "front_right_foot";
+    FRFootTask.task_weight = foot_pos_w;
+    FRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
+    FRFootTask.pos_target << 0.08, -0.065, -0.1;
+    FRFootTask.Kp = foot_pos_Kp;
+    FRFootTask.Kd = 0;
+
+    // Keep the back left foot in place
+    static Task BLFootTask;
+    BLFootTask.type = BODY_POS;
+    BLFootTask.body_id = "back_left_foot";
+    BLFootTask.task_weight = foot_pos_w;
+    BLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
+    BLFootTask.pos_target << -0.11, 0.075, -0.1;
+    BLFootTask.Kp = foot_pos_Kp;
+    BLFootTask.Kd = 0;
+
+    // Keep the back right foot in place
+    static Task BRFootTask;
+    BRFootTask.type = BODY_POS;
+    BRFootTask.body_id = "back_right_foot";
+    BRFootTask.task_weight = foot_pos_w;
+    BRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
+    BRFootTask.pos_target << -0.11, -0.065, -0.1;
+    BRFootTask.Kp = foot_pos_Kp;
+    BRFootTask.Kd = 0;
 
     WBC_.addTask("COM_POSITION", &CoM_Position_Task);
     WBC_.addTask("COM_ORIENTATION", &CoM_Orientation_Task);
     WBC_.addTask("JOINT_ANGLES", &JointPositionTask);
+
+    // Foot position tasks for standstill
+    WBC_.addTask("FRONT_LEFT_FOOT_POSITION", &FLFootTask);
+    WBC_.addTask("FRONT_RIGHT_FOOT_POSITION", &FRFootTask);
+    WBC_.addTask("BACK_LEFT_FOOT_POSITION", &BLFootTask);
+    WBC_.addTask("BACK_RIGHT_FOOT_POSTIION", &BRFootTask);
 }
 
 
@@ -147,8 +201,13 @@ void PupperPlugin::onUpdate(){
     common::Time now = common::Time::GetWallTime();
     double dTime = now.Double();
 
-    //WBC_.getTask("COM_POSITION")->pos_target.z() = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz
-    //cout << WBC_.getTask("COM_POSITION")->pos_target.z();
+    // Oscillate COM height task
+    // float target_height = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz (2 sec)
+    // WBC_.getTask("COM_POSITION")->pos_target.z() = target_height; 
+
+    // Oscillate forward/backward tile
+    float target_pitch = M_PI/12 * sin(0.5 * dTime); // 0.5 HZ (2 sec)
+    WBC_.getTask("COM_ORIENTATION")->quat_target = Eigen::AngleAxisd(target_pitch, Eigen::Vector3d::UnitX());
 
     // First two seconds
     if (now - start_time < common::Time(2, 0)){
@@ -253,6 +312,7 @@ void PupperPlugin::updateJoints_(){
 // Update the body center of mass position and orienation
 void PupperPlugin::updateBody_(){
     auto body_pose = model_->WorldPose();
+    auto body_vel  = model_->WorldLinearVel();
 
     body_COM_[0] = body_pose.Pos().X();
     body_COM_[1] = body_pose.Pos().Y();
@@ -262,17 +322,26 @@ void PupperPlugin::updateBody_(){
     body_quat_.y() = body_pose.Rot().Y();
     body_quat_.z() = body_pose.Rot().Z();
     body_quat_.w() = body_pose.Rot().W();
+
+    body_COM_vel_.x() = body_vel.X();
+    body_COM_vel_.y() = body_vel.Y();
+    body_COM_vel_.z() = body_vel.Z();
 }
 
 // Tell the controller the current state of the robot
 void PupperPlugin::updateController_(){
+    // WBC_.updateController(joint_positions_, joint_velocities_, body_COM_, body_quat_, {0, 0, 0, 0});
     WBC_.updateController(joint_positions_, joint_velocities_, body_COM_, body_quat_, {true,true,true,true});
     WBC_.updateBodyPosTask("COM_POSITION", body_COM_);
     WBC_.updateBodyOriTask("COM_ORIENTATION", body_quat_);
     VectorNd jointPos(12);
     std::copy(joint_positions_.data(), joint_positions_.data() + 12, jointPos.data());
     WBC_.updateJointTask("JOINT_ANGLES", jointPos);
-    cout << "COM height to ground = " << body_COM_[2] << endl;
+    WBC_.updateBodyPosTask("FRONT_LEFT_FOOT_POSITION",  WBC_.getRelativeBodyLocation("front_left_foot"));
+    WBC_.updateBodyPosTask("FRONT_RIGHT_FOOT_POSITION", WBC_.getRelativeBodyLocation("front_right_foot"));
+    WBC_.updateBodyPosTask("BACK_LEFT_FOOT_POSITION",   WBC_.getRelativeBodyLocation("back_left_foot"));
+    WBC_.updateBodyPosTask("BACK_RIGHT_FOOT_POSITION",  WBC_.getRelativeBodyLocation("back_right_foot"));
+    // cout << "COM height to ground = " << body_COM_[2] << endl;
 }
 
 
@@ -285,14 +354,10 @@ void PupperPlugin::updateController_(){
 void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
 
     static const array<string,4> collision_names = {
-        // "pupper::front_left_lower_link:",
-        // "pupper::front_right_lower_link",
-        // "pupper::back_right_lower_link:",
-        // "pupper::back_left_lower_link::"
         "pupper::back_left_lower_link::",
         "pupper::back_right_lower_link:",
         "pupper::front_left_lower_link:",
-        "pupper::front_right_lower_link"
+        "pupper::front_right_lower_link",
     };
 
     std::fill(feet_in_contact_.begin(), feet_in_contact_.end(), false);
@@ -303,7 +368,7 @@ void PupperPlugin::contactCallback_(ConstContactsPtr &_msg){
                     feet_in_contact_[i] = true;
     }
 
-    //Debug: print contacts in order (FL, FR, BR, BL)
+    //Debug: print contacts in order (BL, BR, FL, FR)
     // cout << "{";
     // for (bool b : feet_in_contact_){
     //     cout << b << ", ";

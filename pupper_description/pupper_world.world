@@ -10,14 +10,14 @@
 
         <physics name="ode_100iters" type="ode" default="true">
             <type>ode</type>
-            <max_step_size>0.001</max_step_size>
+            <!-- <max_step_size>0.001</max_step_size> -->
             <real_time_update_rate>1000</real_time_update_rate>
             <ode>
                 <solver>
-                    <min_step_size>0.001</min_step_size>
+                    <!-- <min_step_size>0.001</min_step_size> -->
                     <type>quick</type>
-                    <iters>100</iters>
-                    <sor>0.8</sor>
+                    <iters>300</iters>
+                    <sor>0.4</sor>
                     <!-- <friction_model>box_model</friction_model> -->
                 </solver>
 

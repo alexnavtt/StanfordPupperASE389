@@ -64,6 +64,7 @@ private:
     Eigen::VectorXd joint_velocities_;
     Eigen::VectorXd body_COM_;
     Eigen::Quaterniond body_quat_;
+    Eigen::Vector3d body_COM_vel_;
     void updateJoints_();
     void updateBody_();
 

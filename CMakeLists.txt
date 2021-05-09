@@ -10,7 +10,9 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 # ROS dependencies
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
   gazebo_ros
+  sensor_msgs
 )
 
 # Non-ROS dependencies
@@ -41,9 +43,11 @@ add_library(ase389
 
 # Link all necessary libraries to out library
 target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
   osqp::osqp 
   ${RBDL_LIBRARY} 
-  ${RBDL_URDFReader_LIBRARY})
+  ${RBDL_URDFReader_LIBRARY}
+)
   
 # Specify include directories
 include_directories(
@@ -55,3 +59,9 @@ add_executable(PupperController
   src/PupperCplusplusController/PupperControl.cpp
 )
 target_link_libraries(PupperController ${PROJECT_NAME})
+
+# ROS node for controlling the real life pupper
+add_executable(PupperNode
+  src/PupperCplusplusController/pupper_ros_node.cpp
+)
+target_link_libraries(PupperNode ${PROJECT_NAME})
