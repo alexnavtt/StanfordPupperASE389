@@ -66,14 +66,14 @@ PupperPlugin::PupperPlugin(){
     JointPositionTask.Kd = 0;
 
     float foot_pos_Kp = 100;
-    float foot_pos_w  = 0;
+    float foot_pos_w  = 1;
 
     // Keep the front left foot in place
     static Task FLFootTask;
     FLFootTask.type = BODY_POS;
     FLFootTask.body_id = "front_left_foot";
     FLFootTask.task_weight = foot_pos_w;
-    FLFootTask.active_targets = {true, true, true};  // We'll let the COM task take care of heigh
+    FLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     FLFootTask.pos_target << 0.08, 0.075, -0.1;
     FLFootTask.Kp = foot_pos_Kp;
     FLFootTask.Kd = 0;
@@ -83,7 +83,7 @@ PupperPlugin::PupperPlugin(){
     FRFootTask.type = BODY_POS;
     FRFootTask.body_id = "front_right_foot";
     FRFootTask.task_weight = foot_pos_w;
-    FRFootTask.active_targets = {true, true, true};  // We'll let the COM task take care of heigh
+    FRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     FRFootTask.pos_target << 0.08, -0.065, -0.1;
     FRFootTask.Kp = foot_pos_Kp;
     FRFootTask.Kd = 0;
@@ -93,7 +93,7 @@ PupperPlugin::PupperPlugin(){
     BLFootTask.type = BODY_POS;
     BLFootTask.body_id = "back_left_foot";
     BLFootTask.task_weight = foot_pos_w;
-    BLFootTask.active_targets = {true, true, true};  // We'll let the COM task take care of heigh
+    BLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     BLFootTask.pos_target << -0.11, 0.075, -0.1;
     BLFootTask.Kp = foot_pos_Kp;
     BLFootTask.Kd = 0;
@@ -103,7 +103,7 @@ PupperPlugin::PupperPlugin(){
     BRFootTask.type = BODY_POS;
     BRFootTask.body_id = "back_right_foot";
     BRFootTask.task_weight = foot_pos_w;
-    BRFootTask.active_targets = {true, true, true};  // We'll let the COM task take care of heigh
+    BRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     BRFootTask.pos_target << -0.11, -0.065, -0.1;
     BRFootTask.Kp = foot_pos_Kp;
     BRFootTask.Kd = 0;
@@ -201,7 +201,7 @@ void PupperPlugin::onUpdate(){
     common::Time now = common::Time::GetWallTime();
     double dTime = now.Double();
 
-    //WBC_.getTask("COM_POSITION")->pos_target.z() = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz
+    WBC_.getTask("COM_POSITION")->pos_target.z() = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz
     //cout << WBC_.getTask("COM_POSITION")->pos_target.z();
 
     // First two seconds
