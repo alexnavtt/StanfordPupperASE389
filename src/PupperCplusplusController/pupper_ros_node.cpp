@@ -13,22 +13,34 @@ namespace {
     VectorNd joint_velocities_(12);
     Eigen::Vector3d body_pos_;
     Eigen::Quaterniond robot_quaternion_;
+    Eigen::Quaterniond initial_quaterion_;
+    bool joint_init = false;
+    bool pose_init  = false;
 }
 
 // This is called every time we receive a message from the Python node
 void pupperStateCallBack(const sensor_msgs::JointStateConstPtr &msg){
     // Record the robot data
+    joint_init = true;
     std::copy(msg->position.begin(), msg->position.end(), joint_positions_.data());
     std::copy(msg->velocity.begin(), msg->velocity.end(), joint_velocities_.data());
 }
 
 // Receive the robot pose from the onboard IMU
-void pupperPoseCallBack(const geometry_msgs::PoseConstPtr &msg){
+void pupperPoseCallBack(const geometry_msgs::PoseConstPtr &msg){ 
     // Record the robot pose
     robot_quaternion_.x() = msg->orientation.x;
     robot_quaternion_.y() = msg->orientation.y;
     robot_quaternion_.z() = msg->orientation.z;
     robot_quaternion_.w() = msg->orientation.w;
+
+    // If this is the first time, record the quaternion
+    if (not pose_init){
+        pose_init = true;
+        initial_quaterion_ = robot_quaternion_;
+        ROS_INFO("Initial quaternion: [%.2f, (%.2f, %.2f, %.2f)]", 
+        initial_quaterion_.w(), initial_quaterion_.x(), initial_quaterion_.y(), initial_quaterion_.z());
+    }
 }
 
 int main(int argc, char** argv){
@@ -148,10 +160,21 @@ int main(int argc, char** argv){
     std_msgs::Float64MultiArray command_msg;
     command_msg.data.resize(12);
 
+    // Wait for messages
+    ROS_INFO("Waiting for initial message...");
+    while(not pose_init or not joint_init and nh.ok()){
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+    }
+    ROS_INFO("Message received, starting IHWBC Algorithm");
+
     // Main loop
     while(nh.ok()){
         // Look for new ROS messages
         ros::spinOnce();
+
+        // Offset the quaternion from our initial state
+        robot_quaternion_ = robot_quaternion_ * initial_quaterion_.conjugate();
 
         // Run the Whole Body Controller
         Pup.updateController(joint_positions_, joint_velocities_, body_pos_, robot_quaternion_, contacts);
