@@ -149,21 +149,30 @@ void PupperWBC::addTask(string name, Task* T){
 
 // Update the measured state of the task focus
 void PupperWBC::updateJointTask(std::string name, VectorNd state){
-    if (not task_indices_.count(name)) return;
+    if (not task_indices_.count(name)) {
+        cout << "\e[1;33m" << "Task " << name << " does not exist" << "\e[0m" << endl;
+        return;
+    }
     Task* T = getTask(name);
     assert(T->type == JOINT_POS);
     T->joint_measured = state;
 }
 
 void PupperWBC::updateBodyPosTask(std::string name, Eigen::Vector3d state){
-    if (not task_indices_.count(name)) return;
+    if (not task_indices_.count(name)) {
+        cout << "\e[1;33m" << "Task " << name << " does not exist" << "\e[0m" << endl;
+        return;
+    }
     Task* T = getTask(name);
     assert(T->type == BODY_POS);
     T->pos_measured = state;
 }
 
 void PupperWBC::updateBodyOriTask(std::string name, Eigen::Quaternion<double> state){
-    if (not task_indices_.count(name)) return;
+    if (not task_indices_.count(name)) {
+        cout << "\e[1;33m" << "Task " << name << " does not exist" << "\e[0m" << endl;
+        return;
+    }
     Task* T = getTask(name);
     assert(T->type == BODY_ORI);
     T->quat_measured = state;
