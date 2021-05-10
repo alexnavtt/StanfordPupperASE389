@@ -174,10 +174,12 @@ int main(int argc, char** argv){
         ros::spinOnce();
 
         // Offset the quaternion from our initial state
-        robot_quaternion_ = robot_quaternion_ * initial_quaterion_.conjugate();
+        Eigen::Quaterniond correct_quat = robot_quaternion_ * initial_quaterion_.conjugate();
+        ROS_INFO("Corrected quaternion: [%.2f, (%.2f, %.2f, %.2f)]", 
+        correct_quat.w(), correct_quat.x(), correct_quat.y(), correct_quat.z());
 
         // Run the Whole Body Controller
-        Pup.updateController(joint_positions_, joint_velocities_, body_pos_, robot_quaternion_, contacts);
+        Pup.updateController(joint_positions_, joint_velocities_, body_pos_, correct_quat, contacts);
         array<float,12> tau = Pup.calculateOutputTorque();
 
         // Send commands
