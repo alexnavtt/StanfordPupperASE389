@@ -45,6 +45,12 @@ public:
     // Get the position of a point on a body relative to the root body
     VectorNd getRelativeBodyLocation(std::string body_name, VectorNd offset = VectorNd::Zero(3));
 
+    // Getter for the robot joint angles
+    VectorNd getJointPositions();
+
+    // Calculate height from contacts
+    double calcPupperHeight();
+
     // Load the Pupper model from a URDF
     void Load(std::string filename);
     void Load(RigidBodyDynamics::Model& model);
@@ -106,9 +112,6 @@ public:
     void convertEigenToCSC_(const Matrix &P, std::vector<c_float> &P_x, std::vector<c_int> &P_p, std::vector<c_int> &P_i, bool triup = false);
     void formQP(Matrix &P, VectorNd &q, Matrix &A, VectorNd &l, VectorNd &u);
     VectorNd solveQP(int n, int m, Matrix  &P, c_float *q, Matrix  &A, c_float *lb, c_float *ub);
-
-    // Calculate height from contacts
-    double calcPupperHeight_();
     
     // Used for timing
     double tic;
