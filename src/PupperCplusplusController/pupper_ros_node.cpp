@@ -85,9 +85,9 @@ int main(int argc, char** argv){
     // Task to keep the hips level
     static Task JointPositionTask; // .01
     JointPositionTask.type = JOINT_POS;
-    JointPositionTask.task_weight = 1; //0.1;
+    JointPositionTask.task_weight = 10; //0.1;
     JointPositionTask.joint_target.resize(12);
-    JointPositionTask.joint_target << 0, M_PI_4, M_PI_2, 0, M_PI_4, M_PI_2, 0, M_PI_4, M_PI_2, 0, M_PI_4, M_PI_2;
+    JointPositionTask.joint_target << 0, M_PI_4, M_PI_2, 0, -M_PI_4, -M_PI_2, 0, M_PI_4, M_PI_2, 0, -M_PI_4, -M_PI_2;
     JointPositionTask.active_targets = std::vector<bool>(12, true);
     // JointPositionTask.joint_target = VectorNd::Zero(12);
     // JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false}; // Hips only
@@ -200,7 +200,6 @@ int main(int argc, char** argv){
         Pup.updateBodyPosTask("BACK_RIGHT_FOOT_POSITION",  Pup.getRelativeBodyLocation("back_right_foot"));
         Pup.updateBodyPosTask("FRONT_LEFT_FOOT_POSITION",  Pup.getRelativeBodyLocation("front_left_foot"));
         Pup.updateBodyPosTask("FRONT_RIGHT_FOOT_POSITION", Pup.getRelativeBodyLocation("front_right_foot"));
-
         // Run the IHWBC
         array<float,12> tau = Pup.calculateOutputTorque();
 
