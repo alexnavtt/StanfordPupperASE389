@@ -11,7 +11,7 @@ using std::array;
 namespace {
     VectorNd joint_positions_(12);
     VectorNd joint_velocities_(12);
-    Eigen::Vector3d body_pos_;
+    Eigen::Vector3d body_pos_(3);
     Eigen::Quaterniond robot_quaternion_;
     Eigen::Quaterniond initial_quaterion_;
     bool joint_init = false;
