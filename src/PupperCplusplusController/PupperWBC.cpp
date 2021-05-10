@@ -213,9 +213,9 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd q = VectorNd::Zero(NUM_JOINTS + 12);
     
     // Constraint terms
-    MatrixNd A = MatrixNd::Zero(             26, NUM_JOINTS + 12); // 6 for floating, 16 for cone, 4 for normal reaction
-    VectorNd lower_bounds = VectorNd::Zero(26);
-    VectorNd upper_bounds = VectorNd::Zero(26);
+    MatrixNd A = MatrixNd::Zero(38, NUM_JOINTS + 12); // 18 for torque limit, 16 for cone, 4 for normal reaction
+    VectorNd lower_bounds = VectorNd::Zero(38);
+    VectorNd upper_bounds = VectorNd::Zero(38);
 
     // Solve for q_ddot and reaction forces
     formQP(P, q, A, lower_bounds, upper_bounds);
@@ -437,21 +437,19 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // Optimization problem form:
     // min 1/2(x'Px) + q'x
     // st l <= Ax <= u
-
+    //
     // x is a concatenated vector of qdotdot (18x1) and Fr (12x1) 
     // P is a sparse block matrix, P_b is a diagonal matrix
-    // P = [P_a,  0  ;       Sizes: [ 18x18  ,(18x12)  ;
-    //       0 , P_b];               (12x18) , 12x12 ]
+    // P = [P_a,  0  ;       Sizes: [  18x18  , (18x12) ]
+    //       0 , P_b];              [ (12x18) ,  12x12  ]
     //
     // A is sparse block matrix
-    // A = [ M  , -Jc'  ;   Sizes: [  6x18  ,  6x12]
-    //       0  , A_fr ];            (20x18), 20x12]
+    // A = [ M  , -Jc'  ;   Sizes: [  18x18 , 18x12 ]
+    //       0  , A_fr ];          [ (20x18), 20x12 ]
 
     // TODO: Use update routines instead of FormQP every call
     //       
     //       Set weights in main function
-    //       
-    //       Set up tasks for foot locations
 
     // Parameters
     double lambda_t = 0.0001; // Penalizes high joint accelerations
@@ -459,9 +457,8 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     rf_desired << 0,0,9, 0,0,9, 0,0,9, 0,0,9;
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
     double lambda_rf_xy = 0; // Tangential reaction force penalty (minimize slipping)
-    double w_rf = 100; // Reaction force tracking penalty (follow desired reaction force)
+    double w_rf = 1; // Reaction force tracking penalty (follow desired reaction force)
     double mu = 1; // Coefficient of friction 
-    double rf_z_max = 100; // Max normal reaction force
 
     // ---------------------------------------------------------------
     // ------------------------- OBJECTIVE ---------------------------
@@ -570,28 +567,42 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // ------------------------- CONSTRAINTS ---------------------------
     // -----------------------------------------------------------------
 
-    // Equality constraint of the form (first six rows only) 
-    // A*q_ddot + b_g = Jc^T * Fr (floating-based dynamics)
+    /* ----- Torque Constraints ----- */
 
-    // Incorporate the non-linear effects in the dynamics equation
-    VectorNd eq_vec_0 = -b_g_.head(6);
-    MatrixNd eq_mat_0(6,NUM_JOINTS+12);
+    // Torque is given by the equation tau = A*q_ddot + b_g - Jc^T * Fr
+    // Hence we get the form:
+    //
+    //            tau - b_g = [A, Jc^T] * [q_ddot, Fr]^T
+    //
+    // For the floating base joints we have         0 <= tau <= 0       
+    // For the rest of the joints we have    -tau_lim <= tau <= +tau_lim
 
-    eq_mat_0 << massMat_.topRows(6), -Jc_.transpose().topRows(6);
+    const double torque_limit = 50; // Temporary value, this is a very high value for our small motors
+    VectorNd torque_lower_limit = VectorNd::Zero(NUM_JOINTS);
+    VectorNd torque_upper_limit = VectorNd::Zero(NUM_JOINTS);
+    torque_lower_limit.head(6) = -b_g_.head(6);
+    torque_upper_limit.head(6) = -b_g_.head(6);
+    torque_lower_limit.tail(ROBOT_NUM_JOINTS) = -b_g_.tail(ROBOT_NUM_JOINTS) - torque_limit * VectorNd::Ones(ROBOT_NUM_JOINTS);
+    torque_upper_limit.tail(ROBOT_NUM_JOINTS) = -b_g_.tail(ROBOT_NUM_JOINTS) + torque_limit * VectorNd::Ones(ROBOT_NUM_JOINTS);
 
-    // Reaction force constraints:
+    // Fill in the A matrix of the form [A, Jc^T]
+    MatrixNd torque_limit_mat(NUM_JOINTS, NUM_JOINTS + 12);
+    torque_limit_mat << massMat_, -Jc_.transpose();
+
+    /* ----- Reaction force constraints ----- */
 
     // For lateral reaction forces (Contact wrench cone constraint):
     // -Fr_z*mu <= Fr_x <= Fr_z*mu   which is equivalent to    -inf <= Fr_x - Fr_z*mu < 0  AND  0 <= Fr_x + Fr_z*mu <= inf
-    // -Fr_z*mu <= Fr_y <= Fr_z*mu   which is equivalent to                      (same as above)
-
+    // -Fr_z*mu <= Fr_y <= Fr_z*mu   which is equivalent to    -inf <= Fr_y - Fr_z*mu < 0  AND  0 <= Fr_y + Fr_z*mu <= inf
+    //
     // For normal reaction forces:
     // 0 <= Fr_z <= rf_z_max     (l = u = 0 for feet commanded to swing)
 
-    MatrixNd ineq_mat_0(20,NUM_JOINTS+12); // Block matrix to store inequality matrix 20x30
+    double rf_z_max = 100; // Max normal reaction force
+    MatrixNd reaction_force_mat = MatrixNd::Zero(20, NUM_JOINTS + 12); // Block matrix to store inequality matrix 20x30
     MatrixNd A_fr = MatrixNd::Zero(20,12); // Inequality matrix for reaction forces (3 for Fr_z, 12 for Fr_x/Fr_z)
-    VectorNd ineq_vec_l0 = VectorNd::Zero(20); // Min reaction force (zero for normal reaction forces)
-    VectorNd ineq_vec_u0 = VectorNd::Zero(20); // Max reaction force 
+    VectorNd reaction_force_lower_limit = VectorNd::Zero(20); // Min reaction force (zero for normal reaction forces)
+    VectorNd reaction_force_upper_limit = VectorNd::Zero(20); // Max reaction force 
 
     // Matrix for reaction force constraints. // Indexing ({x,y}, constraint_j, leg_k)
     // Leg 1 
@@ -641,63 +652,62 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     A_fr(19,11) = 1;
 
     // Min for cone constraints
-    ineq_vec_l0(0) = -OSQP_INFTY;
-    ineq_vec_l0(1) = 0;
-    ineq_vec_l0(2) = -OSQP_INFTY;
-    ineq_vec_l0(3) = 0;
-    ineq_vec_l0(4) = -OSQP_INFTY;
-    ineq_vec_l0(5) = 0;
-    ineq_vec_l0(6) = -OSQP_INFTY;
-    ineq_vec_l0(7) = 0;
-    ineq_vec_l0(8) = -OSQP_INFTY;
-    ineq_vec_l0(9) = 0;
-    ineq_vec_l0(10) = -OSQP_INFTY;
-    ineq_vec_l0(11) = 0;
-    ineq_vec_l0(12) = -OSQP_INFTY;
-    ineq_vec_l0(13) = 0;
-    ineq_vec_l0(14) = -OSQP_INFTY;
-    ineq_vec_l0(15) = 0;
+    reaction_force_lower_limit(0)  = -OSQP_INFTY;
+    reaction_force_lower_limit(1)  = 0;
+    reaction_force_lower_limit(2)  = -OSQP_INFTY;
+    reaction_force_lower_limit(3)  = 0;
+    reaction_force_lower_limit(4)  = -OSQP_INFTY;
+    reaction_force_lower_limit(5)  = 0;
+    reaction_force_lower_limit(6)  = -OSQP_INFTY;
+    reaction_force_lower_limit(7)  = 0;
+    reaction_force_lower_limit(8)  = -OSQP_INFTY;
+    reaction_force_lower_limit(9)  = 0;
+    reaction_force_lower_limit(10) = -OSQP_INFTY;
+    reaction_force_lower_limit(11) = 0;
+    reaction_force_lower_limit(12) = -OSQP_INFTY;
+    reaction_force_lower_limit(13) = 0;
+    reaction_force_lower_limit(14) = -OSQP_INFTY;
+    reaction_force_lower_limit(15) = 0;
 
     // Max for cone constraints
-    ineq_vec_u0(0)  = 0;
-    ineq_vec_u0(1)  = OSQP_INFTY;
-    ineq_vec_u0(2)  = 0;
-    ineq_vec_u0(3)  = OSQP_INFTY;
-    ineq_vec_u0(4)  = 0;
-    ineq_vec_u0(5)  = OSQP_INFTY;
-    ineq_vec_u0(6)  = 0;
-    ineq_vec_u0(7)  = OSQP_INFTY;
-    ineq_vec_u0(8)  = 0;
-    ineq_vec_u0(9)  = OSQP_INFTY;
-    ineq_vec_u0(10) = 0;
-    ineq_vec_u0(11) = OSQP_INFTY;
-    ineq_vec_u0(12) = 0;
-    ineq_vec_u0(13) = OSQP_INFTY;
-    ineq_vec_u0(14) = 0;
-    ineq_vec_u0(15) = OSQP_INFTY;
+    reaction_force_upper_limit(0)  = 0;
+    reaction_force_upper_limit(1)  = OSQP_INFTY;
+    reaction_force_upper_limit(2)  = 0;
+    reaction_force_upper_limit(3)  = OSQP_INFTY;
+    reaction_force_upper_limit(4)  = 0;
+    reaction_force_upper_limit(5)  = OSQP_INFTY;
+    reaction_force_upper_limit(6)  = 0;
+    reaction_force_upper_limit(7)  = OSQP_INFTY;
+    reaction_force_upper_limit(8)  = 0;
+    reaction_force_upper_limit(9)  = OSQP_INFTY;
+    reaction_force_upper_limit(10) = 0;
+    reaction_force_upper_limit(11) = OSQP_INFTY;
+    reaction_force_upper_limit(12) = 0;
+    reaction_force_upper_limit(13) = OSQP_INFTY;
+    reaction_force_upper_limit(14) = 0;
+    reaction_force_upper_limit(15) = OSQP_INFTY;
 
     // Max normal reaction force
-    ineq_vec_u0(16) = rf_z_max;
-    ineq_vec_u0(17) = rf_z_max;
-    ineq_vec_u0(18) = rf_z_max;
-    ineq_vec_u0(19) = rf_z_max;
+    reaction_force_upper_limit(16) = rf_z_max;
+    reaction_force_upper_limit(17) = rf_z_max;
+    reaction_force_upper_limit(18) = rf_z_max;
+    reaction_force_upper_limit(19) = rf_z_max;
 
+    reaction_force_mat.rightCols(12) = A_fr;
 
-    ineq_mat_0 << MatrixNd::Zero(20,NUM_JOINTS) , A_fr;
+    A.topRows(NUM_JOINTS) = torque_limit_mat;
+    A.bottomRows(20) = reaction_force_mat;
 
-    A.topRows(6) = eq_mat_0;
-    A.bottomRows(20) = ineq_mat_0;
-
-    l.topRows(6) = eq_vec_0; // For equality constraints, set lower and upper equal
-    u.topRows(6) = eq_vec_0;
-    l.bottomRows(20) = ineq_vec_l0;
-    u.bottomRows(20) = ineq_vec_u0;
+    l.head(NUM_JOINTS) = torque_lower_limit;
+    u.head(NUM_JOINTS) = torque_upper_limit;
+    l.tail(20) = reaction_force_lower_limit;
+    u.tail(20) = reaction_force_upper_limit;
 
     // THIS IS CURRENTLY NOT CORRECT
     // force Fr = 0 in x,y and z for swinging feet
     for (int i=0; i<4; i++){
         if (!feet_in_contact_[i]){
-            //ineq_vec_u0.segment(i*3,3) = VectorNd::Zero(3); 
+            //reaction_force_upper_limit.segment(i*3,3) = VectorNd::Zero(3); 
         }
     }
 
