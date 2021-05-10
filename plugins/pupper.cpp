@@ -55,17 +55,11 @@ PupperPlugin::PupperPlugin(){
     JointPositionTask.type = JOINT_POS;
     JointPositionTask.task_weight = 1; //0.1;
     JointPositionTask.joint_target = VectorNd::Zero(12);
-    // for (int i = 0; i < 4; i++){
-    //     JointPositionTask.joint_target[i*3 + 0] = 0;
-    //     JointPositionTask.joint_target[i*3 + 1] = M_PI_4;
-    //     JointPositionTask.joint_target[i*3 + 2] = M_PI_2;
-    // }
     JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
-    // JointPositionTask.active_targets.resize(12, true);
     JointPositionTask.Kp = 200;
     JointPositionTask.Kd = 0;
 
-    float foot_pos_Kp = 100;
+    float foot_pos_Kp = 10;
     float foot_pos_w  = 1;
 
     // Keep the front left foot in place
@@ -205,9 +199,9 @@ void PupperPlugin::onUpdate(){
     // float target_height = 0.12 + 0.02*sin(0.5*dTime); // 0.5 Hz (2 sec)
     // WBC_.getTask("COM_POSITION")->pos_target.z() = target_height; 
 
-    // Oscillate forward/backward tile
-    float target_pitch = M_PI/12 * sin(0.5 * dTime); // 0.5 HZ (2 sec)
-    WBC_.getTask("COM_ORIENTATION")->quat_target = Eigen::AngleAxisd(target_pitch, Eigen::Vector3d::UnitX());
+    // Oscillate left/right tilt
+    // float target_roll = M_PI/12 * sin(0.5 * dTime); // 0.5 HZ (2 sec)
+    // WBC_.getTask("COM_ORIENTATION")->quat_target = Eigen::AngleAxisd(target_roll, Eigen::Vector3d::UnitX());
 
     // First two seconds
     if (now - start_time < common::Time(2, 0)){
