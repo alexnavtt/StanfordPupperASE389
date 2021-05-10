@@ -285,14 +285,14 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     VectorNd Ax = (A*optimal_solution);
     // First leg x
     // cout << "Cone Constraint Test --------------------------------" << endl;
-    // cout << "Fr_x_1: " << abs(Fr(0)) << " <= " << mu*Fr(2) << endl;
-    // cout << "Fr_y_1: " << abs(Fr(1)) << " <= " << mu*Fr(2) << endl;
+    //cout << "Fr_x_1: " << abs(Fr(0)) << " <= " << mu*Fr(2) << endl;
+    //cout << "Fr_y_1: " << abs(Fr(1)) << " <= " << mu*Fr(2) << endl;
 
     // cout << "----------------------------------------------------" << endl;
     //cout << "A size: " << A.rows() << "x" << A.cols() << endl;
     //cout << "x size: " << optimal_solution.rows() << endl;
-    // cout << "Lower Bounds for F_r: \n" << upper_bounds.tail(20).transpose().format(f)<<endl;
-    // cout << "A*x for F_r = " << Ax.tail(20).transpose().format(f) << endl; 
+    //cout << "Lower Bounds for F_r: \n" << upper_bounds.tail(20).transpose().format(f)<<endl;
+    //cout << "A*x for F_r = " << Ax.tail(20).transpose().format(f) << endl; 
 
     // //-------------------------------------------------------------------------------//
     // //-------------------------------------------------------------------------------//

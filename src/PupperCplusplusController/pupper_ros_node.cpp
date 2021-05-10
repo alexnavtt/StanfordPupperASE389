@@ -1,10 +1,9 @@
 #include "ros/ros.h"
 #include "sensor_msgs/JointState.h"
 #include "std_msgs/Float64MultiArray.h"
-
+#include "geometry_msgs/Pose.h"
 #include "ase389/PupperModel.h"
 #include "ase389/PupperWBC.hpp"
-
 
 // Global variables
 namespace {
@@ -20,8 +19,14 @@ void pupperStateCallBack(const sensor_msgs::JointStateConstPtr &msg){
     std::copy(msg->position.begin(), msg->position.end(), joint_positions_.data());
     std::copy(msg->velocity.begin(), msg->velocity.end(), joint_velocities_.data());
 }
-
-
+void pupperPoseCallBack(const geometry_msgs::PoseConstPtr &msg){
+    // Record the robot pose
+    // ROS_INFO("%.2f",msg->orientation.x);
+    robot_quaternion_.x() = msg->orientation.x;
+    robot_quaternion_.y() = msg->orientation.y;
+    robot_quaternion_.z() = msg->orientation.z;
+    robot_quaternion_.w() = msg->orientation.w;
+}
 
 int main(int argc, char** argv){
     // Initialize ROS node
@@ -30,7 +35,8 @@ int main(int argc, char** argv){
 
     // Create publisher and subscriber to communicate with pupper
     ros::Subscriber RobotStateSubscriber = nh.subscribe("pupper_state", 1, &pupperStateCallBack);
-    ros::Publisher  RobotCommandPub      = nh.advertise<std_msgs::Float64MultiArray>("pupper_commands", 10, false);
+    ros::Subscriber RobotPoseSubscriber = nh.subscribe("pupper_pose", 1, &pupperPoseCallBack);
+    ros::Publisher  RobotCommandPub      = nh.advertise<std_msgs::Float64MultiArray>("pupper_commands", 1, false);
 
     // Create the Whole Body Controller
     PupperWBC Pup;
