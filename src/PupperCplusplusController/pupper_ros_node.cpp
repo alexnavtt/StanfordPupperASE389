@@ -20,8 +20,12 @@ namespace {
 
 // This is called every time we receive a message from the Python node
 void pupperStateCallBack(const sensor_msgs::JointStateConstPtr &msg){
+    if (not joint_init){
+        ROS_INFO("Joint states received");
+        joint_init = true;
+    }
+    
     // Record the robot data
-    joint_init = true;
     std::copy(msg->position.begin(), msg->position.end(), joint_positions_.data());
     std::copy(msg->velocity.begin(), msg->velocity.end(), joint_velocities_.data());
 }
@@ -38,7 +42,7 @@ void pupperPoseCallBack(const geometry_msgs::PoseConstPtr &msg){
     if (not pose_init){
         pose_init = true;
         initial_quaterion_ = robot_quaternion_;
-        ROS_INFO("Initial quaternion: [%.2f, (%.2f, %.2f, %.2f)]", 
+        ROS_INFO("Initial quaternion received: [%.2f, (%.2f, %.2f, %.2f)]", 
         initial_quaterion_.w(), initial_quaterion_.x(), initial_quaterion_.y(), initial_quaterion_.z());
     }
 }
@@ -148,10 +152,11 @@ int main(int argc, char** argv){
     ros::Rate rate(100);  
 
     // Zero the globals
+    body_pos_.setZero();
     joint_positions_.setZero();
     joint_velocities_.setZero();
-    body_pos_.setZero();
     robot_quaternion_.setIdentity();
+    Eigen::Vector3d robot_pos = Eigen::Vector3d::Zero(3);
 
     // Foot contacts
     std::array<bool, 4> contacts = {true, true, true, true};
@@ -166,7 +171,7 @@ int main(int argc, char** argv){
         ros::spinOnce();
         ros::Duration(0.01).sleep();
     }
-    ROS_INFO("Message received, starting IHWBC Algorithm");
+    ROS_INFO("Starting IHWBC Algorithm");
 
     // Main loop
     while(nh.ok()){
@@ -175,11 +180,25 @@ int main(int argc, char** argv){
 
         // Offset the quaternion from our initial state
         Eigen::Quaterniond correct_quat = robot_quaternion_ * initial_quaterion_.conjugate();
-        ROS_INFO("Corrected quaternion: [%.2f, (%.2f, %.2f, %.2f)]", 
-        correct_quat.w(), correct_quat.x(), correct_quat.y(), correct_quat.z());
+        // ROS_INFO("Corrected quaternion: [%.2f, (%.2f, %.2f, %.2f)]", 
+        // correct_quat.w(), correct_quat.x(), correct_quat.y(), correct_quat.z());
 
-        // Run the Whole Body Controller
+        // Calculate the robot height using forward kinematics
+        robot_pos.z() = Pup.calcPupperHeight();
+
+        // Update the robot state
         Pup.updateController(joint_positions_, joint_velocities_, body_pos_, correct_quat, contacts);
+
+        // Update the tasks states
+        Pup.updateBodyPosTask("COM_ORIENTATION", robot_pos);
+        Pup.updateBodyOriTask("COM_ORIENTATION", correct_quat);
+        Pup.updateJointTask("JOINT_ANGLES", Pup.getJointPositions());
+        Pup.updateBodyPosTask("BACK_LEFT_FOOT_POSITION",   Pup.getRelativeBodyLocation("back_left_foot"));
+        Pup.updateBodyPosTask("BACK_RIGHT_FOOT_POSITION",  Pup.getRelativeBodyLocation("back_right_foot"));
+        Pup.updateBodyPosTask("FRONT_LEFT_FOOT_POSITION",  Pup.getRelativeBodyLocation("front_left_foot"));
+        Pup.updateBodyPosTask("FRONT_RIGHT_FOOT_POSITION", Pup.getRelativeBodyLocation("front_right_foot"));
+
+        // Run the IHWBC
         array<float,12> tau = Pup.calculateOutputTorque();
 
         // Send commands
