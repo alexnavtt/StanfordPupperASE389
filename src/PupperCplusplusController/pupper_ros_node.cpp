@@ -63,24 +63,24 @@ int main(int argc, char** argv){
 
     // ============================  TASKS ============================= //
 
-    // // Task for Body center of mass to be 10cm high // range .02
-    // static Task CoM_Position_Task;
-    // CoM_Position_Task.type    = BODY_POS;
-    // CoM_Position_Task.body_id = "bottom_PCB";
-    // CoM_Position_Task.task_weight = 1; // 1
-    // CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
-    // CoM_Position_Task.pos_target << 0, 0, 0.10;
-    // CoM_Position_Task.Kp = 10;//1000;
-    // CoM_Position_Task.Kd = 0;
+    // Task for Body center of mass to be 10cm high // range .02
+    static Task CoM_Position_Task;
+    CoM_Position_Task.type    = BODY_POS;
+    CoM_Position_Task.body_id = "bottom_PCB";
+    CoM_Position_Task.task_weight = 0; // 1
+    CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
+    CoM_Position_Task.pos_target << 0, 0, 0.10;
+    CoM_Position_Task.Kp = 10;//1000;
+    CoM_Position_Task.Kd = 0;
 
-    // // Task for Body center of mass to be flat // .001
-    // static Task CoM_Orientation_Task;
-    // CoM_Orientation_Task.type    = BODY_ORI;
-    // CoM_Orientation_Task.body_id = "bottom_PCB";
-    // CoM_Orientation_Task.task_weight = 1; // 10;
-    // CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
-    // CoM_Orientation_Task.Kp = 10; //1000;
-    // CoM_Orientation_Task.Kd = 0;
+    // Task for Body center of mass to be flat // .001
+    static Task CoM_Orientation_Task;
+    CoM_Orientation_Task.type    = BODY_ORI;
+    CoM_Orientation_Task.body_id = "bottom_PCB";
+    CoM_Orientation_Task.task_weight = 0; // 10;
+    CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
+    CoM_Orientation_Task.Kp = 10; //1000;
+    CoM_Orientation_Task.Kd = 0;
 
     // Task to keep the hips level
     static Task JointPositionTask; // .01
@@ -94,60 +94,60 @@ int main(int argc, char** argv){
     JointPositionTask.Kp = 200;
     JointPositionTask.Kd = 0;
 
-    // // Weights are shared between all four feet
-    // float foot_pos_Kp = 10;
-    // float foot_pos_w  = 1;
+    // Weights are shared between all four feet
+    float foot_pos_Kp = 10;
+    float foot_pos_w  = 0;
 
-    // // Keep the front left foot in place
-    // static Task FLFootTask;
-    // FLFootTask.type = BODY_POS;
-    // FLFootTask.body_id = "front_left_foot";
-    // FLFootTask.task_weight = foot_pos_w;
-    // FLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
-    // FLFootTask.pos_target << 0.08, 0.075, -0.1;
-    // FLFootTask.Kp = foot_pos_Kp;
-    // FLFootTask.Kd = 0;
+    // Keep the front left foot in place
+    static Task FLFootTask;
+    FLFootTask.type = BODY_POS;
+    FLFootTask.body_id = "front_left_foot";
+    FLFootTask.task_weight = foot_pos_w;
+    FLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
+    FLFootTask.pos_target << 0.08, 0.075, -0.1;
+    FLFootTask.Kp = foot_pos_Kp;
+    FLFootTask.Kd = 0;
 
-    // // Keep the front right foot in place
-    // static Task FRFootTask;
-    // FRFootTask.type = BODY_POS;
-    // FRFootTask.body_id = "front_right_foot";
-    // FRFootTask.task_weight = foot_pos_w;
-    // FRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
-    // FRFootTask.pos_target << 0.08, -0.065, -0.1;
-    // FRFootTask.Kp = foot_pos_Kp;
-    // FRFootTask.Kd = 0;
+    // Keep the front right foot in place
+    static Task FRFootTask;
+    FRFootTask.type = BODY_POS;
+    FRFootTask.body_id = "front_right_foot";
+    FRFootTask.task_weight = foot_pos_w;
+    FRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
+    FRFootTask.pos_target << 0.08, -0.065, -0.1;
+    FRFootTask.Kp = foot_pos_Kp;
+    FRFootTask.Kd = 0;
 
-    // // Keep the back left foot in place
-    // static Task BLFootTask;
-    // BLFootTask.type = BODY_POS;
-    // BLFootTask.body_id = "back_left_foot";
-    // BLFootTask.task_weight = foot_pos_w;
-    // BLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
-    // BLFootTask.pos_target << -0.11, 0.075, -0.1;
-    // BLFootTask.Kp = foot_pos_Kp;
-    // BLFootTask.Kd = 0;
+    // Keep the back left foot in place
+    static Task BLFootTask;
+    BLFootTask.type = BODY_POS;
+    BLFootTask.body_id = "back_left_foot";
+    BLFootTask.task_weight = foot_pos_w;
+    BLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
+    BLFootTask.pos_target << -0.11, 0.075, -0.1;
+    BLFootTask.Kp = foot_pos_Kp;
+    BLFootTask.Kd = 0;
 
-    // // Keep the back right foot in place
-    // static Task BRFootTask;
-    // BRFootTask.type = BODY_POS;
-    // BRFootTask.body_id = "back_right_foot";
-    // BRFootTask.task_weight = foot_pos_w;
-    // BRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
-    // BRFootTask.pos_target << -0.11, -0.065, -0.1;
-    // BRFootTask.Kp = foot_pos_Kp;
-    // BRFootTask.Kd = 0;
+    // Keep the back right foot in place
+    static Task BRFootTask;
+    BRFootTask.type = BODY_POS;
+    BRFootTask.body_id = "back_right_foot";
+    BRFootTask.task_weight = foot_pos_w;
+    BRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
+    BRFootTask.pos_target << -0.11, -0.065, -0.1;
+    BRFootTask.Kp = foot_pos_Kp;
+    BRFootTask.Kd = 0;
 
     // Control the body
-    // Pup.addTask("COM_POSITION", &CoM_Position_Task);
-    // Pup.addTask("COM_ORIENTATION", &CoM_Orientation_Task);
+    Pup.addTask("COM_POSITION", &CoM_Position_Task);
+    Pup.addTask("COM_ORIENTATION", &CoM_Orientation_Task);
     Pup.addTask("JOINT_ANGLES", &JointPositionTask);
 
     // Foot position tasks for standstill
-    // Pup.addTask("FRONT_LEFT_FOOT_POSITION", &FLFootTask);
-    // Pup.addTask("FRONT_RIGHT_FOOT_POSITION", &FRFootTask);
-    // Pup.addTask("BACK_LEFT_FOOT_POSITION", &BLFootTask);
-    // Pup.addTask("BACK_RIGHT_FOOT_POSTIION", &BRFootTask);
+    Pup.addTask("FRONT_LEFT_FOOT_POSITION", &FLFootTask);
+    Pup.addTask("FRONT_RIGHT_FOOT_POSITION", &FRFootTask);
+    Pup.addTask("BACK_LEFT_FOOT_POSITION", &BLFootTask);
+    Pup.addTask("BACK_RIGHT_FOOT_POSITION", &BRFootTask);
 
     // ================================================================= //
 
@@ -169,12 +169,12 @@ int main(int argc, char** argv){
     command_msg.data.resize(12);
 
     // Wait for messages
-    ROS_INFO("Waiting for initial message...");
-    while(not pose_init or not joint_init and nh.ok()){
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-    }
-    ROS_INFO("Starting IHWBC Algorithm");
+    // ROS_INFO("Waiting for initial message...");
+    // while(not pose_init or not joint_init and nh.ok()){
+    //     ros::spinOnce();
+    //     ros::Duration(0.01).sleep();
+    // }
+    // ROS_INFO("Starting IHWBC Algorithm");
 
     // Main loop
     while(nh.ok()){
@@ -193,9 +193,9 @@ int main(int argc, char** argv){
         Pup.updateController(joint_positions_, joint_velocities_, body_pos_, correct_quat, contacts);
 
         // Update the tasks states
-        Pup.updateBodyPosTask("COM_ORIENTATION", robot_pos);
+        Pup.updateBodyPosTask("COM_POSITION", robot_pos);
         Pup.updateBodyOriTask("COM_ORIENTATION", correct_quat);
-        Pup.updateJointTask("JOINT_ANGLES", Pup.getJointPositions());
+        Pup.updateJointTask("JOINT_ANGLES", Pup.getJointPositions().segment(6,12));
         Pup.updateBodyPosTask("BACK_LEFT_FOOT_POSITION",   Pup.getRelativeBodyLocation("back_left_foot"));
         Pup.updateBodyPosTask("BACK_RIGHT_FOOT_POSITION",  Pup.getRelativeBodyLocation("back_right_foot"));
         Pup.updateBodyPosTask("FRONT_LEFT_FOOT_POSITION",  Pup.getRelativeBodyLocation("front_left_foot"));
