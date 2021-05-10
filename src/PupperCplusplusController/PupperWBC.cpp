@@ -102,7 +102,7 @@ void PupperWBC::updateController(const VectorNd& joint_angles,
 
     // Update robot height
     // Note: contacts, joint angles, and orientation must be updated before this
-    robot_height_ = calcPupperHeight_();
+    robot_height_ = calcPupperHeight();
 
     // Update the problem matrices
     massMat_.setZero(); // Required!
@@ -413,6 +413,11 @@ MatrixNd PupperWBC::getTaskJacobian_(unsigned priority){
 MatrixNd PupperWBC::getTaskJacobian_(std::string task_name){
     unsigned index = task_indices_.at(task_name);
     return getTaskJacobian_(index);
+}
+
+// Getter for the joint angles
+VectorNd PupperWBC::getJointPositions(){
+    return joint_angles_;
 }
 
 void PupperWBC::updateContactJacobian_(bool update_kinematics){
@@ -815,7 +820,7 @@ void PupperWBC::convertEigenToCSC_(const MatrixNd &P, vector<c_float> &P_x, vect
     }
 }
 
-double PupperWBC::calcPupperHeight_(){
+double PupperWBC::calcPupperHeight(){
     // Calculates the height of the pupper using contacts, joint angles, and orientation 
     // Note: feet_in_contact_, joint_angles_ and orientation should be updated before this. 
     // The orientation is implicitly used in the CalcBodyToBaseCoordinates.
