@@ -37,7 +37,7 @@
 
     <!-- Inertia of a hemisphere via Wikipedia -->
     <xacro:macro name = "footInertia">
-        <xacro:property name = "foot_mass" value = "0.01"/>
+        <xacro:property name = "foot_mass" value = "0.003"/>
         <xacro:property name = "foot_radius" value = "0.0095"/>
         <xacro:property name = "i__" value = "${2/5 * foot_mass * foot_radius**2}"/>
         <mass value = "${foot_mass}"/>
