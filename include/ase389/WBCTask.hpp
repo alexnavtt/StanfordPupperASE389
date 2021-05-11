@@ -29,12 +29,15 @@ struct Task{
     
     Eigen::VectorXd joint_target;
     Eigen::VectorXd joint_measured;
+    Eigen::VectorXd last_joint_measured;
 
     Eigen::Quaternion<double> quat_target;
     Eigen::Quaternion<double> quat_measured;
+    Eigen::Quaternion<double> last_quat_measured;
 
     Eigen::Vector3d pos_target;
     Eigen::Vector3d pos_measured;
+    Eigen::Vector3d last_pos_measured;
 
     // Coefficients for the PD error term 
     double Kp;

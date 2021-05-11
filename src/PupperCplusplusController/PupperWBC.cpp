@@ -71,7 +71,7 @@ PupperWBC::PupperWBC(){
     b_g_     = VectorNd::Zero(NUM_JOINTS);
 
     // Time for numerical derivative of jacobian
-    t_prev = now();
+    t_prev_ = now();
 }
 
 // Update the controller with the current state of the robot
@@ -125,25 +125,28 @@ void PupperWBC::addTask(string name, Task* T){
 
     switch(T->type){
         case BODY_POS:
-        T->active_targets.resize(3, false);
-        if (Pupper_.GetBodyId(T->body_id.c_str()) == -1){
-            string message = "Task name " + T->body_id + " did not match any known body";
-            throw(std::runtime_error(message));
-        }
-        break;
+            if (Pupper_.GetBodyId(T->body_id.c_str()) == -1){
+                string message = "Task name " + T->body_id + " did not match any known body";
+                throw(std::runtime_error(message));
+            }
+            T->active_targets.resize(3, false);
+            break;
 
         case BODY_ORI:
-        if (Pupper_.GetBodyId(T->body_id.c_str()) == -1){
-            string message = "Task name " + T->body_id + " did not match any known body";
-            throw(std::runtime_error(message));
-        }
-        T->quat_measured = Eigen::Quaterniond::Identity();
-        break;
+            if (Pupper_.GetBodyId(T->body_id.c_str()) == -1){
+                string message = "Task name " + T->body_id + " did not match any known body";
+                throw(std::runtime_error(message));
+            }
+            T->quat_measured = Eigen::Quaterniond::Identity();
+            T->last_quat_measured = Eigen::Quaterniond::Identity();
+            break;
 
         case JOINT_POS:
-        assert(T->joint_target.size() == ROBOT_NUM_JOINTS);
-        T->joint_measured = VectorNd::Zero(T->joint_target.size());
-        T->active_targets.resize(T->joint_target.size(), false);
+            assert(T->joint_target.size() == ROBOT_NUM_JOINTS);
+            T->joint_measured = VectorNd::Zero(T->joint_target.size());
+            T->last_joint_measured = T->joint_measured;
+            T->active_targets.resize(T->joint_target.size(), false);
+            break;
     }
 }
 
@@ -155,6 +158,7 @@ void PupperWBC::updateJointTask(std::string name, VectorNd state){
     }
     Task* T = getTask(name);
     assert(T->type == JOINT_POS);
+    T->last_joint_measured = T->joint_measured;
     T->joint_measured = state;
 }
 
@@ -165,6 +169,7 @@ void PupperWBC::updateBodyPosTask(std::string name, Eigen::Vector3d state){
     }
     Task* T = getTask(name);
     assert(T->type == BODY_POS);
+    T->last_pos_measured = T->pos_measured;
     T->pos_measured = state;
 }
 
@@ -175,11 +180,38 @@ void PupperWBC::updateBodyOriTask(std::string name, Eigen::Quaternion<double> st
     }
     Task* T = getTask(name);
     assert(T->type == BODY_ORI);
+    T->last_quat_measured = T->quat_measured;
     T->quat_measured = state;
 }
 
 Task* PupperWBC::getTask(string name){
     return robot_tasks_[task_indices_[name]];
+}
+
+VectorNd PupperWBC::taskDerivative_(const Task *T){
+    VectorNd deriv;
+    const float dt = now() - t_prev_;
+
+    switch (T->type){
+
+        case BODY_POS:
+            deriv.resize(3);
+            deriv = (T->pos_measured - T->last_pos_measured)/dt;
+            break;
+
+        case BODY_ORI:
+            deriv.resize(3);
+            deriv = quatDiff(T->quat_measured, T->last_quat_measured)/dt;
+            break;
+
+        case JOINT_POS:
+            deriv.resize(ROBOT_NUM_JOINTS);
+            deriv = T->joint_measured - T->last_joint_measured;
+            break;
+
+    }
+
+    return deriv;
 }
 
 VectorNd PupperWBC::getRelativeBodyLocation(std::string body_name, VectorNd offset){
@@ -491,7 +523,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
         //-----------------Calculate j_dot-----------------
         // MatrixNd j_dot;
-        // double delta_t = (now() - t_prev); // seconds
+        // double delta_t = (now() - t_prev_); // seconds
         // if (T->j_prev_updated == true){
         //     j_dot = (j - T->j_prev)/delta_t;
         //     // cout << "j_dot calculated" << endl;
@@ -509,15 +541,15 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
 
         switch(T->type){
             case BODY_ORI:
-                x_ddot_desired = T->Kp * quatDiff(T->quat_measured, T->quat_target);
+                x_ddot_desired = T->Kp * quatDiff(T->quat_measured, T->quat_target) + T->Kd * taskDerivative_(T);
                 break;
 
             case BODY_POS:
-                x_ddot_desired = T->Kp * (T->pos_measured - T->pos_target);
+                x_ddot_desired = T->Kp * (T->pos_measured - T->pos_target) + T->Kd * taskDerivative_(T);
                 break;
 
             case JOINT_POS:
-                x_ddot_desired = T->Kp * (T->joint_measured - T->joint_target);
+                x_ddot_desired = T->Kp * (T->joint_measured - T->joint_target) + T->Kd * taskDerivative_(T);;
                 break;
         }
 
@@ -536,7 +568,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
         //cout << "j_dot_q_dot_" << i << ": \n" << j_dot_q_dot << endl;
     }
     // For j_dot calculation
-    t_prev = now();
+    t_prev_ = now();
 
     // Add a cost to penalize high joint accelerations
     for (int i = 6; i < NUM_JOINTS; i++){
@@ -552,7 +584,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     //MatrixNd cost_rf_mat = MatrixNd::Identity(12,12);
     VectorNd cost_rf_vec = VectorNd::Zero(12);
     MatrixNd cost_rf_mat = MatrixNd::Zero(12,12);
-    VectorNd diag_terms = VectorNd::Zero(12); 
+    VectorNd diag_terms  = VectorNd::Zero(12); 
 
     // Penalize large lateral and normal reaction forces (lambda_rf), and penalize tracking error (w_rf)
     // These elements go into the diagonal of the cost matrix

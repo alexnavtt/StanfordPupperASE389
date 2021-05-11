@@ -40,7 +40,7 @@ PupperPlugin::PupperPlugin(){
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
     CoM_Position_Task.pos_target << 0, 0, 0.10;
     CoM_Position_Task.Kp = 200;//1000;
-    CoM_Position_Task.Kd = 0;
+    CoM_Position_Task.Kd = 200;
 
     // Task for Body center of mass to be flat // .001
     static Task CoM_Orientation_Task;
@@ -49,7 +49,7 @@ PupperPlugin::PupperPlugin(){
     CoM_Orientation_Task.task_weight = 10; // 0.7;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
     CoM_Orientation_Task.Kp = 1000;//1000;
-    CoM_Orientation_Task.Kd = 0;
+    CoM_Orientation_Task.Kd = 200;
 
     static Task JointPositionTask; // .01
     JointPositionTask.type = JOINT_POS;
@@ -57,9 +57,10 @@ PupperPlugin::PupperPlugin(){
     JointPositionTask.joint_target = VectorNd::Zero(12);
     JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false};
     JointPositionTask.Kp = 200;
-    JointPositionTask.Kd = 0;
+    JointPositionTask.Kd = 200;
 
     float foot_pos_Kp = 10;
+    float foot_pos_Kd = 10;
     float foot_pos_w  = 1;
 
     // Keep the front left foot in place
@@ -70,7 +71,7 @@ PupperPlugin::PupperPlugin(){
     FLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     FLFootTask.pos_target << 0.08, 0.075, -0.1;
     FLFootTask.Kp = foot_pos_Kp;
-    FLFootTask.Kd = 0;
+    FLFootTask.Kd = foot_pos_Kd;
 
     // Keep the front right foot in place
     static Task FRFootTask;
@@ -80,7 +81,7 @@ PupperPlugin::PupperPlugin(){
     FRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     FRFootTask.pos_target << 0.08, -0.065, -0.1;
     FRFootTask.Kp = foot_pos_Kp;
-    FRFootTask.Kd = 0;
+    FRFootTask.Kd = foot_pos_Kd;
 
     // Keep the back left foot in place
     static Task BLFootTask;
@@ -90,7 +91,7 @@ PupperPlugin::PupperPlugin(){
     BLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     BLFootTask.pos_target << -0.11, 0.075, -0.1;
     BLFootTask.Kp = foot_pos_Kp;
-    BLFootTask.Kd = 0;
+    BLFootTask.Kd = foot_pos_Kd;
 
     // Keep the back right foot in place
     static Task BRFootTask;
@@ -100,7 +101,7 @@ PupperPlugin::PupperPlugin(){
     BRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of heigh
     BRFootTask.pos_target << -0.11, -0.065, -0.1;
     BRFootTask.Kp = foot_pos_Kp;
-    BRFootTask.Kd = 0;
+    BRFootTask.Kd = foot_pos_Kd;
 
     WBC_.addTask("COM_POSITION", &CoM_Position_Task);
     WBC_.addTask("COM_ORIENTATION", &CoM_Orientation_Task);
@@ -110,7 +111,7 @@ PupperPlugin::PupperPlugin(){
     WBC_.addTask("FRONT_LEFT_FOOT_POSITION", &FLFootTask);
     WBC_.addTask("FRONT_RIGHT_FOOT_POSITION", &FRFootTask);
     WBC_.addTask("BACK_LEFT_FOOT_POSITION", &BLFootTask);
-    WBC_.addTask("BACK_RIGHT_FOOT_POSTIION", &BRFootTask);
+    WBC_.addTask("BACK_RIGHT_FOOT_POSITION", &BRFootTask);
 }
 
 
