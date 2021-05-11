@@ -468,11 +468,11 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // Parameters
     double lambda_t = 0.0001; // Penalizes high joint accelerations
     VectorNd rf_desired = VectorNd::Zero(12);// Desired reaction forces
-    rf_desired << 0,0,9, 0,0,9, 0,0,9, 0,0,9;
+    // rf_desired << 0,0,9, 0,0,9, 0,0,9, 0,0,9;
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
     double lambda_rf_xy = 0; // Tangential reaction force penalty (minimize slipping)
-    double w_rf = 1; // Reaction force tracking penalty (follow desired reaction force)
-    double mu = 1; // Coefficient of friction 
+    double w_rf = 0; // Reaction force tracking penalty (follow desired reaction force)
+    double mu = .1; // Coefficient of friction 
 
     // ---------------------------------------------------------------
     // ------------------------- OBJECTIVE ---------------------------

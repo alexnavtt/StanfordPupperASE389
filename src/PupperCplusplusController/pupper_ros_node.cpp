@@ -70,33 +70,33 @@ int main(int argc, char** argv){
     CoM_Position_Task.task_weight = 10; // 1
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
     CoM_Position_Task.pos_target << 0, 0, 0.10;
-    CoM_Position_Task.Kp = 10;//1000;
+    CoM_Position_Task.Kp = 100;//1000;
     CoM_Position_Task.Kd = 0;
 
     // Task for Body center of mass to be flat // .001
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.type    = BODY_ORI;
     CoM_Orientation_Task.body_id = "bottom_PCB";
-    CoM_Orientation_Task.task_weight = 10; // 10;
+    CoM_Orientation_Task.task_weight = 15; // 10;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
-    CoM_Orientation_Task.Kp = 10; //1000;
+    CoM_Orientation_Task.Kp = 100; //1000;
     CoM_Orientation_Task.Kd = 0;
 
     // Task to keep the hips level
     static Task JointPositionTask; // .01
     JointPositionTask.type = JOINT_POS;
-    JointPositionTask.task_weight = 0; //0.1;
+    JointPositionTask.task_weight = 1; //0.1;
     JointPositionTask.joint_target.resize(12);
-    JointPositionTask.joint_target << 0, M_PI_4, M_PI_2, 0, -M_PI_4, -M_PI_2, 0, M_PI_4, M_PI_2, 0, -M_PI_4, -M_PI_2;
-    JointPositionTask.active_targets = std::vector<bool>(12, true);
-    // JointPositionTask.joint_target = VectorNd::Zero(12);
-    // JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false}; // Hips only
-    JointPositionTask.Kp = 200;
+    // JointPositionTask.joint_target << 0, M_PI_4, M_PI_2, 0, -M_PI_4, -M_PI_2, 0, M_PI_4, M_PI_2, 0, -M_PI_4, -M_PI_2;
+    // JointPositionTask.active_targets = std::vector<bool>(12, true);
+    JointPositionTask.joint_target = VectorNd::Zero(12);
+    JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false}; // Hips only
+    JointPositionTask.Kp = 100;
     JointPositionTask.Kd = 0;
 
     // Weights are shared between all four feet
-    float foot_pos_Kp = 10;
-    float foot_pos_w  = 0;
+    float foot_pos_Kp = 100;
+    float foot_pos_w  = 5;
 
     // Keep the front left foot in place
     static Task FLFootTask;
