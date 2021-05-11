@@ -188,6 +188,11 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
 // Called on every simulation time step
 void PupperPlugin::onUpdate(){
+    // static vector<float> test_angles = { 0.0,  M_PI_4,  M_PI_2, 
+    //                                      0.0, -M_PI_4, -M_PI_2,
+    //                                      0.0,  M_PI_4,  M_PI_2,
+    //                                      0.0, -M_PI_4, -M_PI_2};
+
     static vector<float> test_angles = { 0.0,  M_PI_4,  M_PI_2, 
                                          0.0, -M_PI_4, -M_PI_2,
                                          0.0,  M_PI_4,  M_PI_2,
@@ -208,6 +213,11 @@ void PupperPlugin::onUpdate(){
     if (now - start_time < common::Time(2, 0)){
         setJointPositions(test_angles);
     }
+
+    // // Fall (hopefully) gracefully
+    // else if (now - start_time < common::Time(5, 0)){
+    //     std::fill(control_torques_.begin(), control_torques_.end(), 0);
+    // }
 
     //Manage publisher update rate
     else if (now - last_update_time_ > update_interval_){

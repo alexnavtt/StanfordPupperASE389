@@ -323,7 +323,7 @@ array<float, 12> PupperWBC::calculateOutputTorque(){
     // Check constraints:
     double mu = 1; 
     
-    VectorNd Ax = (A*optimal_solution);
+    // VectorNd Ax = (A*optimal_solution);
     // First leg x
     // cout << "Cone Constraint Test --------------------------------" << endl;
     //cout << "Fr_x_1: " << abs(Fr(0)) << " <= " << mu*Fr(2) << endl;
@@ -500,11 +500,11 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // Parameters
     double lambda_t = 0.0001; // Penalizes high joint accelerations
     VectorNd rf_desired = VectorNd::Zero(12);// Desired reaction forces
-    rf_desired << 0,0,9, 0,0,9, 0,0,9, 0,0,9;
+    // rf_desired << 0,0,9, 0,0,9, 0,0,9, 0,0,9;
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
     double lambda_rf_xy = 0; // Tangential reaction force penalty (minimize slipping)
-    double w_rf = 1; // Reaction force tracking penalty (follow desired reaction force)
-    double mu = 1; // Coefficient of friction 
+    double w_rf = 0; // Reaction force tracking penalty (follow desired reaction force)
+    double mu = .1; // Coefficient of friction 
 
     // ---------------------------------------------------------------
     // ------------------------- OBJECTIVE ---------------------------
@@ -623,7 +623,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // For the floating base joints we have         0 <= tau <= 0       
     // For the rest of the joints we have    -tau_lim <= tau <= +tau_lim
 
-    const double torque_limit = 50; // Temporary value, this is a very high value for our small motors
+    const double torque_limit = 6; // Temporary value, this is a very high value for our small motors
     VectorNd torque_lower_limit = VectorNd::Zero(NUM_JOINTS);
     VectorNd torque_upper_limit = VectorNd::Zero(NUM_JOINTS);
     torque_lower_limit.head(6) = -b_g_.head(6);
