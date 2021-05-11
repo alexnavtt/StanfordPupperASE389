@@ -211,7 +211,7 @@ std::shared_ptr<Model> createPupperModel(){
 
     /* ------  MOTOR (m) ------ */
 
-    double motor_mass = 0.12;
+    double motor_mass = 0.09;
     Vector3d motor_com = Vector3d(0, 0, 0);
     Matrix3d motor_inertia;
     motor_inertia << 7.2e-6, 0,       0,

@@ -1,0 +1,22 @@
+// Bottom PCB (Without solder)
+    88 g
+// Top PCB (with microusb connector)
+    56 g
+// Rubber foot
+    03 g
+// Front bulkhead with threaded inserts 
+    32 g
+// Aluminum clamps
+    11 g
+// Motor controller
+    22 g
+// IMU + breadboard
+    17 g
+// Power button
+    44 g
+// Lower link
+    07 g
+// Battery 
+    205 g
+
+Total weight: 2,240 g

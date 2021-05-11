@@ -6,7 +6,7 @@
 
         <xacro:property name = "motorRad"    value = "0.012"/>
         <xacro:property name = "motorLength" value = "0.03"/>
-        <xacro:property name = "motorMass"   value = "0.120"/> <!-- kg --> 
+        <xacro:property name = "motorMass"   value = "0.09"/> <!-- kg --> 
 
         <!-- Create the motor -->
         <link name = "${name}_motor">
@@ -65,7 +65,7 @@
         </gazebo>
 
         <gazebo reference = "${revolute_child}">
-            <self_collide>false</self_collide>
+            <self_collide>true</self_collide>
         </gazebo>
         </xacro:if>
 
