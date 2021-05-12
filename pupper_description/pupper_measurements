@@ -18,5 +18,8 @@
     07 g
 // Battery 
     205 g
-
+// Rotor - measured with calipers (assuming shaft is constant diameter inside motor)
+    Diameter of rotor: 5.98 mm
+    Length of rotor: 64.6 mm
+    Estimated mass: 14.61 g 
 Total weight: 2,240 g
