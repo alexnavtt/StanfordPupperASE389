@@ -24,6 +24,8 @@ namespace {
         // Get the 3d axis difference
         VectorNd error3d = VectorNd::Zero(3);
         error3d = error.vec() * error.w()/abs(error.w());
+        // Remove yaw component 
+        error3d(2) *= 0.1;
         return error3d;
     }
 
