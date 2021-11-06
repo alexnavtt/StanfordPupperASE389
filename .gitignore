@@ -3,3 +3,6 @@ plugins/build/
 .catkin_tools/
 build/
 devel/
+src/DJIPupperTests/
+src/StanfordQuadruped/
+src/PupperKeyboardController/
