@@ -67,20 +67,20 @@ int main(int argc, char** argv){
     static Task CoM_Position_Task;
     CoM_Position_Task.type    = BODY_POS;
     CoM_Position_Task.body_id = "bottom_PCB";
-    CoM_Position_Task.task_weight = 10; // 1
+    CoM_Position_Task.task_weight = 5; // 3(3) too low // 10 // 1
     CoM_Position_Task.active_targets = {false, false, true};    // only account for z-position
-    CoM_Position_Task.pos_target << 0, 0, 0.10;
-    CoM_Position_Task.Kp = 100;//1000;
-    CoM_Position_Task.Kd = 0;
+    CoM_Position_Task.pos_target << 0, 0, 0.15;
+    CoM_Position_Task.Kp =  250;//60;// 40 // 25 // 16//  12 // 8 // 6// 4// 3//1000;
+    CoM_Position_Task.Kd = 100;//20;// 20//   7 // 5  //  1 // .5
 
     // Task for Body center of mass to be flat // .001
     static Task CoM_Orientation_Task;
     CoM_Orientation_Task.type    = BODY_ORI;
     CoM_Orientation_Task.body_id = "bottom_PCB";
-    CoM_Orientation_Task.task_weight = 15; // 10;
+    CoM_Orientation_Task.task_weight = 200; // 45 // 15 // 10;
     CoM_Orientation_Task.quat_target = Eigen::Quaternion<double>::Identity();
-    CoM_Orientation_Task.Kp = 100; //1000;
-    CoM_Orientation_Task.Kd = 0;
+    CoM_Orientation_Task.Kp = 4;//15;// 7 // 3 //1000;
+    CoM_Orientation_Task.Kd = 1;//7; // 1.5 // .5
 
     // Task to keep the hips level
     static Task JointPositionTask; // .01
@@ -91,12 +91,13 @@ int main(int argc, char** argv){
     // JointPositionTask.active_targets = std::vector<bool>(12, true);
     JointPositionTask.joint_target = VectorNd::Zero(12);
     JointPositionTask.active_targets = {true, false, false, true, false, false, true, false, false, true, false, false}; // Hips only
-    JointPositionTask.Kp = 100;
-    JointPositionTask.Kd = 0;
+    JointPositionTask.Kp = 3;
+    JointPositionTask.Kd = .5;
 
     // Weights are shared between all four feet
-    float foot_pos_Kp = 100;
-    float foot_pos_w  = 5;
+    float foot_pos_Kp = 0; //1
+    float foot_pos_Kd = 0; //0
+    float foot_pos_w  = 5; // 40 maybe too high
 
     // Keep the front left foot in place
     static Task FLFootTask;
@@ -106,7 +107,7 @@ int main(int argc, char** argv){
     FLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
     FLFootTask.pos_target << 0.08, 0.075, -0.1;
     FLFootTask.Kp = foot_pos_Kp;
-    FLFootTask.Kd = 0;
+    FLFootTask.Kd = foot_pos_Kd;
 
     // Keep the front right foot in place
     static Task FRFootTask;
@@ -116,7 +117,7 @@ int main(int argc, char** argv){
     FRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
     FRFootTask.pos_target << 0.08, -0.065, -0.1;
     FRFootTask.Kp = foot_pos_Kp;
-    FRFootTask.Kd = 0;
+    FRFootTask.Kd = foot_pos_Kd;
 
     // Keep the back left foot in place
     static Task BLFootTask;
@@ -126,7 +127,7 @@ int main(int argc, char** argv){
     BLFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
     BLFootTask.pos_target << -0.11, 0.075, -0.1;
     BLFootTask.Kp = foot_pos_Kp;
-    BLFootTask.Kd = 0;
+    BLFootTask.Kd = foot_pos_Kd;
 
     // Keep the back right foot in place
     static Task BRFootTask;
@@ -136,7 +137,7 @@ int main(int argc, char** argv){
     BRFootTask.active_targets = {true, true, false};  // We'll let the COM task take care of height
     BRFootTask.pos_target << -0.11, -0.065, -0.1;
     BRFootTask.Kp = foot_pos_Kp;
-    BRFootTask.Kd = 0;
+    BRFootTask.Kd = foot_pos_Kd;
 
     // Control the body
     Pup.addTask("COM_POSITION", &CoM_Position_Task);
@@ -169,12 +170,12 @@ int main(int argc, char** argv){
     command_msg.data.resize(12);
 
     // Wait for messages
-    // ROS_INFO("Waiting for initial message...");
-    // while(not pose_init or not joint_init and nh.ok()){
-    //     ros::spinOnce();
-    //     ros::Duration(0.01).sleep();
-    // }
-    // ROS_INFO("Starting IHWBC Algorithm");
+    ROS_INFO("Waiting for initial message...");
+    while(not pose_init or not joint_init and nh.ok()){
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+    }
+    ROS_INFO("Starting IHWBC Algorithm");
 
     // Main loop
     while(nh.ok()){
@@ -188,7 +189,8 @@ int main(int argc, char** argv){
 
         // Calculate the robot height using forward kinematics
         robot_pos.z() = Pup.calcPupperHeight();
-
+        std::cout << "height: " << robot_pos.z() << std::endl;
+        
         // Update the robot state
         Pup.updateController(joint_positions_, joint_velocities_, body_pos_, correct_quat, contacts);
 
