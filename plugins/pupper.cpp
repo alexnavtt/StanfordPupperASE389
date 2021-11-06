@@ -188,11 +188,6 @@ void PupperPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
 // Called on every simulation time step
 void PupperPlugin::onUpdate(){
-    // static vector<float> test_angles = { 0.0,  M_PI_4,  M_PI_2, 
-    //                                      0.0, -M_PI_4, -M_PI_2,
-    //                                      0.0,  M_PI_4,  M_PI_2,
-    //                                      0.0, -M_PI_4, -M_PI_2};
-
     static vector<float> test_angles = { 0.0,  M_PI_4,  M_PI_2, 
                                          0.0, -M_PI_4, -M_PI_2,
                                          0.0,  M_PI_4,  M_PI_2,
