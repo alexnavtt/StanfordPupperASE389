@@ -502,10 +502,10 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // Parameters
     double lambda_t = 0.0001; // Penalizes high joint accelerations
     VectorNd rf_desired = VectorNd::Zero(12);// Desired reaction forces
-    // rf_desired << 0,0,9, 0,0,9, 0,0,9, 0,0,9;
+    rf_desired << 1,-1,7.5, 1,1,7.5, -1,-1,5.5, -1,1,5.5; // Note: 6.5 back and 4.5 front was really close to standing
     double lambda_rf_z = 0; // Normal reaction force penalty (minimize impacts)
-    double lambda_rf_xy = 0; // Tangential reaction force penalty (minimize slipping)
-    double w_rf = 0; // Reaction force tracking penalty (follow desired reaction force)
+    double lambda_rf_xy = 100; // Tangential reaction force penalty (minimize slipping)
+    double w_rf = 15; // Reaction force tracking penalty (follow desired reaction force)
     double mu = .1; // Coefficient of friction 
 
     // ---------------------------------------------------------------
@@ -553,8 +553,9 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
             case JOINT_POS:
                 x_ddot_desired = T->Kp * (T->joint_measured - T->joint_target) + T->Kd * taskDerivative_(T);;
                 break;
-        }
 
+        }
+        cout << "xddot for " << T->body_id << " :" << x_ddot_desired.transpose().format(f) << endl;
         // cout << "j.transpose() size: (" << j.transpose().rows() << "x" << j.transpose().cols() << ")\n";
         // cout << "x_ddot_desired size: " << x_ddot_desired.size() << endl;
 
@@ -625,7 +626,7 @@ void PupperWBC::formQP(MatrixNd &P, VectorNd &q, MatrixNd &A, VectorNd &l, Vecto
     // For the floating base joints we have         0 <= tau <= 0       
     // For the rest of the joints we have    -tau_lim <= tau <= +tau_lim
 
-    const double torque_limit = 6; // Temporary value, this is a very high value for our small motors
+    const double torque_limit = 10; // Temporary value, this is a very high value for our small motors
     VectorNd torque_lower_limit = VectorNd::Zero(NUM_JOINTS);
     VectorNd torque_upper_limit = VectorNd::Zero(NUM_JOINTS);
     torque_lower_limit.head(6) = -b_g_.head(6);

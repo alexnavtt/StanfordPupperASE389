@@ -721,51 +721,51 @@ std::shared_ptr<Model> createPupperModel(){
 
 
 
-    // Test
-    cout << "---------- MODEL CREATION TESTING ------------\n" << endl;
-    cout << "Model has " << model->mJoints.size() << " joints\n";
+    // // Test
+    // cout << "---------- MODEL CREATION TESTING ------------\n" << endl;
+    // cout << "Model has " << model->mJoints.size() << " joints\n";
 
-    cout << "All bodies:\n";
-    for (int i = 0; i < model->mBodies.size(); i++){
-        cout << "Body " << i << ": " << model->GetBodyName(i) << endl;
-    }
-    cout << "\nFixed bodies:\n";
-    for (int i = 0; i < model->mFixedBodies.size(); i++){
-        cout << "Body " << i << ": " << model->GetBodyName(i) << endl;
-    }
-    cout << "\nAll masses:\n";
-    double total_mass = 0;
-    for (int i = 0; i < model->mBodies.size(); i++){
-        cout << "Mass of " << model->GetBodyName(i) << ": " << model->mBodies[i].mMass << "kg\n";
-        total_mass += model->mBodies[i].mMass;
-    }
-    cout << "Total mass: " << total_mass << " kg" << endl;
+    // cout << "All bodies:\n";
+    // for (int i = 0; i < model->mBodies.size(); i++){
+    //     cout << "Body " << i << ": " << model->GetBodyName(i) << endl;
+    // }
+    // cout << "\nFixed bodies:\n";
+    // for (int i = 0; i < model->mFixedBodies.size(); i++){
+    //     cout << "Body " << i << ": " << model->GetBodyName(i) << endl;
+    // }
+    // cout << "\nAll masses:\n";
+    // double total_mass = 0;
+    // for (int i = 0; i < model->mBodies.size(); i++){
+    //     cout << "Mass of " << model->GetBodyName(i) << ": " << model->mBodies[i].mMass << "kg\n";
+    //     total_mass += model->mBodies[i].mMass;
+    // }
+    // cout << "Total mass: " << total_mass << " kg" << endl;
 
-    cout << "\n---------- KINEMATICS TESTING ------------\n" << endl;
-    VectorNd q(model->q_size); q.setZero();
-    Vector3d zero_offset(0, 0, 0);
+    // cout << "\n---------- KINEMATICS TESTING ------------\n" << endl;
+    // VectorNd q(model->q_size); q.setZero();
+    // Vector3d zero_offset(0, 0, 0);
 
-    for (int i = 2; i < model->mBodies.size(); i++){
-        MatrixNd J(6, model->qdot_size); J.setZero();
-        CalcPointJacobian6D(*model, q, i, zero_offset, J);
-        for (int j = 0; j < J.size(); j++){
-            if (abs(J.data()[j]) < 1e-5) J.data()[j] = 0;
-        }
-        cout << "\nJacobian for " << model->GetBodyName(i) << ": \n" << J << endl;
-    }
+    // for (int i = 2; i < model->mBodies.size(); i++){
+    //     MatrixNd J(6, model->qdot_size); J.setZero();
+    //     CalcPointJacobian6D(*model, q, i, zero_offset, J);
+    //     for (int j = 0; j < J.size(); j++){
+    //         if (abs(J.data()[j]) < 1e-5) J.data()[j] = 0;
+    //     }
+    //     cout << "\nJacobian for " << model->GetBodyName(i) << ": \n" << J << endl;
+    // }
 
-    std::vector<const char*> points_to_test = {"front_left_foot", "front_right_foot", "back_left_foot", "back_right_foot"};
-    for (auto body : points_to_test){
-        auto pos = CalcBodyToBaseCoordinates(*model, q, model->GetBodyId(body), zero_offset);
-        cout << "Location of " << body << " in base coordinates: (" << pos[0] << ", " << pos[1] << ", "  << pos[2] << ")\n";
-    }
+    // std::vector<const char*> points_to_test = {"front_left_foot", "front_right_foot", "back_left_foot", "back_right_foot"};
+    // for (auto body : points_to_test){
+    //     auto pos = CalcBodyToBaseCoordinates(*model, q, model->GetBodyId(body), zero_offset);
+    //     cout << "Location of " << body << " in base coordinates: (" << pos[0] << ", " << pos[1] << ", "  << pos[2] << ")\n";
+    // }
 
 
-    cout << "\n---------- DYNAMICS TESTING ------------\n" << endl;
+    // cout << "\n---------- DYNAMICS TESTING ------------\n" << endl;
 
-    MatrixNd M(model->qdot_size, model->qdot_size); M.setZero();
-    RigidBodyDynamics::CompositeRigidBodyAlgorithm(*model, q, M);
-    cout << "\nMass Matrix: \n" << M << endl;
+    // MatrixNd M(model->qdot_size, model->qdot_size); M.setZero();
+    // RigidBodyDynamics::CompositeRigidBodyAlgorithm(*model, q, M);
+    // cout << "\nMass Matrix: \n" << M << endl;
 
     return model;
 }
